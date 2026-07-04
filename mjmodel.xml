@@ -1,0 +1,59 @@
+<mujoco model="particle_scene">
+  <!-- Model that includes like lighting and a ground. -->
+  <compiler angle="radian"/>
+
+  <option timestep="0.001"/>
+
+  <visual>
+    <headlight ambient="0.3 0.3 0.3" diffuse="0.6 0.6 0.6" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+  </visual>
+
+  <statistic extent="0.9" center="0 0 0"/>
+
+  <default>
+    <geom solimp="0 0.95 0.005"/>
+    <general ctrllimited="true" ctrlrange="-1 1" biastype="affine" gainprm="0.1" biasprm="0 0 -0.1"/>
+    <default class="goal">
+      <geom contype="0" conaffinity="0" rgba="0 1 0 0.2"/>
+    </default>
+  </default>
+
+  <asset>
+    <texture type="skybox" colorspace="auto" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture type="2d" colorspace="auto" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8" width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
+  </asset>
+
+  <worldbody>
+    <geom name="floor" size="0 0 0.125" type="plane" material="groundplane"/>
+    <light pos="0 0 1" dir="0 0 -1"/>
+    <body name="goal" pos="0 0 0.009" mocap="true">
+      <geom name="goal_bottom" class="goal" size="0.01 0.04 0.01" type="box"/>
+      <geom name="goal_top" class="goal" size="0.03 0.01 0.01" pos="0 0.03 0" type="box"/>
+    </body>
+    <body name="block" pos="0 0 0.0095">
+      <joint name="T_x" pos="0 0 0" axis="1 0 0" type="slide"/>
+      <joint name="T_y" pos="0 0 0" axis="0 1 0" type="slide"/>
+      <joint name="T_z" pos="0 0 0" axis="0 0 1"/>
+      <geom name="bottom" size="0.01 0.04 0.01" type="box"/>
+      <geom name="top" size="0.03 0.01 0.01" pos="0 0.03 0" type="box"/>
+    </body>
+    <body name="pusher" pos="0 0.1 0.011">
+      <joint name="root_x" pos="0 0 0" axis="1 0 0" type="slide"/>
+      <joint name="root_y" pos="0 0 0" axis="0 1 0" type="slide"/>
+      <geom name="pusher" size="0.01" rgba="1 0 0 1"/>
+      <site name="pusher" pos="0 0 0" rgba="0 0 0 0"/>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <general name="x_motor" joint="root_x"/>
+    <general name="y_motor" joint="root_y"/>
+  </actuator>
+
+  <sensor>
+    <framepos objtype="body" objname="block" reftype="body" refname="goal" name="position"/>
+    <framequat objtype="body" objname="block" reftype="body" refname="goal" name="orientation"/>
+  </sensor>
+</mujoco>

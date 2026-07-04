@@ -1,0 +1,3 @@
+[submodule "ksos-tools"]
+	path = ksos-tools
+	url = https://github.com/Simple-Robotics/ksos-tools
