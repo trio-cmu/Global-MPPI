@@ -8,3 +8,8 @@ __pycache__
 MUJOCO_LOG.TXT
 # hydrax/recordings/
 .idea
+
+# Run artifacts (videos, run logs, W&B run dirs)
+*.mp4
+*.log
+wandb/

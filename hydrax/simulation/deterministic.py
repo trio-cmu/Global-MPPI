@@ -25,6 +25,34 @@ Tools for deterministic (synchronous) simulation, with the simulator and
 controller running one after the other in the same thread.
 """
 
+
+class _HeadlessViewer:
+    """Drop-in stand-in for the MuJoCo passive viewer for headless runs.
+
+    Exposes just the attributes/methods the simulation loop touches
+    (``is_running``, ``sync``, ``cam``, ``user_scn``) so the exact same loop can
+    run on a machine with no display. Frames are rendered offscreen instead of
+    being shown in a window.
+    """
+
+    def __init__(self, mj_model: mujoco.MjModel, max_cycles: int) -> None:
+        self.cam = mujoco.MjvCamera()
+        mujoco.mjv_defaultFreeCamera(mj_model, self.cam)
+        self.user_scn = mujoco.MjvScene(mj_model, maxgeom=10000)
+        self._running = True
+
+    def __enter__(self) -> "_HeadlessViewer":
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self._running = False
+
+    def is_running(self) -> bool:
+        return self._running
+
+    def sync(self) -> None:  # no window to sync to
+        pass
+
 def rbf_kernel(X1, X2=None, sigma=1.0):
     X1 = np.atleast_2d(X1)
     if X2 is None:
@@ -110,6 +138,10 @@ def run_interactive(  # noqa: PLR0912, PLR0915
     current_seed: int = 0,
     max_cycles: int = 100,
     current_task: str = "default",
+    use_wandb: bool = False,
+    wandb_project: str = "global-mppi",
+    wandb_entity: str = None,
+    headless: bool = False,
 ) -> None:
     """Run an interactive simulation with the MPC controller.
 
@@ -206,6 +238,12 @@ def run_interactive(  # noqa: PLR0912, PLR0915
         pert = mujoco.MjvPerturb()
         catmask = mujoco.mjtCatBit.mjCAT_DYNAMIC  # only show dynamic bodies
 
+    # In headless mode there is no window: always record so there is something
+    # to look at (and to upload to W&B), and skip on-screen-only traces.
+    if headless:
+        record_video = True
+        show_traces = False
+
     # Initialize video recording if enabled
     recorder = None
     if record_video:
@@ -225,8 +263,14 @@ def run_interactive(  # noqa: PLR0912, PLR0915
             record_video = False
         renderer = mujoco.Renderer(mj_model, height=height, width=width)
 
-    # Start the simulation
-    with mujoco.viewer.launch_passive(mj_model, mj_data) as viewer:
+    # Start the simulation. Use a headless stand-in (no window) when requested,
+    # otherwise launch the interactive passive viewer.
+    viewer_ctx = (
+        _HeadlessViewer(mj_model, max_cycles)
+        if headless
+        else mujoco.viewer.launch_passive(mj_model, mj_data)
+    )
+    with viewer_ctx as viewer:
         # Tracking for min cost across cycles
         min_cost_history = []
         cycle_count = 0
@@ -277,6 +321,30 @@ def run_interactive(  # noqa: PLR0912, PLR0915
         error_history = []
         pre_best_cost = np.inf
         best_sample_cost = np.inf
+
+        # Optionally start a Weights & Biases run to log best_cost_history
+        wandb_run = None
+        if use_wandb:
+            import wandb
+
+            wandb_run = wandb.init(
+                project=wandb_project,
+                entity=wandb_entity,
+                name=f"{current_task}_{controller.ctrl_name}_seed{current_seed}",
+                group=f"{current_task}_{controller.ctrl_name}",
+                reinit=True,
+                config={
+                    "algorithm": controller.ctrl_name,
+                    "task": current_task,
+                    "seed": current_seed,
+                    "num_samples": getattr(controller, "num_samples", None),
+                    "plan_horizon": controller.plan_horizon,
+                    "num_knots": controller.num_knots,
+                    "frequency": actual_frequency,
+                    "max_cycles": max_cycles,
+                },
+            )
+
         while viewer.is_running():
             start_time = time.time()
 
@@ -380,26 +448,28 @@ def run_interactive(  # noqa: PLR0912, PLR0915
             
             # ============================================================
             # Save total timing over all restarts / iterations
+            # (only mppiksos populates these timing variables)
             # ============================================================
-            with open(timing_file, "a") as f:
-                f.write(
-                    f"cycle={cycle_count}, "
+            if controller.ctrl_name == "mppiksos":
+                with open(timing_file, "a") as f:
+                    f.write(
+                        f"cycle={cycle_count}, "
+                        f"num_restart={controller.ksos_num_restart}, "
+                        f"total_ksos_rollout_time={total_ksos_rollout_time:.6f}, "
+                        f"total_other_time={total_other_time:.6f}, "
+                        f"total_all_time={total_all_time:.6f}, "
+                        f"avg_ksos_rollout_time={total_ksos_rollout_time / controller.ksos_num_restart:.6f}, "
+                        f"avg_other_time={total_other_time / controller.ksos_num_restart:.6f}, "
+                        f"avg_all_time={total_all_time / controller.ksos_num_restart:.6f}, "
+                        f"sigma={getattr(controller, 'ksos_sigma', None)}\n"
+                    )
+                print(
+                    f"[Timing total] cycle={cycle_count}, "
                     f"num_restart={controller.ksos_num_restart}, "
-                    f"total_ksos_rollout_time={total_ksos_rollout_time:.6f}, "
-                    f"total_other_time={total_other_time:.6f}, "
-                    f"total_all_time={total_all_time:.6f}, "
-                    f"avg_ksos_rollout_time={total_ksos_rollout_time / controller.ksos_num_restart:.6f}, "
-                    f"avg_other_time={total_other_time / controller.ksos_num_restart:.6f}, "
-                    f"avg_all_time={total_all_time / controller.ksos_num_restart:.6f}, "
-                    f"sigma={getattr(controller, 'ksos_sigma', None)}\n"
+                    f"total_ksos_rollout={total_ksos_rollout_time:.3f}s, "
+                    f"total_other={total_other_time:.3f}s, "
+                    f"total_all={total_all_time:.3f}s"
                 )
-            print(
-                f"[Timing total] cycle={cycle_count}, "
-                f"num_restart={controller.ksos_num_restart}, "
-                f"total_ksos_rollout={total_ksos_rollout_time:.3f}s, "
-                f"total_other={total_other_time:.3f}s, "
-                f"total_all={total_all_time:.3f}s"
-            )
             # data logging
             best_cost = rollouts_best.costs.sum()
 
@@ -421,7 +491,15 @@ def run_interactive(  # noqa: PLR0912, PLR0915
                 print(f"\nCycle {cycle_count}: Best cost: {best_cost}, Best sample: {np.min(costs)}")
                 best_cost_history.append(best_cost)
                 error_history.append(np.min(costs) - best_cost)
-                
+
+            # Stream the latest best cost to Weights & Biases. best_cost may be a
+            # size-1 array (shape (1,)), so flatten to a scalar first.
+            if wandb_run is not None:
+                wandb.log(
+                    {"best_cost": float(np.asarray(best_cost).ravel()[0])},
+                    step=int(cycle_count),
+                )
+
             # cost evaulation
             if cycle_count % 10 == 0:
                 print(f"Cost for optimal action (cycle {cycle_count}): {best_cost_history}")
@@ -561,6 +639,41 @@ def run_interactive(  # noqa: PLR0912, PLR0915
     # Preserve the last printout
     print(f"finish the seed {current_seed} interactive simulation for controller {controller.ctrl_name}.")
 
-    # Close the video recorder if recording was enabled
+    # Finalize the video first, so the finished .mp4 can be attached to the run.
     if record_video and recorder is not None:
         recorder.stop()
+
+    # Finalize the Weights & Biases run: log best_cost_history and the video.
+    if wandb_run is not None:
+        if len(best_cost_history) > 0:
+            # Entries may be size-1 arrays; flatten to a 1-D array of scalars.
+            hist = np.asarray(best_cost_history, dtype=float).ravel()
+            wandb_run.summary["final_best_cost"] = float(hist[-1])
+            wandb_run.summary["min_best_cost"] = float(hist.min())
+            table = wandb.Table(
+                data=[[i, float(c)] for i, c in enumerate(hist)],
+                columns=["cycle", "best_cost"],
+            )
+            wandb_run.log(
+                {
+                    "best_cost_history": wandb.plot.line(
+                        table, "cycle", "best_cost", title="Best cost history"
+                    )
+                }
+            )
+        if (
+            record_video
+            and recorder is not None
+            and recorder.video_path is not None
+            and os.path.exists(recorder.video_path)
+        ):
+            wandb_run.log(
+                {
+                    "rollout_video": wandb.Video(
+                        recorder.video_path,
+                        fps=int(actual_frequency),
+                        format="mp4",
+                    )
+                }
+            )
+        wandb_run.finish()

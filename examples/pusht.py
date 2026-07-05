@@ -1,5 +1,16 @@
-import mujoco
 import argparse
+import os
+import sys
+import getpass
+
+# On a headless machine (e.g. a remote server with no display) MuJoCo must use
+# an offscreen GL backend. Select it BEFORE importing mujoco so the render
+# context is created correctly. EGL uses the GPU; fall back to `osmesa` (CPU)
+# by setting MUJOCO_GL yourself if EGL is unavailable.
+if "--headless" in sys.argv:
+    os.environ.setdefault("MUJOCO_GL", "egl")
+
+import mujoco
 
 from evosax.algorithms.distribution_based.cma_es import CMA_ES
 from hydrax.algs import PredictiveSampling, MPPI, CEM, Evosax, DIAL, KSOS, MPPIKSOS
@@ -18,6 +29,35 @@ task = PushT()
 parser = argparse.ArgumentParser(
     description="Run an interactive simulation of the particle tracking task."
 )
+# Weights & Biases logging options (place before the algorithm, e.g.
+# `python pusht.py --wandb ps`)
+parser.add_argument(
+    "--wandb",
+    action="store_true",
+    help="Log best_cost_history to Weights & Biases",
+)
+parser.add_argument(
+    "--wandb-project",
+    default="global-mppi",
+    help="W&B project name (default: global-mppi)",
+)
+parser.add_argument(
+    "--wandb-entity",
+    default=None,
+    help="W&B entity/team (default: your default entity)",
+)
+parser.add_argument(
+    "--wandb-key",
+    default=None,
+    help="W&B API key. Only needed the first time; afterwards it is cached.",
+)
+parser.add_argument(
+    "--headless",
+    action="store_true",
+    help="Run without a viewer window and record the rollout to a video "
+    "(uploaded to W&B when --wandb is set). Use on remote/headless machines.",
+)
+
 subparsers = parser.add_subparsers(
     dest="algorithm", help="Sampling algorithm (choose one)"
 )
@@ -40,6 +80,32 @@ subparsers.add_parser(
     "mppiksos", help="Model Predictive Path Integral Control with KSOS"
 )
 args = parser.parse_args()
+
+# Authenticate with Weights & Biases. The first time, prompt for an API key
+# (grab yours from https://wandb.ai/authorize); it is cached in ~/.netrc so
+# subsequent runs log in automatically.
+if args.wandb:
+    import wandb
+
+    def _wandb_logged_in() -> bool:
+        if os.environ.get("WANDB_API_KEY"):
+            return True
+        netrc = os.path.expanduser("~/.netrc")
+        try:
+            with open(netrc) as f:
+                return "api.wandb.ai" in f.read()
+        except OSError:
+            return False
+
+    if args.wandb_key:
+        wandb.login(key=args.wandb_key)
+    elif _wandb_logged_in():
+        wandb.login()
+    else:
+        key = getpass.getpass(
+            "Enter your W&B API key (from https://wandb.ai/authorize): "
+        ).strip()
+        wandb.login(key=key)
 
 # Set up the controller
 # Set the controller based on command-line arguments
@@ -157,5 +223,9 @@ for trial_idx in range(start_seed, 6):
         current_seed=trial_idx,
         max_cycles=100,
         current_task="pushT_ps4",
+        use_wandb=args.wandb,
+        wandb_project=args.wandb_project,
+        wandb_entity=args.wandb_entity,
+        headless=args.headless,
     )
     # ipdb.set_trace()
