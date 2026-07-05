@@ -23,6 +23,19 @@ dependencies = [
     "mujoco>=3.2.4",
     "mujoco-mjx>=3.2.4",
     "wandb>=0.16",
+    # Task/geometry math used by global_mppi.tasks
+    "jaxlie>=1.5.0",
+    # KernelSOS solver stack (imported by the ksos_tools submodule)
+    "cvxpy>=1.9.0",
+    "eigenpy>=3.13.0",
+    # Interactive debugging hook used by the example scripts
+    "ipdb>=0.13.13",
+    # ffmpeg binary for headless video recording / W&B video upload
+    "imageio-ffmpeg>=0.6.0",
+    # Optional NVIDIA Warp backend for mujoco-mjx (silences the
+    # "Failed to import warp" startup messages)
+    "warp-lang>=1.14.0",
+    "mujoco-warp>=3.10.0",
 ]
 
 [project.optional-dependencies]
@@ -70,7 +83,7 @@ ignore = [
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
-known-first-party = ["hydrax"]
+known-first-party = ["global_mppi"]
 split-on-trailing-comma = false
 
 [tool.ruff.format]
@@ -87,4 +100,4 @@ testpaths = [
 ]
 
 [tool.setuptools]
-packages = ["hydrax"]
+packages = ["global_mppi"]

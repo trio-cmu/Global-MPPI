@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 from mujoco import mjx
 import ipdb
-from hydrax.tasks.pusht import PushT
+from global_mppi.tasks.pusht import PushT
 
 
 def test_task() -> None:

@@ -12,4 +12,6 @@ MUJOCO_LOG.TXT
 # Run artifacts (videos, run logs, W&B run dirs)
 *.mp4
 *.log
+*.npy
+logs/
 wandb/

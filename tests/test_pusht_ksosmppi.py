@@ -3,14 +3,14 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 from mujoco import mjx
 import numpy as np
-# from hydrax.algs.cem import CEM
-from hydrax.algs.ksos import KSOS
-from hydrax.algs.mppi import MPPI
-from hydrax.algs import PredictiveSampling, MPPI, Evosax, DIAL, KSOS, MPPIKSOS
-from hydrax.tasks.pendulum import Pendulum
+# from global_mppi.algs.cem import CEM
+from global_mppi.algs.ksos import KSOS
+from global_mppi.algs.mppi import MPPI
+from global_mppi.algs import PredictiveSampling, MPPI, Evosax, DIAL, KSOS, MPPIKSOS
+from global_mppi.tasks.pendulum import Pendulum
 import time
 
-from hydrax.tasks.pusht import PushT
+from global_mppi.tasks.pusht import PushT
 import ipdb
 
 def test_open_loop() -> None:

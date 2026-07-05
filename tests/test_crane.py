@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 from mujoco import mjx
 
-from hydrax.tasks.crane import Crane
+from global_mppi.tasks.crane import Crane
 
 
 def test_crane() -> None:

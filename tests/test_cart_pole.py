@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 from mujoco import mjx
 
-from hydrax.tasks.cart_pole import CartPole
+from global_mppi.tasks.cart_pole import CartPole
 
 
 def test_cart_pole() -> None:

@@ -4,8 +4,8 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 from mujoco import mjx
 
-from hydrax.algs.evosax import Evosax
-from hydrax.tasks.pendulum import Pendulum
+from global_mppi.algs.evosax import Evosax
+from global_mppi.tasks.pendulum import Pendulum
 
 
 def test_cmaes() -> None:

@@ -4,16 +4,16 @@ import time
 import mujoco
 import numpy as np
 
-from hydrax import ROOT
-from hydrax.algs.predictive_sampling import PredictiveSampling
-from hydrax.simulation.asynchronous import (
+from global_mppi import ROOT
+from global_mppi.algs.predictive_sampling import PredictiveSampling
+from global_mppi.simulation.asynchronous import (
     SharedMemoryMujocoData,
     SharedMemoryNumpyArray,
     run_controller,
     run_interactive,
     run_simulator,
 )
-from hydrax.tasks.pendulum import Pendulum
+from global_mppi.tasks.pendulum import Pendulum
 
 
 def _write_to_shared_nparray(shared: SharedMemoryNumpyArray) -> None:

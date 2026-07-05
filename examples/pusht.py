@@ -7,15 +7,16 @@ import getpass
 # an offscreen GL backend. Select it BEFORE importing mujoco so the render
 # context is created correctly. EGL uses the GPU; fall back to `osmesa` (CPU)
 # by setting MUJOCO_GL yourself if EGL is unavailable.
-if "--headless" in sys.argv:
+# Headless is the default; only an explicit --no-headless opts out.
+if "--no-headless" not in sys.argv:
     os.environ.setdefault("MUJOCO_GL", "egl")
 
 import mujoco
 
 from evosax.algorithms.distribution_based.cma_es import CMA_ES
-from hydrax.algs import PredictiveSampling, MPPI, CEM, Evosax, DIAL, KSOS, MPPIKSOS
-from hydrax.simulation.deterministic import run_interactive
-from hydrax.tasks.pusht import PushT
+from global_mppi.algs import PredictiveSampling, MPPI, CEM, Evosax, DIAL, KSOS, MPPIKSOS
+from global_mppi.simulation.deterministic import run_interactive
+from global_mppi.tasks.pusht import PushT
 import ipdb
 import numpy as np
 """
@@ -33,8 +34,10 @@ parser = argparse.ArgumentParser(
 # `python pusht.py --wandb ps`)
 parser.add_argument(
     "--wandb",
-    action="store_true",
-    help="Log best_cost_history to Weights & Biases",
+    action=argparse.BooleanOptionalAction,
+    default=True,
+    help="Log best_cost_history to Weights & Biases "
+    "(on by default; use --no-wandb to disable)",
 )
 parser.add_argument(
     "--wandb-project",
@@ -43,8 +46,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--wandb-entity",
-    default=None,
-    help="W&B entity/team (default: your default entity)",
+    default="zhongqi2",
+    help="W&B entity/team (default: zhongqi2)",
 )
 parser.add_argument(
     "--wandb-key",
@@ -53,9 +56,11 @@ parser.add_argument(
 )
 parser.add_argument(
     "--headless",
-    action="store_true",
+    action=argparse.BooleanOptionalAction,
+    default=True,
     help="Run without a viewer window and record the rollout to a video "
-    "(uploaded to W&B when --wandb is set). Use on remote/headless machines.",
+    "(uploaded to W&B when --wandb is set). Use on remote/headless machines. "
+    "On by default; use --no-headless to open an interactive viewer.",
 )
 
 subparsers = parser.add_subparsers(

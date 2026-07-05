@@ -3,9 +3,9 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 from mujoco import mjx
 
-from hydrax.algs.dial import DIAL
-from hydrax.tasks.pendulum import Pendulum
-from hydrax.alg_base import Trajectory
+from global_mppi.algs.dial import DIAL
+from global_mppi.tasks.pendulum import Pendulum
+from global_mppi.alg_base import Trajectory
 import ipdb
 from pathlib import Path
 

@@ -4,9 +4,9 @@ from evosax.algorithms.distribution_based.cma_es import CMA_ES
 
 import mujoco
 import ipdb
-from hydrax.algs import CEM, MPPI, Evosax, PredictiveSampling, DIAL, MPPIKSOS
-from hydrax.simulation.deterministic import run_interactive
-from hydrax.tasks.cube import CubeRotation
+from global_mppi.algs import CEM, MPPI, Evosax, PredictiveSampling, DIAL, MPPIKSOS
+from global_mppi.simulation.deterministic import run_interactive
+from global_mppi.tasks.cube import CubeRotation
 
 """
 Run an interactive simulation of the cube rotation task.

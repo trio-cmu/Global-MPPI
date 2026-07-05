@@ -7,9 +7,9 @@ import mujoco
 import pytest
 from mujoco import mjx
 
-from hydrax import ROOT
-from hydrax.tasks.humanoid_mocap import HumanoidMocap
-from hydrax.tasks.humanoid_standup import HumanoidStandup
+from global_mppi import ROOT
+from global_mppi.tasks.humanoid_mocap import HumanoidMocap
+from global_mppi.tasks.humanoid_standup import HumanoidStandup
 
 
 def test_mjx_model() -> None:

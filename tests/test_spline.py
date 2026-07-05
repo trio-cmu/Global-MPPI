@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 import pytest
 
-from hydrax.utils.spline import get_interp_func
+from global_mppi.utils.spline import get_interp_func
 
 
 def test_zero_interp_func() -> None:

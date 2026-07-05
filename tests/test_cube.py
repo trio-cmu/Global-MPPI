@@ -6,8 +6,8 @@ import jax.numpy as jnp
 import mujoco
 from mujoco import mjx
 
-from hydrax import ROOT
-from hydrax.tasks.cube import CubeRotation
+from global_mppi import ROOT
+from global_mppi.tasks.cube import CubeRotation
 
 
 def test_mjx_model() -> None:
