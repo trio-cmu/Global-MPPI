@@ -40,6 +40,12 @@ parser.add_argument(
     "(on by default; use --no-wandb to disable)",
 )
 parser.add_argument(
+    "--ksos-solver",
+    choices=["Hypatia", "newton", "newton-rs"],
+    default="Hypatia",
+    help="KSOS solver used by MPPI-KSOS (default: Hypatia)",
+)
+parser.add_argument(
     "--wandb-project",
     default="global-mppi",
     help="W&B project name (default: global-mppi)",
@@ -188,6 +194,7 @@ elif args.algorithm == "mppiksos":
         plan_horizon=1.0,
         num_knots=6,
         iterations=5,
+        ksos_solver=args.ksos_solver,
     )
 
 # Run the interactive simulation

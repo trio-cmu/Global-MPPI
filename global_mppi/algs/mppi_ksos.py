@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Literal, Tuple
 import numpy as np
 import jax
@@ -9,7 +10,7 @@ from global_mppi.risk import RiskStrategy
 from global_mppi.task_base import Task
 import ipdb
 from mujoco import mjx
-from ksos_tools.solvers import newton
+from ksos_tools.solvers import hypatia, ksos
 from typing import Any, Literal, Tuple
 from scipy.stats import qmc
 from jax import lax
@@ -56,6 +57,7 @@ class MPPIKSOS(SamplingBasedController):
         num_knots: int = 4,
         iterations: int = 1,
         ctrl_name : str = "mppiksos",
+        ksos_solver: str = "Hypatia",
     ) -> None:
         """Initialize the controller.
 
@@ -108,9 +110,17 @@ class MPPIKSOS(SamplingBasedController):
         self.ksos_iterations = 100
         self.ksos_linesearch = True
         self.ksos_num_restart = 5
+        self.ksos_solver = ksos_solver
         # self.ksos_sampling = "linspace"
         self.ksos_sampling = "uniform" # for pushT
         self.decay_rate = 0.85  #  for pushT
+        self.hypatia_path = Path(__file__).resolve().parents[3] / "Hypatia.jl"
+        if self.ksos_solver == "Hypatia":
+            hypatia.initialize(
+                formulation="dual",
+                hypatia_path=self.hypatia_path,
+                warmup=True,
+            )
         
         self.debug = False
         self.is_lse_smoothing = True
@@ -390,39 +400,52 @@ class MPPIKSOS(SamplingBasedController):
 
         # ipdb.set_trace()
         n_samples = lse_costs.shape[0]
-        problem = newton.Problem(
-            lambd=self.ksos_lambda,
-            t=self.ksos_epsilon / max(n_samples, 1),
-            use_K=False,
-        )
-        problem.register_fixed_samples(
+        samples = np.asarray(
             knots_elites.reshape(n_samples, -1),
-            f_samples=lse_costs,
+            dtype=np.float64,
         )
-        # ipdb.set_trace()
-        success = problem.initialize_kernel(self.ksos_sigma, self.ksos_kernel)
-        if not success:
-            raise RuntimeError("Failed to initialize kernel")
+        sample_costs = np.asarray(lse_costs, dtype=np.float64).reshape(-1)
         try:
-            updated_knots, info = newton.damped_newton_advanced(
-                problem,
-                iterations=self.ksos_iterations,
-                verbose=False,
-                linesearch=self.ksos_linesearch,
-                return_B=False,
+            updated_knots, info = ksos.solve(
+                f=None,
+                samples=samples,
+                f_samples=sample_costs,
+                lambd=self.ksos_lambda,
+                sigma=float(self.ksos_sigma),
+                epsilon=self.ksos_epsilon,
+                kernel=self.ksos_kernel,
+                solver=self.ksos_solver,
+                hypatia_options={
+                    "formulation": "dual",
+                    "hypatia_path": self.hypatia_path,
+                    "persistent": True,
+                },
             )
-            updated_knots = updated_knots.reshape(self.num_knots, self.task.model.nu).astype(np.float32)
-
-        except Exception:
-            print("damped_newton_advanced failed !!!")
-            return params.mean
+            if updated_knots is None:
+                raise RuntimeError(
+                    info.get("status", "Hypatia returned no solution")
+                )
+            updated_knots = np.asarray(
+                updated_knots,
+                dtype=np.float32,
+            ).reshape(
+                self.num_knots,
+                self.task.model.nu,
+            )
+        except Exception as error:
+            print(f"Hypatia failed: {error}")
+            return params
 
         # ps sampling
         # print("lse_cost",params.lse_cost)
         # jax.debug.print("lse_cost: {}", params.lse_cost)
         # updated_knots = params.knots[0] 
         # ipdb.set_trace()
-        return params.replace(ksos_mean=updated_knots,ksos_result_cost=info['cost'], lse_cost = lse_costs)
+        return params.replace(
+            ksos_mean=updated_knots,
+            ksos_result_cost=info["cost"],
+            lse_cost=lse_costs,
+        )
 
     def update_params(
         self, params: MPPIKSOSParams, rollouts: Trajectory

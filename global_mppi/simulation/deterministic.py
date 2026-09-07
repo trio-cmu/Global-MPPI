@@ -395,6 +395,7 @@ def run_interactive(  # noqa: PLR0912, PLR0915
                 
                 if cycle_count % 1 == 0:          # 5 for pushT with ksos
                     total_ksos_rollout_time = 0.0
+                    total_ksos_solver_time = 0.0
                     total_other_time = 0.0
                     total_all_time = 0.0
                     for iter in range(controller.ksos_num_restart):
@@ -445,7 +446,9 @@ def run_interactive(  # noqa: PLR0912, PLR0915
                             # ipdb.set_trace()
                             controller.ksos_sigma = np.exp(res.x[0])
                             print(f"Auto-calibrated sigma: {controller.ksos_sigma}")
+                        ksos_solver_start = time.perf_counter()
                         policy_params = controller.solve_ksos(policy_params)
+                        ksos_solver_time = time.perf_counter() - ksos_solver_start
             
                         # ipdb.set_trace()
                         policy_params = policy_params.replace(mean=policy_params.ksos_mean)
@@ -458,6 +461,7 @@ def run_interactive(  # noqa: PLR0912, PLR0915
                         iter_total_time = time.perf_counter() - iter_start_time
 
                         total_ksos_rollout_time += ksos_rollout_time
+                        total_ksos_solver_time += ksos_solver_time
 
                         total_other_time += other_time
 
@@ -475,9 +479,11 @@ def run_interactive(  # noqa: PLR0912, PLR0915
                         f"cycle={cycle_count}, "
                         f"num_restart={controller.ksos_num_restart}, "
                         f"total_ksos_rollout_time={total_ksos_rollout_time:.6f}, "
+                        f"total_ksos_solver_time={total_ksos_solver_time:.6f}, "
                         f"total_other_time={total_other_time:.6f}, "
                         f"total_all_time={total_all_time:.6f}, "
                         f"avg_ksos_rollout_time={total_ksos_rollout_time / controller.ksos_num_restart:.6f}, "
+                        f"avg_ksos_solver_time={total_ksos_solver_time / controller.ksos_num_restart:.6f}, "
                         f"avg_other_time={total_other_time / controller.ksos_num_restart:.6f}, "
                         f"avg_all_time={total_all_time / controller.ksos_num_restart:.6f}, "
                         f"sigma={getattr(controller, 'ksos_sigma', None)}\n"
@@ -486,6 +492,7 @@ def run_interactive(  # noqa: PLR0912, PLR0915
                     f"[Timing total] cycle={cycle_count}, "
                     f"num_restart={controller.ksos_num_restart}, "
                     f"total_ksos_rollout={total_ksos_rollout_time:.3f}s, "
+                    f"total_ksos_solver={total_ksos_solver_time:.3f}s, "
                     f"total_other={total_other_time:.3f}s, "
                     f"total_all={total_all_time:.3f}s"
                 )
