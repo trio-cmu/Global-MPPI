@@ -78,6 +78,15 @@ def rollout_push(
     pusher_qadr = model.jnt_qposadr[pusher_qpos_id]
     box_qadr = model.jnt_qposadr[box_qpos_id]
 
+    # Start at rest at the first commanded position: without this, the
+    # pusher starts at qpos=0 while the position actuator immediately
+    # targets u_sequence[0], so kp snaps it there on step one (a visible
+    # jump/impulse at the start of the video instead of starting at rest).
+    data.qpos[pusher_qadr] = u_sequence[0]
+    data.qvel[:] = 0.0
+    data.ctrl[0] = u_sequence[0]
+    mujoco.mj_forward(model, data)
+
     pusher_x_hist = []
     box_x_hist = []
     ctrl_hist = []
@@ -194,6 +203,18 @@ if __name__ == "__main__":
     smooth_model = mujoco.MjModel.from_xml_string(smooth_xml)
     smooth_data = mujoco.MjData(smooth_model)
 
+    # ------------------------------------------------------------
+    # PushT task's actual contact model (global_mppi/models/pusht/pusht.xml)
+    # ------------------------------------------------------------
+    pusht_xml = make_1d_push_xml(
+        margin=0.0,
+        solref="0.02 1",
+        solimp="0.0 0.95 0.005 0.5 2",
+    )
+
+    pusht_model = mujoco.MjModel.from_xml_string(pusht_xml)
+    pusht_data = mujoco.MjData(pusht_model)
+
     # Example rollout
     theta = np.array([-0.3, 0.95])
     U = make_time_constant_position_control(
@@ -208,20 +229,27 @@ if __name__ == "__main__":
     print("Running smooth contact rollout...")
     smooth_out = rollout_push(smooth_model, smooth_data, U, render=False)
 
+    print("Running pushT contact rollout...")
+    pusht_out = rollout_push(pusht_model, pusht_data, U, render=False)
+
     print("Hard final box x:", hard_out["box_x"][-1])
     print("Smooth final box x:", smooth_out["box_x"][-1])
+    print("PushT final box x:", pusht_out["box_x"][-1])
 
     print("Hard cost:", trajectory_cost(theta, hard_model, hard_data))
     print("Smooth cost:", trajectory_cost(theta, smooth_model, smooth_data))
+    print("PushT cost:", trajectory_cost(theta, pusht_model, pusht_data))
     plot_box_position(
         {
             "hard contact": hard_out["box_x"],
             "smooth contact": smooth_out["box_x"],
+            "pushT contact": pusht_out["box_x"],
         },
         hard_model.opt.timestep,
     )
 
     # Render one rollout
     print("Rendering smooth contact rollout...")
-    rollout_push(smooth_model, smooth_data, U, render=True)
+    # rollout_push(smooth_model, smooth_data, U, render=True)
     # rollout_push(hard_model, hard_data, U, render=True)
+    rollout_push(pusht_model, pusht_data, U, render=True)
