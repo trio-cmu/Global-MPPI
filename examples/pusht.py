@@ -42,8 +42,8 @@ parser.add_argument(
 parser.add_argument(
     "--ksos-solver",
     choices=["Hypatia", "newton", "newton-rs"],
-    default="Hypatia",
-    help="KSOS solver used by MPPI-KSOS (default: Hypatia)",
+    default="newton-rs",
+    help="KSOS solver used by MPPI-KSOS (default: newton-rs)",
 )
 parser.add_argument(
     "--wandb-project",

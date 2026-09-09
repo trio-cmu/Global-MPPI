@@ -349,7 +349,7 @@ def run_interactive(  # noqa: PLR0912, PLR0915
             wandb_run = wandb.init(
                 project=wandb_project,
                 entity=wandb_entity,
-                name=f"{current_task}_{controller.ctrl_name}_seed{current_seed}",
+                name=f"{current_task}_{controller.ctrl_name}_seed{current_seed}_{RUN_TIMESTAMP}",
                 group=f"{current_task}_{controller.ctrl_name}",
                 reinit=True,
                 config={
@@ -496,11 +496,10 @@ def run_interactive(  # noqa: PLR0912, PLR0915
                     f"total_other={total_other_time:.3f}s, "
                     f"total_all={total_all_time:.3f}s"
                 )
-            # data logging
+            # data logging: rollouts_best (from jit_optimize) is already the
+            # rollout of params.mean, so its summed cost is the "best cost" -
+            # no need to re-roll-out via get_cost_with_best_samples.
             best_cost = rollouts_best.costs.sum()
-
-            # evaluate best cost with best samples
-            best_cost, best_trace = controller.get_cost_with_best_samples(mjx_data, policy_params)
             # policy_params = policy_params.replace(best_cost=best_cost, best_trace=best_trace)
             if controller.ctrl_name == "mppiksos":
                 # policy_params = policy_params.replace(mean=policy_params.ksos_mean)

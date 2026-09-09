@@ -57,7 +57,7 @@ class MPPIKSOS(SamplingBasedController):
         num_knots: int = 4,
         iterations: int = 1,
         ctrl_name : str = "mppiksos",
-        ksos_solver: str = "Hypatia",
+        ksos_solver: str = "newton-rs",
     ) -> None:
         """Initialize the controller.
 
@@ -123,7 +123,7 @@ class MPPIKSOS(SamplingBasedController):
             )
         
         self.debug = False
-        self.is_lse_smoothing = True
+        self.is_lse_smoothing = False
 
     def init_params(
         self, initial_knots: jax.Array = None, seed: int = 0
