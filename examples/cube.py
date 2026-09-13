@@ -3,8 +3,7 @@ import argparse
 from evosax.algorithms.distribution_based.cma_es import CMA_ES
 
 import mujoco
-import ipdb
-from global_mppi.algs import CEM, MPPI, Evosax, PredictiveSampling, DIAL, MPPIKSOS
+from global_mppi.algs import CEM, MPPI, Evosax, PredictiveSampling, DIAL, GlobalMPPI
 from global_mppi.simulation.deterministic import run_interactive
 from global_mppi.tasks.cube import CubeRotation
 
@@ -30,7 +29,7 @@ subparsers.add_parser("mppi", help="Model Predictive Path Integral Control")
 subparsers.add_parser("cem", help="Cross-Entropy Method")
 subparsers.add_parser("cmaes", help="CMA-ES")
 subparsers.add_parser("dial", help="DIAL")
-subparsers.add_parser("mppiksos", help="MPPI-KSOS")
+subparsers.add_parser("globalmppi", help="GlobalMPPI")
 args = parser.parse_args()
 
 # Set the controller based on command-line arguments
@@ -90,9 +89,9 @@ elif args.algorithm == "dial":
         spline_type="zero",
         num_knots=4,
     )
-elif args.algorithm == "mppiksos":
-    print("Running MPPI-KSOS")
-    ctrl = MPPIKSOS(
+elif args.algorithm == "globalmppi":
+    print("Running GlobalMPPI")
+    ctrl = GlobalMPPI(
         task,
         num_samples=128,
         noise_level=0.1,
@@ -111,11 +110,8 @@ mj_data = mujoco.MjData(mj_model)
 
 # Run the interactive simulation
 start_seed = 0
-set_random_pos = True
 for trial_idx in range(start_seed, 6):
     mj_model = task.mj_model
-    # set large friction for qusial static pushing
-    # mj_model.geom_friction[:] = np.array([5.0, 0.005, 0.0001])
     mj_data = mujoco.MjData(mj_model)
     qpos = [
     -0.8, 0., -0.8, -0.8, -0.8,

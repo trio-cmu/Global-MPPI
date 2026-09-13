@@ -10,7 +10,6 @@ from mujoco import mjx
 from global_mppi.risk import AverageCost, RiskStrategy
 from global_mppi.task_base import Task
 from global_mppi.utils.spline import get_interp_func
-import ipdb
 
 @dataclass
 class Trajectory:
@@ -190,18 +189,9 @@ class SamplingBasedController(ABC):
                 knots, self.task.u_min, self.task.u_max
             )  # (num_rollouts, num_knots, nu)
 
-            # Roll out the control sequences, applying domain randomizations and
-            # combining costs using self.risk_strategy.
-            rng, dr_rng = jax.random.split(params.rng)
-            # rollouts = self.rollout_with_randomizations(
-            #     state, new_tk, knots, dr_rng
-            # )
+            # Roll out the control sequences.
+            rng, _ = jax.random.split(params.rng)
             rollouts = self.rollout(state, new_tk, knots)
-            # compute the control sequence from the knots
-            # best_costs = self.get_cost_with_best_samples(
-            #     state, params, new_tk, knots
-            # )
-            # jax.debug.print("rng!!!! {}", rng)
             params = params.replace(rng=rng)
 
             # Update the policy parameters based on the combined costs
@@ -223,36 +213,23 @@ class SamplingBasedController(ABC):
         self,
         state: mjx.Data,
         params: Any,
-        # tk: jax.Array,
     ) -> Tuple[jax.Array, jax.Array]:
         """Compute rollout costs for the best samples.
 
         Args:
             state: The initial state x₀.
             params: The policy parameters.
-            tk: The knot times of the control spline, (num_knots,).
-            knots: The control spline knots, (num rollouts, num_knots, nu).
-        """  
+        """
         # Evaluate the controller's current mean as the "best" knot
         # sequence. `params.mean` has shape (num_knots, nu) so we add a
         # leading axis to make it (1, num_knots, nu) for the interp func and
         # eval_rollouts which expect a batch dimension.
-        if self.ctrl_name == "mppiksos":
-            # best_knots = params.ksos_mean[None, ...]  # (1, num_knots, nu)
-            best_knots = params.mean[None, ...]  # (1, num_knots, nu)
-        else:
-            best_knots = params.mean[None, ...]  # (1, num_knots, nu)
+        best_knots = params.mean[None, ...]  # (1, num_knots, nu)
         tq = jnp.linspace(params.tk[0], params.tk[-1], self.ctrl_steps)
         best_controls = self.interp_func(tq, params.tk, best_knots)  # (num_rollouts, H, nu)
         state_final, best_rollouts = self.eval_rollouts(self.model, state, best_controls, best_knots)
         best_costs = jnp.sum(best_rollouts.costs, axis=1)
 
-        # ipdb.set_trace()
-        # jax.debug.print("best_knots!!!! {}", best_knots.shape)
-        # jax.debug.print("knots!!!! {}", knots.shape)
-        # jax.debug.print("best_controls!!!! {}", best_controls.shape)
-        # jax.debug.print("best_rollouts!!!! {}", best_rollouts.costs.shape)
-        
         return best_costs, best_rollouts.trace_sites
     
     def rollout(
@@ -291,7 +268,6 @@ class SamplingBasedController(ABC):
         states = jax.vmap(lambda _, x: x, in_axes=(0, None))(
             jnp.arange(self.num_randomizations), state
         )
-        # jax.debug.print("self.num_randomizations!!!! {}", self.num_randomizations)
         if self.num_randomizations > 1:
             # Randomize the initial states for each domain randomization
             subrngs = jax.random.split(rng, self.num_randomizations)
@@ -299,22 +275,15 @@ class SamplingBasedController(ABC):
                 states, subrngs
             )
             states = states.tree_replace(randomizations)
-        
-        # jax.debug.print("num_rollouts!!!! {}", self.num_rollouts)
+
         # compute the control sequence from the knots
         tq = jnp.linspace(tk[0], tk[-1], self.ctrl_steps)
-        # jax.debug.print("tq!!!! {}", tq.shape)
-        # jax.debug.print("tk!!!! {}", tk.shape)
-        # jax.debug.print("tq!!!! {}", tq)
-        # jax.debug.print("tk!!!! {}", tk)
         controls = self.interp_func(tq, tk, knots)  # (num_rollouts, H, nu)
-        # jax.debug.print("controls!!!! {}", controls.shape)
         # Apply the control sequences, parallelized over both rollouts and
         # domain randomizations.
         _, rollouts = jax.vmap(
             self.eval_rollouts, in_axes=(self.randomized_axes, 0, None, None)
         )(self.model, states, controls, knots)
-        # jax.debug.print("rollouts!!!! {}", rollouts.costs.shape)
         # Combine the costs from different domain randomizations using the
         # specified risk strategy.
         costs = self.risk_strategy.combine_costs(rollouts.costs)

@@ -47,8 +47,8 @@ installed separately, because it is a git submodule rather than a PyPI package.
 ## Running the examples
 
 The example scripts live in `examples/`. Each takes an algorithm as a
-positional argument (`ps`, `mppi`, `cem`, `cmaes`, `dial`, `ksos`,
-`mppiksos`, ...).
+positional argument (`ps`, `mppi`, `cem`, `cmaes`, `dial`,
+`globalmppi`, ...).
 
 ```bash
 source .venv/bin/activate
@@ -82,3 +82,21 @@ Pass `--wandb-entity` (or set `export WANDB_ENTITY=<your-entity>`) if your W&B
 account has no default entity, otherwise `wandb.init` errors with
 `entity not specified`. The first run prompts for your API key (from
 https://wandb.ai/authorize) and caches it in `~/.netrc`.
+
+## Citation
+
+If you use this codebase, please cite:
+
+```bibtex
+@article{wei2026global,
+  title={Global Sampling-Based Trajectory Optimization for Contact-Rich Manipulation via {K}ernel{SOS}},
+  author={Wei, Zhongqi and D{\"u}mbgen, Frederike},
+  journal={arXiv preprint arXiv:2604.27175},
+  year={2026}
+}
+```
+
+## Acknowledgements
+
+This codebase builds on [hydrax](https://github.com/vincekurtz/hydrax), a
+library for sampling-based MPC in MuJoCo MJX.

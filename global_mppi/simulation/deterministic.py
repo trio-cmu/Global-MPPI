@@ -5,7 +5,6 @@ import os
 
 import jax
 import jax.numpy as jnp
-import matplotlib.pyplot as plt
 import mujoco
 import mujoco.viewer
 import numpy as np
@@ -19,12 +18,8 @@ from global_mppi.utils.video import VideoRecorder
 # run shares the same log subfolder: logs/<task>_<algorithm>/<RUN_TIMESTAMP>/.
 RUN_TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-from ksos_tools.solvers import ksos
-from ksos_tools.solvers import external, newton
-from ksos_tools.solvers.problem import LLT_METHOD, Problem, decompose, kernel_function
 from scipy.optimize import minimize
 
-import ipdb
 """
 Tools for deterministic (synchronous) simulation, with the simulator and
 controller running one after the other in the same thread.
@@ -73,13 +68,7 @@ def rbf_kernel(X1, X2=None, sigma=1.0):
 def neg_lml(log_sigma, X, y):
     lam = 1e-6
     sigma = np.exp(log_sigma)
-    # print("sigma in neg_lml:", sigma)
     K = rbf_kernel(X, X, sigma)
-    # K = kernel_function(X, X, sigma, "Gauss")
-    # K = np.array(
-    #     [[kernel_function(xi, xj, sigma, "Laplace") for xi in X] for xj in X]
-    # )
-    # ipdb.set_trace()
     Ky = K + lam * np.eye(len(X))
 
     try:
@@ -199,20 +188,17 @@ def run_interactive(  # noqa: PLR0912, PLR0915
         mocap_pos=mj_data.mocap_pos, mocap_quat=mj_data.mocap_quat
     )
     policy_params = controller.init_params(initial_knots=initial_knots, seed=current_seed)
-    # jit_optimize = jax.jit(controller.optimize)
-    # jit_optimize = jax.jit(controller.optimize_single_loop)
     jit_interp_func = jax.jit(controller.interp_func)
     
     # Warm-up the controller
     print("Jitting the controller...")
     st = time.time()
 
-    if controller.ctrl_name == "mppiksos":
+    if controller.ctrl_name == "globalmppi":
         jit_ksos_rollout = jax.jit(controller.ksos_rollout)
         policy_params = jit_ksos_rollout(mjx_data, policy_params)
         policy_params = jit_ksos_rollout(mjx_data, policy_params)
-        
-        # jit_optimize = jax.jit(controller.optimize_single_loop)
+
         jit_optimize = jax.jit(controller.optimize)
         policy_params, rollouts, rollouts_best = jit_optimize(mjx_data, policy_params)
         policy_params, rollouts, rollouts_best = jit_optimize(mjx_data, policy_params)
@@ -302,7 +288,6 @@ def run_interactive(  # noqa: PLR0912, PLR0915
         # Set up rollout traces
         if show_traces:
             num_trace_sites = len(controller.task.trace_site_ids)
-            # ipdb.set_trace()
             for i in range(
                 num_trace_sites * num_traces * controller.ctrl_steps
             ):
@@ -379,19 +364,14 @@ def run_interactive(  # noqa: PLR0912, PLR0915
 
             # Do a replanning step
             plan_start = time.time()
-            
-            # disable lse smoothing after convergence
-            # if cycle_count >= 48:
-            #     print("Disabling LSE smoothing after convergence")
-            #     controller.is_lse_smoothing = False
-            
+
             # run ksos update to initilize the mean
-            if controller.ctrl_name == "mppiksos":
+            if controller.ctrl_name == "globalmppi":
                 enable_auto_calib = True          # run ksos update
                 
                 log_dir = "test/log"
                 os.makedirs(log_dir, exist_ok=True)
-                timing_file = os.path.join(log_dir, "mppiksos_timing.txt")
+                timing_file = os.path.join(log_dir, "globalmppi_timing.txt")
                 
                 if cycle_count % 1 == 0:          # 5 for pushT with ksos
                     total_ksos_rollout_time = 0.0
@@ -443,14 +423,12 @@ def run_interactive(  # noqa: PLR0912, PLR0915
                                 method="L-BFGS-B",
                                 bounds=[(np.log(1e-2), np.log(30.0))],
                             )
-                            # ipdb.set_trace()
                             controller.ksos_sigma = np.exp(res.x[0])
                             print(f"Auto-calibrated sigma: {controller.ksos_sigma}")
                         ksos_solver_start = time.perf_counter()
                         policy_params = controller.solve_ksos(policy_params)
                         ksos_solver_time = time.perf_counter() - ksos_solver_start
-            
-                        # ipdb.set_trace()
+
                         policy_params = policy_params.replace(mean=policy_params.ksos_mean)
 
                         # run MPPI optimization loop as a local search
@@ -471,9 +449,9 @@ def run_interactive(  # noqa: PLR0912, PLR0915
             
             # ============================================================
             # Save total timing over all restarts / iterations
-            # (only mppiksos populates these timing variables)
+            # (only globalmppi populates these timing variables)
             # ============================================================
-            if controller.ctrl_name == "mppiksos":
+            if controller.ctrl_name == "globalmppi":
                 with open(timing_file, "a") as f:
                     f.write(
                         f"cycle={cycle_count}, "
@@ -500,17 +478,10 @@ def run_interactive(  # noqa: PLR0912, PLR0915
             # rollout of params.mean, so its summed cost is the "best cost" -
             # no need to re-roll-out via get_cost_with_best_samples.
             best_cost = rollouts_best.costs.sum()
-            # policy_params = policy_params.replace(best_cost=best_cost, best_trace=best_trace)
-            if controller.ctrl_name == "mppiksos":
-                # policy_params = policy_params.replace(mean=policy_params.ksos_mean)
+            if controller.ctrl_name == "globalmppi":
                 print(f"\nCycle {cycle_count}: Best cost: {best_cost}")
                 best_cost_history.append(best_cost)
                 error_history.append(best_sample_cost - best_cost)
-                # print(f"\nCycle {cycle_count}: Best cost: {policy_params.best_cost}, Best sample: {policy_params.lse_cost[0]}")
-            
-                # best_cost_history.append(policy_params.best_cost)
-                # best_sample_history.append(policy_params.lse_cost[0])
-                # error_history.append(policy_params.lse_cost[0]- policy_params.best_cost)
             else:
                 costs = np.sum(rollouts.costs, axis=1)  # sum over time steps
                 print(f"\nCycle {cycle_count}: Best cost: {best_cost}, Best sample: {np.min(costs)}")
@@ -538,7 +509,6 @@ def run_interactive(  # noqa: PLR0912, PLR0915
                     out_sample_npy = os.path.join(logs_dir, f"{current_task}_{controller.ctrl_name}_best_sample_history_seed{current_seed}.npy")
                     out_pos_npy = os.path.join(logs_dir, f"{current_task}_{controller.ctrl_name}_robot_pos_history_seed{current_seed}.npy")
                     # Save arrays separately for downstream analysis
-                    # ipdb.set_trace()
                     np.save(
                         out_pos_npy,
                         np.asarray(robot_pos_history, dtype=float),
@@ -549,8 +519,7 @@ def run_interactive(  # noqa: PLR0912, PLR0915
                     )
                 if cycle_count >= max_cycles:
                     print(policy_params.mean[None, ...])
-                    # ipdb.set_trace()
-                    break    
+                    break
                 
             plan_time = time.time() - plan_start
             print(f"\nCycle {cycle_count}: plan time: {plan_time:.4f}s"),
@@ -559,7 +528,7 @@ def run_interactive(  # noqa: PLR0912, PLR0915
             # Visualize the rollouts
             if show_traces:
                 ii = 0
-                if controller.ctrl_name == "mppiksos":
+                if controller.ctrl_name == "globalmppi":
                     for k in range(num_trace_sites):
                         for i in range(num_traces):
                             for j in range(controller.ctrl_steps):
@@ -606,8 +575,7 @@ def run_interactive(  # noqa: PLR0912, PLR0915
                             policy_params.best_trace[1, j + 1, 1],
                         )
                         ii += 1
-                    
-            # ipdb.set_trace()
+
             # Update the ghost reference
             if reference is not None:
                 t_ref = mj_data.time * reference_fps

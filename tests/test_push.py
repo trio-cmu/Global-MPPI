@@ -1,115 +1,54 @@
 import jax
 import jax.numpy as jnp
-import matplotlib.pyplot as plt
 from mujoco import mjx
-import numpy as np
+
 from global_mppi.algs.cem import CEM
-from global_mppi.algs.ksos import KSOS
-from global_mppi.algs.mppi import MPPI
-from global_mppi.tasks.pendulum import Pendulum
-import time
-
 from global_mppi.tasks.pusht import PushT
-import ipdb
 
-def test_open_loop() -> None:
-    """Use CEM for open-loop push task."""
-    # Task and optimizer setup
+
+def test_cem_open_loop() -> None:
+    """Run CEM open-loop on the push-T task and check the cost converges."""
     task = PushT()
-    # opt = CEM(
-    #     task,
-    #     num_samples=1000,
-    #     num_elites=4,
-    #     sigma_start=1.0,
-    #     sigma_min=0.1,
-    #     plan_horizon=1.0,
-    #     spline_type="zero",
-    #     num_knots=11,
-    # )
-    opt = MPPI(
+    opt = CEM(
         task,
-        num_samples=250,
-        noise_level=0.1,
-        temperature=0.1,
-        spline_type="cubic",
+        num_samples=1000,
+        num_elites=4,
+        sigma_start=1.0,
+        sigma_min=0.1,
         plan_horizon=1.0,
-        num_knots=6,
+        spline_type="zero",
+        num_knots=11,
     )
-    # opt = KSOS(
-    #     task,
-    #     num_samples=30,
-    #     noise_level=0.3,
-    #     temperature=0.1,
-    #     spline_type="cubic",
-    #     plan_horizon=1.0,
-    #     num_knots=6,
-    #     iterations = 5,
-    # )
     jit_opt = jax.jit(opt.optimize)
 
-    # Initialize the system state and policy parameters
     state = mjx.make_data(task.model)
     params = opt.init_params()
 
-    for _ in range(10000):
-        # Do an optimization step
-        t0 = time.perf_counter()
-        params, rollouts = jit_opt(state, params)
-        # params, rollouts = jax.block_until_ready((params, rollouts))
-        # mean_np = np.asarray(params.mean, copy=True)
-        # mean_np[0] = 123.0
-        # params = params.replace(mean=jax.device_put(mean_np))
-        dt = time.perf_counter() - t0
-        print(f"jit_opt step took {dt * 1e3:.2f} ms")
+    for _ in range(300):
+        params, rollouts, rollouts_best = jit_opt(state, params)
 
-    # Roll out the solution, check that it's good enough
+    # Roll out the solution and check that it's good enough.
     knots = params.mean[None]
     tk = jnp.linspace(0.0, opt.plan_horizon, opt.num_knots)
     tq = jnp.linspace(0.0, opt.plan_horizon - opt.dt, opt.ctrl_steps)
     controls = opt.interp_func(tq, tk, knots)
-    states, final_rollout = jax.jit(opt.eval_rollouts)(
+    _, final_rollout = jax.jit(opt.eval_rollouts)(
         task.model, state, controls, knots
     )
-    theta = states.qpos[0, :, 0]
-    theta_dot = states.qvel[0, :, 0]
 
     total_cost = jnp.sum(final_rollout.costs[0])
     assert total_cost <= 9.0
     assert jnp.all(params.cov >= opt.sigma_min)
 
-    if __name__ == "__main__":
-        # Plot the solution
-        _, ax = plt.subplots(3, 1, sharex=True)
-        times = jnp.arange(opt.ctrl_steps) * task.dt
-
-        ax[0].plot(times, theta)
-        ax[0].set_ylabel(r"$\theta$")
-
-        ax[1].plot(times, theta_dot)
-        ax[1].set_ylabel(r"$\dot{\theta}$")
-
-        ax[2].step(times, final_rollout.controls[0], where="post")
-        ax[2].axhline(-1.0, color="black", linestyle="--")
-        ax[2].axhline(1.0, color="black", linestyle="--")
-        ax[2].set_ylabel("u")
-        ax[2].set_xlabel("Time (s)")
-
-        time_samples = jnp.linspace(0, times[-1], 100)
-        controls = jax.vmap(opt.get_action, in_axes=(None, 0))(
-            params, time_samples
-        )
-        ax[2].plot(time_samples, controls, color="gray", alpha=0.5)
-
-        plt.show()
-
 
 def test_explore_fraction() -> None:
     """Unit test for sampling controls with different explore_fraction values.
 
-    This test uses the Pendulum task as a dummy task to verify:
+    Verifies that:
       - The overall controls array shape is correct.
       - The split between main and exploration samples is as expected.
     """
+    task = PushT()
     num_samples = 10
     num_elites = 2
     sigma_start = 1.0
@@ -117,7 +56,6 @@ def test_explore_fraction() -> None:
 
     # Test different fractions: no exploration, partial exploration, full exploration.
     for explore_fraction in [0.0, 0.3, 0.5, 0.75, 1.0]:
-        task = Pendulum()
         opt = CEM(
             task=task,
             num_samples=num_samples,
@@ -130,7 +68,7 @@ def test_explore_fraction() -> None:
             num_knots=11,
         )
         params = opt.init_params(seed=42)
-        controls, new_params = opt.sample_knots(params)
+        controls, _ = opt.sample_knots(params)
 
         # Check the overall shape of the controls array.
         expected_shape = (num_samples, opt.num_knots, task.model.nu)
@@ -165,5 +103,5 @@ def test_explore_fraction() -> None:
 
 
 if __name__ == "__main__":
-    test_open_loop()
-    # test_explore_fraction()
+    test_cem_open_loop()
+    test_explore_fraction()

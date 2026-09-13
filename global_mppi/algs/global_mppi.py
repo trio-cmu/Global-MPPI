@@ -1,22 +1,17 @@
-from pathlib import Path
-from typing import Literal, Tuple
+from typing import Any, Literal, Tuple
 import numpy as np
 import jax
 import jax.numpy as jnp
 from flax.struct import dataclass
-# jax.config.update("jax_disable_jit", True)
 from global_mppi.alg_base import SamplingBasedController, SamplingParams, Trajectory
 from global_mppi.risk import RiskStrategy
 from global_mppi.task_base import Task
-import ipdb
 from mujoco import mjx
-from ksos_tools.solvers import hypatia, ksos
-from typing import Any, Literal, Tuple
-from scipy.stats import qmc
+from ksos_tools.solvers import ksos
 from jax import lax
 
 @dataclass
-class MPPIKSOSParams(SamplingParams):
+class GlobalMPPIParams(SamplingParams):
     """Policy parameters for model-predictive path integral control.
 
     Same as SamplingParams, but with a different name for clarity.
@@ -34,7 +29,7 @@ class MPPIKSOSParams(SamplingParams):
     ksos_result_cost: jax.Array
     ksos_trace: jax.Array
 
-class MPPIKSOS(SamplingBasedController):
+class GlobalMPPI(SamplingBasedController):
     """Model-predictive path integral control.
 
     Implements "MPPI-generic" as described in https://arxiv.org/abs/2409.07563.
@@ -56,7 +51,7 @@ class MPPIKSOS(SamplingBasedController):
         spline_type: Literal["zero", "linear", "cubic"] = "zero",
         num_knots: int = 4,
         iterations: int = 1,
-        ctrl_name : str = "mppiksos",
+        ctrl_name : str = "globalmppi",
         ksos_solver: str = "newton-rs",
     ) -> None:
         """Initialize the controller.
@@ -95,50 +90,43 @@ class MPPIKSOS(SamplingBasedController):
         
         # lse parameters
         self.lse_num_samples = 100
-  
         self.lse_smoothing_sigma = jnp.array([0.3, 0.2, 0.1, 0.05, 0.001])
-        # self.lse_smoothing_sigma = jnp.array([0.4, 0.2, 0.1, 0.05, 0.0025])
         self.lse_lambda = 0.1
-        
+
         # ksos parameters
-        self.ksos_num_samples = 256 # 256
-        self.ksos_lambda = 1e-5 # 1e-3
-        self.ksos_sigma = 0.01 # 0.1
-        self.ksos_epsilon = 1e-3
-        self.ksos_kernel = "Laplace" 
-        # self.ksos_kernel = "Gauss"
+        self.ksos_num_samples = 256
+        self.elite_num = 80
+        self.ksos_lambda = 1e-5
+        self.ksos_sigma = 0.01
+        self.ksos_epsilon = 1e-2
+        self.ksos_kernel = "Laplace"
         self.ksos_iterations = 100
         self.ksos_linesearch = True
         self.ksos_num_restart = 5
         self.ksos_solver = ksos_solver
-        # self.ksos_sampling = "linspace"
-        self.ksos_sampling = "uniform" # for pushT
-        self.decay_rate = 0.85  #  for pushT
-        self.hypatia_path = Path(__file__).resolve().parents[3] / "Hypatia.jl"
-        if self.ksos_solver == "Hypatia":
-            hypatia.initialize(
-                formulation="dual",
-                hypatia_path=self.hypatia_path,
-                warmup=True,
-            )
-        
-        self.debug = False
-        self.is_lse_smoothing = False
+        self.ksos_sampling = "uniform"
+        self.decay_rate = 0.85
+        self.is_lse_smoothing = True
 
     def init_params(
         self, initial_knots: jax.Array = None, seed: int = 0
-    ) -> MPPIKSOSParams:
-        """Initialize the policy parameters."""
+    ) -> GlobalMPPIParams:
+        """Initialize the policy parameters, extending the base params with the
+        extra fields GlobalMPPI needs to track the KSOS/LSE optimization state
+        (iteration counter, LSE-smoothed costs, KSOS mean and trace)."""
         _params = super().init_params(initial_knots, seed)
         iter = 0
         lse_cost = jnp.array(0.0)
         cost = jnp.array(0.0)
         ksos_mean = jnp.zeros_like(_params.mean)
         ksos_result_cost = jnp.array(0.0)
-        return MPPIKSOSParams(tk=_params.tk, mean=_params.mean, rng=_params.rng, iter=iter, lse_cost=lse_cost, cost = cost, ksos_mean=ksos_mean, ksos_result_cost = ksos_result_cost, knots=None, best_cost= _params.best_cost, ksos_trace=None,best_trace=_params.best_trace)
+        return GlobalMPPIParams(tk=_params.tk, mean=_params.mean, rng=_params.rng, iter=iter, lse_cost=lse_cost, cost = cost, ksos_mean=ksos_mean, ksos_result_cost = ksos_result_cost, knots=None, best_cost= _params.best_cost, ksos_trace=None,best_trace=_params.best_trace)
 
-    def sample_knots(self, params: MPPIKSOSParams) -> Tuple[jax.Array, MPPIKSOSParams]:
-        """Sample a control sequence."""
+    def sample_knots(self, params: GlobalMPPIParams) -> Tuple[jax.Array, GlobalMPPIParams]:
+        """Sample MPPI candidate knots as Gaussian noise around the current
+        mean, with the noise scale taken from `lse_smoothing_sigma` at the
+        current iteration (used by the base class's `optimize`/MPPI update,
+        as opposed to the KSOS candidate sampling in `sample_ksos_knots`)."""
         rng, sample_rng = jax.random.split(params.rng)
         noise = jax.random.normal(
             sample_rng,
@@ -151,12 +139,16 @@ class MPPIKSOS(SamplingBasedController):
         sigma = self.lse_smoothing_sigma[params.iter]
         controls = params.mean + sigma * noise
         jax.debug.print("sigma: {}", sigma)
-        # controls = params.mean + self.noise_level * noise
 
         return controls, params.replace(rng=rng)
 
-    def sample_ksos_knots(self, params: MPPIKSOSParams) -> Tuple[jax.Array, MPPIKSOSParams]:
-        """Sample a control sequence."""
+    def sample_ksos_knots(self, params: GlobalMPPIParams) -> Tuple[jax.Array, GlobalMPPIParams]:
+        """Sample `ksos_num_samples` candidate knot sequences for the KSOS
+        solver. Candidates are drawn from a trust region centered at the
+        previous KSOS mean (or zero on the first iteration) whose radius
+        shrinks geometrically with `decay_rate` each iteration. The sampling
+        distribution is controlled by `self.ksos_sampling`
+        ("linspace", "uniform", "gaussian", or "Sobol")."""
         rng, sample_rng = jax.random.split(params.rng)
 
         center = lax.cond(
@@ -165,32 +157,20 @@ class MPPIKSOS(SamplingBasedController):
             lambda _: params.ksos_mean,
             operand=None,
         )
-        # cov = lax.cond(
-        #     jnp.equal(params.iter, 0),
-        #     lambda _: jnp.full_like(params.mean, self.sigma_start),
-        #     lambda _: params.cov,
-        #     operand=None,
-        # )
-        # center = params.ksos_mean
-        # jax.debug.print("center!!!! {}", center)
         radius = (
             jnp.power(self.decay_rate, params.iter).astype(params.mean.dtype)
             * self.task.u_max
         )
-        # ipdb.set_trace()
         if self.ksos_sampling == "linspace":
             ksos_knots_old = jnp.linspace(
                 center - radius,
                 center + radius,
                 self.ksos_num_samples,
-            )                           
+            )
             # Shape: [ksos_num_samples, num_knots, nu]
-            # perm = np.random.permutation(6)   # e.g. [3, 1, 5, 0, 2, 4]
-            # ksos_knots = ksos_knots_old[:, perm, :]
             ksos_knots_old = ksos_knots_old.reshape(-1, 2)     # shape (24, 2)
             np.random.shuffle(ksos_knots_old)
             ksos_knots_old = ksos_knots_old.reshape(30, 6, 2)
-            # ipdb.set_trace()
         elif self.ksos_sampling == "uniform":
             ksos_knots = jax.random.uniform(
                 sample_rng,
@@ -231,8 +211,11 @@ class MPPIKSOS(SamplingBasedController):
         
         return ksos_knots, params.replace(rng=rng)
     
-    def sample_lse_knots(self, ksos_knots: jax.Array, params: MPPIKSOSParams) -> Tuple[jax.Array, MPPIKSOSParams]:
-        """Sample a control sequence."""
+    def sample_lse_knots(self, ksos_knots: jax.Array, params: GlobalMPPIParams) -> Tuple[jax.Array, GlobalMPPIParams]:
+        """For each KSOS candidate knot sequence, sample `lse_num_samples`
+        nearby perturbations (Gaussian noise scaled by the current
+        `lse_smoothing_sigma`) used to estimate a smoothed cost for that
+        candidate via log-sum-exp in `lse_smoothing_rollout`."""
         rng, sample_rng = jax.random.split(params.rng)
         num_ksos = ksos_knots.shape[0]
         noise = jax.random.normal(
@@ -256,26 +239,18 @@ class MPPIKSOS(SamplingBasedController):
         state: mjx.Data,
         tk: jax.Array,
         knots: jax.Array,
-        params: MPPIKSOSParams,
-    ) -> MPPIKSOSParams:
-        """Compute rollouts without applying domain randomization."""
-        
+        params: GlobalMPPIParams,
+    ) -> GlobalMPPIParams:
+        """Roll out each KSOS candidate knot sequence once (no domain
+        randomization, no LSE smoothing) and record its total cost. This is
+        the cheaper alternative to `lse_smoothing_rollout`, used when
+        `self.is_lse_smoothing` is False."""
+
         tq = jnp.linspace(tk[0], tk[-1], self.ctrl_steps)
         controls = self.interp_func(tq, tk, knots)  # (num_rollouts, H, nu)
         _, rollouts = self.eval_rollouts(self.model, state, controls, knots)
         costs = jnp.sum(rollouts.costs, axis=1)  # sum over time steps
-        
-        # filter out bad rollouts 
-        # first_20 = rollouts.costs[:, :20]        # (256, 20)
-        # diff = first_20[:, 1:] - first_20[:, :-1]   # (256, 19)
-        # rollout_index = (diff < 0).any(axis=1).astype(int)   # (256,)
-        # idx_ones = jnp.where(rollout_index == 1)[0]
 
-        # costs = costs[idx_ones]
-        # knots = knots[idx_ones]
-        # trace_sites = rollouts.trace_sites[idx_ones]
-        # costs = jnp.where(rollout_index == 1, costs, jnp.inf)
-        
         return params.replace(knots= knots, lse_cost=costs, cost = rollouts.costs, ksos_trace=rollouts.trace_sites)
     
     def lse_smoothing_rollout(
@@ -283,26 +258,26 @@ class MPPIKSOS(SamplingBasedController):
         state: mjx.Data,
         tk: jax.Array,
         knots: jax.Array,
-        params: MPPIKSOSParams,
-    ) -> MPPIKSOSParams:
-        """Compute rollouts without applying domain randomization."""
-        
+        params: GlobalMPPIParams,
+    ) -> GlobalMPPIParams:
+        """Estimate a smoothed cost for each KSOS candidate knot sequence by
+        rolling out `lse_num_samples` nearby perturbations (from
+        `sample_lse_knots`) and combining their costs with a log-sum-exp soft
+        minimum, tempered by `lse_lambda`. This trades extra rollouts for a
+        cost estimate that is less sensitive to a single unlucky sample than
+        `general_rollout`."""
+
         # generate lse samples
         lse_knots, params = self.sample_lse_knots(knots, params)
         
         tq = jnp.linspace(tk[0], tk[-1], self.ctrl_steps)
         num_rollouts, num_lse, num_knots, nu = lse_knots.shape
-        if self.debug:
-            controls = self.interp_func(tq, tk, knots)  # (num_rollouts, H, nu)
-            _, rollouts = self.eval_rollouts(self.model, state, controls, knots)
-            params = params.replace(ksos_trace=rollouts.trace_sites)
 
         flat_knots = lse_knots.reshape(num_rollouts * num_lse, num_knots, nu)
         flat_controls = self.interp_func(tq, tk, flat_knots)  # (num_rollouts, H, nu)
         _, flat_rollouts = self.eval_rollouts(self.model, state, flat_controls, flat_knots)
         total_costs = flat_rollouts.costs.reshape(num_rollouts, num_lse, flat_rollouts.costs.shape[1])
-        # trace_sites = flat_rollouts.trace_sites.reshape(num_rollouts, num_lse, flat_rollouts.trace_sites.shape[1], flat_rollouts.trace_sites.shape[2], flat_rollouts.trace_sites.shape[3])
-        # ipdb.set_trace()
+        
         # sum cost over time steps
         sum_costs = jnp.sum(total_costs, axis=-1)  # sum over time steps
         min_costs = jnp.min(sum_costs, axis=1, keepdims=True)
@@ -313,25 +288,21 @@ class MPPIKSOS(SamplingBasedController):
         return params.replace(knots= knots, cost = total_costs, lse_cost=lse_cost.squeeze())
     
     def ksos_rollout(self, state: mjx.Data, params: Any) -> Any:
-        """Perform an optimization step to update the policy parameters.
+        """Warm-start the spline knot times to the current sim time, sample a
+        batch of KSOS candidate knots, and roll them all out to get a cost
+        for each candidate (via `lse_smoothing_rollout` or `general_rollout`,
+        depending on `self.is_lse_smoothing`). The resulting per-candidate
+        costs are consumed by `solve_ksos` to fit an updated mean.
 
         Args:
             state: The initial state x₀.
             params: The current policy parameters, U ~ π(params).
 
         Returns:
-            Updated policy parameters
-            Rollouts used to update the parameters
+            Updated policy parameters, with `knots`/`lse_cost`/`cost` set to
+            the sampled candidates and their evaluated costs.
         """
         # update tk with sim time
-        # best_cost = jnp.atleast_1d(params.best_cost)[0]
-        # plan_horizon = lax.cond(
-        #     best_cost <= 0.003,
-        #     lambda _: jnp.array(0.5, dtype=best_cost.dtype),
-        #     lambda _: jnp.array(self.plan_horizon, dtype=best_cost.dtype),
-        #     operand=None,
-        # )
-        
         tk = params.tk
         new_tk = (jnp.linspace(0.0, self.plan_horizon, self.num_knots) + state.time)
         new_mean = self.interp_func(new_tk, tk, params.mean[None, ...])[0]
@@ -350,33 +321,24 @@ class MPPIKSOS(SamplingBasedController):
             params = self.general_rollout(state, tk, knots, params)
 
         params = params.replace(rng=rng)
-        # downsample to get elites (top k samples)
-        # indices = jnp.argsort(params.lse_cost)
-        # elites = indices[: 30]
-
-        # lse_costs = params.lse_cost[elites]
-        # knots_elites = params.knots[elites]
-        
-        # add the best cost for last (not good!!!!)
-        # best_cost = jnp.atleast_1d(params.best_cost)
-        # lse_costs = jnp.concatenate([lse_costs, best_cost], axis=0)
-        # knots_elites = jnp.concatenate([knots_elites, params.mean[None, ...]], axis=0)
-        
-        # params = params.replace(lse_cost=params.lse_cost, knots=params.knots)
 
         return params
     
     def solve_ksos(
         self,
-        params: MPPIKSOSParams,
-    ) -> MPPIKSOSParams:
-        """Compute rollouts without applying domain randomization."""
-        
+        params: GlobalMPPIParams,
+    ) -> GlobalMPPIParams:
+        """Fit an updated mean from the KSOS candidates rolled out in
+        `ksos_rollout`. Takes the `self.elite_num` lowest-cost candidates,
+        drops any whose per-step cost trace never decreases (a heuristic filter for rollouts
+        that never make progress), and hands the survivors to the KernelSOS
+        solver (`ksos.solve`, using `self.ksos_solver`) to produce a new
+        `ksos_mean`. Falls back to returning `params` unchanged if every
+        elite is filtered out or the solver fails."""
+
         indices = jnp.argsort(params.lse_cost)
-        # elites = indices[: 60]
-        elites = indices[: 80]
-        
-        # ipdb.set_trace()
+        elites = indices[: self.elite_num]
+
         if self.is_lse_smoothing == False:
             costs = params.cost[elites]
         else:
@@ -385,9 +347,9 @@ class MPPIKSOS(SamplingBasedController):
         knots_elites = params.knots[elites]
 
         # filter out bad rollouts
-        first_20 = costs[:, :20]        # (256, 20)
-        diff = first_20[:, 1:] - first_20[:, :-1]   # (256, 19)
-        rollout_index = (diff < 0).any(axis=1).astype(int)   # (256,)
+        first_20 = costs[:, :20]
+        diff = first_20[:, 1:] - first_20[:, :-1]  
+        rollout_index = (diff < 0).any(axis=1).astype(int)   
         idx_ones = jnp.where(rollout_index == 1)[0]
 
         if idx_ones.shape[0] == 0:
@@ -398,7 +360,6 @@ class MPPIKSOS(SamplingBasedController):
         lse_costs = lse_costs[idx_ones]
         knots_elites = knots_elites[idx_ones]
 
-        # ipdb.set_trace()
         n_samples = lse_costs.shape[0]
         samples = np.asarray(
             knots_elites.reshape(n_samples, -1),
@@ -415,15 +376,10 @@ class MPPIKSOS(SamplingBasedController):
                 epsilon=self.ksos_epsilon,
                 kernel=self.ksos_kernel,
                 solver=self.ksos_solver,
-                hypatia_options={
-                    "formulation": "dual",
-                    "hypatia_path": self.hypatia_path,
-                    "persistent": True,
-                },
             )
             if updated_knots is None:
                 raise RuntimeError(
-                    info.get("status", "Hypatia returned no solution")
+                    info.get("status", "KSOS solver returned no solution")
                 )
             updated_knots = np.asarray(
                 updated_knots,
@@ -433,14 +389,9 @@ class MPPIKSOS(SamplingBasedController):
                 self.task.model.nu,
             )
         except Exception as error:
-            print(f"Hypatia failed: {error}")
+            print(f"KSOS solver failed: {error}")
             return params
 
-        # ps sampling
-        # print("lse_cost",params.lse_cost)
-        # jax.debug.print("lse_cost: {}", params.lse_cost)
-        # updated_knots = params.knots[0] 
-        # ipdb.set_trace()
         return params.replace(
             ksos_mean=updated_knots,
             ksos_result_cost=info["cost"],
@@ -448,9 +399,13 @@ class MPPIKSOS(SamplingBasedController):
         )
 
     def update_params(
-        self, params: MPPIKSOSParams, rollouts: Trajectory
-    ) -> MPPIKSOSParams:
-        """Update the mean with an exponentially weighted average."""
+        self, params: GlobalMPPIParams, rollouts: Trajectory
+    ) -> GlobalMPPIParams:
+        """MPPI update: set the mean to a softmax-weighted average of the
+        rollout knots, favoring lower-cost samples (temperature-scaled by
+        `self.temperature`). This is the local-search step the base class's
+        `optimize` runs after `solve_ksos` seeds the mean with a KSOS
+        solution."""
         costs = jnp.sum(rollouts.costs, axis=1)  # sum over time steps
         
         # N.B. jax.nn.softmax takes care of details like baseline subtraction.

@@ -8,7 +8,6 @@ from mujoco import mjx
 
 from global_mppi import ROOT
 from global_mppi.task_base import Task
-import ipdb
 
 class PushT(Task):
     """Push a T-shaped block to a desired pose."""
@@ -26,9 +25,6 @@ class PushT(Task):
         )
         self.block_orientation_sensor = mujoco.mj_name2id(
             mj_model, mujoco.mjtObj.mjOBJ_SENSOR, "orientation"
-        )
-        self.block_position_sensor = mujoco.mj_name2id(
-            mj_model, mujoco.mjtObj.mjOBJ_SENSOR, "position"
         )
 
     def _get_position_err(self, state: mjx.Data) -> jax.Array:
@@ -69,15 +65,12 @@ class PushT(Task):
         """The running cost ℓ(xₜ, uₜ)."""
         position_err = self._get_position_err(state)
         orientation_err = self._get_orientation_err(state)
-        # se3_err = self._get_se3_err(state)
-        # ipdb.set_trace()
         close_to_block_err = self._close_to_block_err(state)
 
         position_cost = jnp.sum(jnp.square(position_err))
         orientation_cost = jnp.sum(jnp.square(orientation_err))
         close_to_block_cost = jnp.sum(jnp.square(close_to_block_err))
 
-        # return 5 * position_cost + 1.5 * orientation_cost + 0.01 * close_to_block_cost
         return 50 * position_cost + 15 * orientation_cost
 
     def terminal_cost(self, state: mjx.Data) -> jax.Array:

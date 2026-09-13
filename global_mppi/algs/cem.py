@@ -7,7 +7,6 @@ from flax.struct import dataclass
 from global_mppi.alg_base import SamplingBasedController, SamplingParams, Trajectory
 from global_mppi.risk import RiskStrategy
 from global_mppi.task_base import Task
-import ipdb
 
 @dataclass
 class CEMParams(SamplingParams):
@@ -116,7 +115,6 @@ class CEM(SamplingBasedController):
             if main_shape[0] > 0
             else jnp.empty(main_shape)
         )
-        # ipdb.set_trace()
         # Sample exploration knots with initial covariance
         explore_controls = (
             params.mean
@@ -124,7 +122,6 @@ class CEM(SamplingBasedController):
             if explore_shape[0] > 0
             else jnp.empty(explore_shape)
         )
-        # jax.debug.print("run sample_knots")
         # Combine both sets of controls
         controls = jnp.concatenate([main_controls, explore_controls])
         return controls, params.replace(rng=rng)
@@ -144,9 +141,4 @@ class CEM(SamplingBasedController):
         cov = jnp.maximum(
             jnp.std(rollouts.knots[elites], axis=0), self.sigma_min
         )
-        
-        # minimal cost
-        # indices = jnp.argsort(costs)
-        # elites = indices[:1]
-        # updated_mean = rollouts.knots[elites[0]]
         return params.replace(mean=mean, cov=cov)

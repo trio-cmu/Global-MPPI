@@ -1,12 +1,12 @@
 import jax
 import jax.numpy as jnp
 from mujoco import mjx
-import ipdb
+
 from global_mppi.tasks.pusht import PushT
 
 
 def test_task() -> None:
-    """Set up the push T task."""
+    """Set up the push-T task and sanity-check its cost terms."""
     task = PushT()
 
     state = mjx.make_data(task.model)
@@ -25,7 +25,7 @@ def test_task() -> None:
 
     phi = task.terminal_cost(state)
     assert phi.shape == ()
-    ipdb.set_trace()
+
 
 if __name__ == "__main__":
     test_task()

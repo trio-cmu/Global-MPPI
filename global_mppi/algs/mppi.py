@@ -1,13 +1,10 @@
 from typing import Literal, Tuple
-import numpy as np
 import jax
 import jax.numpy as jnp
 from flax.struct import dataclass
-# jax.config.update("jax_disable_jit", True)
 from global_mppi.alg_base import SamplingBasedController, SamplingParams, Trajectory
 from global_mppi.risk import RiskStrategy
 from global_mppi.task_base import Task
-import ipdb
 
 @dataclass
 class MPPIParams(SamplingParams):
@@ -98,7 +95,6 @@ class MPPI(SamplingBasedController):
             ),
         )
         controls = params.mean + self.noise_level * noise
-        # ipdb.set_trace()
         return controls, params.replace(rng=rng)
 
     def update_params(
@@ -106,10 +102,6 @@ class MPPI(SamplingBasedController):
     ) -> MPPIParams:
         """Update the mean with an exponentially weighted average."""
         costs = jnp.sum(rollouts.costs, axis=1)  # sum over time steps
-        # costs.block_until_ready()
-        # costs_np = np.asarray(jax.device_get(costs))
-        # N.B. jax.nn.softmax takes care of details like baseline subtraction.
         weights = jax.nn.softmax(-costs / self.temperature, axis=0)
         mean = jnp.sum(weights[:, None, None] * rollouts.knots, axis=0)
-        # import ipdb; ipdb.set_trace()
         return params.replace(mean=mean)

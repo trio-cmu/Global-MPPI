@@ -79,17 +79,7 @@ class PredictiveSampling(SamplingBasedController):
     def sample_knots(self, params: PSParams) -> Tuple[jax.Array, PSParams]:
         """Sample a control sequence."""
         rng, sample_rng = jax.random.split(params.rng)
-        # noise = jax.random.normal(
-        #     sample_rng,
-        #     (
-        #         self.num_samples,
-        #         self.num_knots,
-        #         self.task.model.nu,
-        #     ),
-        # )
-        # controls = params.mean + self.noise_level * noise
-        
-        # # uniform noise
+        # uniform noise
         noise = jax.random.uniform(
             sample_rng,
             (

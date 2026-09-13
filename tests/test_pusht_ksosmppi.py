@@ -1,24 +1,16 @@
 import jax
 import jax.numpy as jnp
-import matplotlib.pyplot as plt
 from mujoco import mjx
-import numpy as np
-# from global_mppi.algs.cem import CEM
-from global_mppi.algs.ksos import KSOS
-from global_mppi.algs.mppi import MPPI
-from global_mppi.algs import PredictiveSampling, MPPI, Evosax, DIAL, KSOS, MPPIKSOS
-from global_mppi.tasks.pendulum import Pendulum
-import time
 
+from global_mppi.algs import GlobalMPPI
 from global_mppi.tasks.pusht import PushT
-import ipdb
 
-def test_open_loop() -> None:
-    """Use CEM for open-loop push task."""
-    # Task and optimizer setup
+
+def test_ksos_rollout_and_solve() -> None:
+    """Run a few KSOS rollout + solve iterations on the push-T task and check
+    that the resulting mean is finite and no worse than the initial guess."""
     task = PushT()
-
-    opt = MPPIKSOS(
+    opt = GlobalMPPI(
         task,
         num_samples=256,
         noise_level=0.1,
@@ -27,170 +19,30 @@ def test_open_loop() -> None:
         plan_horizon=1.0,
         num_knots=6,
     )
+    # Start with the block away from the goal, as in examples/pusht.py, so
+    # there is meaningful cost to reduce.
     state = mjx.make_data(task.model)
-    params = opt.init_params()
-    
-    # test rollout
-    # tk = params.tk
-    # new_tk = (jnp.linspace(0.0, opt.plan_horizon, opt.num_knots) + state.time)
-    # new_mean = opt.interp_func(new_tk, tk, params.mean[None, ...])[0]
-
-    # rollout and evaluate sample knots
-    # rollouts = opt.rollout(state, new_tk, params.knots)
-    
-    # knots = params.mean[None]
-    # tk = jnp.linspace(0.0, opt.plan_horizon, opt.num_knots)
-    # tq = jnp.linspace(0.0, opt.plan_horizon - opt.dt, opt.ctrl_steps)
-    # controls = opt.interp_func(tq, tk, knots)
-    # states, final_rollout = opt.eval_rollouts(
-    #     task.model, state, controls, knots
-    # )
-    # get_cost_with_best_samples = opt.get_cost_with_best_samples(state, params)
-
-    # ipdb.set_trace()
-    for iter in range(opt.ksos_num_restart):
-        params = params.replace(iter = iter)
-        params = opt.ksos_rollout(state, params)
-        params = opt.solve_ksos(params)
-        ipdb.set_trace()
-    ipdb.set_trace()
-    # knots,params = opt.sample_ksos_knots(params)
-    # knots = jnp.clip(knots, task.u_min, task.u_max)
-    # tk = jnp.linspace(0.0, opt.plan_horizon, opt.num_knots)
-    # params = opt.lse_smoothing_rollout(state, tk, knots, params)
-    # params = opt.solve_ksos(params)
-
-    # jit_opt = jax.jit(opt.optimize)
-    jit_ksos_rollout = jax.jit(opt.ksos_rollout)
-
-    # Initialize the system state and policy parameters
-    state = mjx.make_data(task.model)
-    params = opt.init_params()
-
-    for _ in range(10000):
-        # Do an optimization step
-        t0 = time.perf_counter()
-        # params, rollouts = jit_opt(state, params)
-        
-        for iter in range(opt.ksos_num_restart):
-            params = params.replace(iter = iter)
-            params = jit_ksos_rollout(state, params)
-            params = jax.block_until_ready((params))
-            params = opt.solve_ksos(params)
-            ipdb.set_trace()
-            
-        # params = jit_ksos_rollout(state, params)
-        # params = jax.block_until_ready((params))
-        # params = opt.solve_ksos(params)
-        # params, rollouts = jax.block_until_ready((params, rollouts))
-        # mean_np = np.asarray(params.mean, copy=True)
-        # mean_np[0] = 123.0
-        params = params.replace(mean=jax.device_put(params.mean))
-        dt = time.perf_counter() - t0
-        print(f"jit_opt step took {dt * 1e3:.2f} ms")
-
-    # Roll out the solution, check that it's good enough
-    knots = params.mean[None]
-    tk = jnp.linspace(0.0, opt.plan_horizon, opt.num_knots)
-    tq = jnp.linspace(0.0, opt.plan_horizon - opt.dt, opt.ctrl_steps)
-    controls = opt.interp_func(tq, tk, knots)
-    states, final_rollout = jax.jit(opt.eval_rollouts)(
-        task.model, state, controls, knots
+    state = state.replace(
+        qpos=jnp.array([0.1, 0.1, 1.3, 0.0, 0.0]), qvel=jnp.zeros_like(state.qvel)
     )
-    theta = states.qpos[0, :, 0]
-    theta_dot = states.qvel[0, :, 0]
+    state = jax.jit(mjx.forward)(task.model, state)
+    params = opt.init_params()
 
-    total_cost = jnp.sum(final_rollout.costs[0])
-    assert total_cost <= 9.0
-    assert jnp.all(params.cov >= opt.sigma_min)
+    initial_cost, _ = opt.get_cost_with_best_samples(state, params)
 
-    if __name__ == "__main__":
-        # Plot the solution
-        _, ax = plt.subplots(3, 1, sharex=True)
-        times = jnp.arange(opt.ctrl_steps) * task.dt
+    jit_ksos_rollout = jax.jit(opt.ksos_rollout)
+    for iter in range(opt.ksos_num_restart):
+        params = params.replace(iter=iter)
+        params = jit_ksos_rollout(state, params)
+        params = opt.solve_ksos(params)
 
-        ax[0].plot(times, theta)
-        ax[0].set_ylabel(r"$\theta$")
+    updated_cost, _ = opt.get_cost_with_best_samples(
+        state, params.replace(mean=params.ksos_mean)
+    )
 
-        ax[1].plot(times, theta_dot)
-        ax[1].set_ylabel(r"$\dot{\theta}$")
-
-        ax[2].step(times, final_rollout.controls[0], where="post")
-        ax[2].axhline(-1.0, color="black", linestyle="--")
-        ax[2].axhline(1.0, color="black", linestyle="--")
-        ax[2].set_ylabel("u")
-        ax[2].set_xlabel("Time (s)")
-
-        time_samples = jnp.linspace(0, times[-1], 100)
-        controls = jax.vmap(opt.get_action, in_axes=(None, 0))(
-            params, time_samples
-        )
-        ax[2].plot(time_samples, controls, color="gray", alpha=0.5)
-
-        plt.show()
-
-
-# def test_explore_fraction() -> None:
-#     """Unit test for sampling controls with different explore_fraction values.
-
-#     This test uses the Pendulum task as a dummy task to verify:
-#       - The overall controls array shape is correct.
-#       - The split between main and exploration samples is as expected.
-#     """
-#     num_samples = 10
-#     num_elites = 2
-#     sigma_start = 1.0
-#     sigma_min = 0.1
-
-#     # Test different fractions: no exploration, partial exploration, full exploration.
-#     for explore_fraction in [0.0, 0.3, 0.5, 0.75, 1.0]:
-#         task = Pendulum()
-#         opt = CEM(
-#             task=task,
-#             num_samples=num_samples,
-#             num_elites=num_elites,
-#             sigma_start=sigma_start,
-#             sigma_min=sigma_min,
-#             explore_fraction=explore_fraction,
-#             plan_horizon=1.0,
-#             spline_type="zero",
-#             num_knots=11,
-#         )
-#         params = opt.init_params(seed=42)
-#         controls, new_params = opt.sample_knots(params)
-
-#         # Check the overall shape of the controls array.
-#         expected_shape = (num_samples, opt.num_knots, task.model.nu)
-#         assert controls.shape == expected_shape, (
-#             f"Expected shape {expected_shape} but got {controls.shape} "
-#             f"for explore_fraction = {explore_fraction}"
-#         )
-
-#         # Calculate expected number of exploration samples.
-#         num_explore = int(explore_fraction * num_samples)
-#         num_main = num_samples - num_explore
-
-#         # The implementation concatenates main samples first and exploration samples later.
-#         main_controls = controls[:num_main]
-#         explore_controls = controls[num_main:]
-
-#         # Verify that the main and exploration segments have the correct shapes.
-#         expected_main_shape = (num_main, opt.num_knots, task.model.nu)
-#         expected_explore_shape = (
-#             num_explore,
-#             opt.num_knots,
-#             task.model.nu,
-#         )
-#         assert main_controls.shape == expected_main_shape, (
-#             f"Expected main controls shape {expected_main_shape} but got {main_controls.shape} "
-#             f"for explore_fraction = {explore_fraction}"
-#         )
-#         assert explore_controls.shape == expected_explore_shape, (
-#             f"Expected explore controls shape {expected_explore_shape} but got {explore_controls.shape} "
-#             f"for explore_fraction = {explore_fraction}"
-#         )
+    assert jnp.isfinite(updated_cost).all()
+    assert jnp.all(updated_cost < initial_cost)
 
 
 if __name__ == "__main__":
-    test_open_loop()
-    # test_explore_fraction()
+    test_ksos_rollout_and_solve()
