@@ -105,7 +105,7 @@ class GlobalMPPI(SamplingBasedController):
         self.ksos_num_restart = 5
         self.ksos_solver = ksos_solver
         self.ksos_sampling = "uniform"
-        self.decay_rate = 0.85
+        self.decay_rate = 0.80
         self.is_lse_smoothing = True
 
     def init_params(

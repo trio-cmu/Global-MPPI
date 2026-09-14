@@ -20,9 +20,9 @@ with the same simulation loop.
 
 | Algorithm | Flag | Description |
 | --- | --- | --- |
-| Predictive Sampling | `ps` | Samples control tapes around the current mean and keeps the lowest-cost one ([Howell et al., 2022](https://arxiv.org/abs/2212.00541)). |
-| MPPI | `mppi` | Model-predictive path integral control: a softmax-weighted average over sampled rollouts ([Vlahov et al., 2024](https://arxiv.org/abs/2409.07563)). |
-| DIAL-MPC | `dial` | MPPI with noise annealed across both optimization iterations and the planning horizon ([Xue et al., 2024](https://arxiv.org/abs/2409.15610)). |
+| Predictive Sampling | `ps` | Samples control tapes around the current mean and keeps the lowest-cost one. |
+| MPPI | `mppi` | Model-predictive path integral control: a softmax-weighted average over sampled rollouts. |
+| DIAL-MPC | `dial` | MPPI with noise annealed across both optimization iterations and the planning horizon. |
 | GlobalMPPI | `globalmppi` | This work: a KernelSOS global-search step seeds the mean, followed by an MPPI local-search refinement. |
 
 ## Tasks
