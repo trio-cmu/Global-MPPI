@@ -13,8 +13,7 @@ if "--no-headless" not in sys.argv:
 
 import mujoco
 
-from evosax.algorithms.distribution_based.cma_es import CMA_ES
-from global_mppi.algs import PredictiveSampling, MPPI, CEM, Evosax, DIAL, GlobalMPPI
+from global_mppi.algs import PredictiveSampling, MPPI, DIAL, GlobalMPPI
 from global_mppi.simulation.deterministic import run_interactive
 from global_mppi.tasks.pusht import PushT
 """
@@ -50,8 +49,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--wandb-entity",
-    default="zhongqi2",
-    help="W&B entity/team (default: zhongqi2)",
+    default=None,
+    help="W&B entity/team (defaults to your W&B account's default entity)",
 )
 parser.add_argument(
     "--wandb-key",
@@ -72,8 +71,6 @@ subparsers = parser.add_subparsers(
 )
 subparsers.add_parser("ps", help="Predictive Sampling")
 subparsers.add_parser("mppi", help="Model Predictive Path Integral Control")
-subparsers.add_parser("cem", help="Cross-Entropy Method")
-subparsers.add_parser("cmaes", help="CMA-ES")
 subparsers.add_parser(
     "dial", help="Diffusion-Inspired Annealing for Legged MPC (DIAL)"
 )
@@ -132,32 +129,6 @@ elif args.algorithm == "mppi":
         plan_horizon=1.0,
         num_knots=6,
         iterations = 5,
-    )
-elif args.algorithm == "cem":
-    print("Running CEM")
-    ctrl = CEM(
-        task,
-        num_samples=256, #256 # more num_samples is better for CEM
-        num_elites=3,
-        sigma_start=1,
-        sigma_min=0.1,
-        spline_type="cubic",
-        plan_horizon=1.0,
-        num_knots=6,
-        explore_fraction = 0.1,
-    )
-elif args.algorithm == "cmaes":
-    ctrl = Evosax(
-        task,
-        CMA_ES,
-        num_samples=256,
-        beta_opt_iter=1.0,
-        beta_horizon=1.0,
-        temperature=0.001,
-        plan_horizon=1.0,
-        spline_type="cubic",
-        num_knots=4,
-        iterations=5,
     )
 elif args.algorithm == "dial":
     print("Running DIAL")

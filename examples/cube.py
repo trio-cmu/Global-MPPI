@@ -1,9 +1,7 @@
 import argparse
 
-from evosax.algorithms.distribution_based.cma_es import CMA_ES
-
 import mujoco
-from global_mppi.algs import CEM, MPPI, Evosax, PredictiveSampling, DIAL, GlobalMPPI
+from global_mppi.algs import MPPI, PredictiveSampling, DIAL, GlobalMPPI
 from global_mppi.simulation.deterministic import run_interactive
 from global_mppi.tasks.cube import CubeRotation
 
@@ -26,8 +24,6 @@ subparsers = parser.add_subparsers(
 )
 subparsers.add_parser("ps", help="Predictive Sampling")
 subparsers.add_parser("mppi", help="Model Predictive Path Integral Control")
-subparsers.add_parser("cem", help="Cross-Entropy Method")
-subparsers.add_parser("cmaes", help="CMA-ES")
 subparsers.add_parser("dial", help="DIAL")
 subparsers.add_parser("globalmppi", help="GlobalMPPI")
 args = parser.parse_args()
@@ -50,28 +46,6 @@ elif args.algorithm == "mppi":
         num_samples=128,
         noise_level=0.2,
         temperature=0.001,
-        plan_horizon=0.25,
-        spline_type="zero",
-        num_knots=4,
-    )
-elif args.algorithm == "cem":
-    print("Running CEM")
-    ctrl = CEM(
-        task,
-        num_samples=128,
-        num_elites=5,
-        sigma_start=0.5,
-        sigma_min=0.5,
-        plan_horizon=0.25,
-        spline_type="zero",
-        num_knots=4,
-    )
-elif args.algorithm == "cmaes":
-    print("Running CMA-ES")
-    ctrl = Evosax(
-        task,
-        CMA_ES,
-        num_samples=128,
         plan_horizon=0.25,
         spline_type="zero",
         num_knots=4,
