@@ -25,9 +25,6 @@ with the same simulation loop.
 | DIAL-MPC | `dial` | MPPI with noise annealed across both optimization iterations and the planning horizon ([Xue et al., 2024](https://arxiv.org/abs/2409.15610)). |
 | GlobalMPPI | `globalmppi` | This work: a KernelSOS global-search step seeds the mean, followed by an MPPI local-search refinement. |
 
-`CEM` and `Evosax`/CMA-ES controllers are also implemented in
-`global_mppi/algs/` but are not wired into the example scripts.
-
 ## Tasks
 
 - **PushT** (`global_mppi/tasks/pusht.py`) — push a T-shaped block to a target
@@ -84,7 +81,7 @@ installed separately, because it is a git submodule rather than a PyPI package.
 
 ```
 global_mppi/
-├── algs/          # Controllers: PS, MPPI, DIAL, GlobalMPPI, CEM, CMA-ES
+├── algs/          # Controllers: PS, MPPI, DIAL, GlobalMPPI
 ├── tasks/         # Task definitions (dynamics + costs): PushT, CubeRotation
 ├── models/        # MuJoCo XML models for each task
 ├── simulation/    # Interactive/async simulation loops, W&B + video logging
