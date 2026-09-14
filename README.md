@@ -89,8 +89,8 @@ If you use this codebase, please cite:
 
 ```bibtex
 @article{wei2026global,
-  title={Global Sampling-Based Trajectory Optimization for Contact-Rich Manipulation via {K}ernel{SOS}},
-  author={Wei, Zhongqi and D{\"u}mbgen, Frederike},
+  title={Global Sampling-Based Trajectory Optimization for Contact-Rich Manipulation via KernelSOS},
+  author={Wei, Zhongqi and Duembgen, Frederike},
   journal={arXiv preprint arXiv:2604.27175},
   year={2026}
 }
