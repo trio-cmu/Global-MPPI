@@ -1,5 +1,5 @@
 <mujoco model="particle_scene">
-  <!-- Model that includes like lighting and a ground. -->
+  <!-- Push-T scene: pusht.xml (12 cm T, 5 mm rod, goal, start_2 keyframe) plus lighting and a ground plane. -->
   <include file="pusht.xml"/>
 
   <statistic center="0 0 0" extent="0.9"/>

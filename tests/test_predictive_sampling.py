@@ -68,7 +68,7 @@ def test_optimize_does_not_increase_the_best_cost() -> None:
 
     state = mjx.make_data(opt.task.model)
     state = state.replace(
-        qpos=jnp.array([0.1, 0.1, 1.3, 0.0, 0.0]), qvel=jnp.zeros_like(state.qvel)
+        qpos=jnp.array(opt.task.start_qpos("start_2")), qvel=jnp.zeros_like(state.qvel)
     )
     state = jax.jit(mjx.forward)(opt.task.model, state)
     params = opt.init_params()

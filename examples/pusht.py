@@ -166,7 +166,7 @@ for trial_idx in range(start_seed, 6):
     mj_model.opt.iterations = 100
     mj_model.opt.ls_iterations = 50
     mj_data = mujoco.MjData(mj_model)
-    mj_data.qpos = [0.1, 0.1, 1.3, 0.0, 0.0]
+    mj_data.qpos[:] = task.start_qpos("start_2")  # start_2 keyframe of models/pusht/pusht.xml
     mj_data.qvel[:] = 0.0
     mujoco.mj_forward(mj_model, mj_data)
     print(f"\n=== Seed {trial_idx} ===")

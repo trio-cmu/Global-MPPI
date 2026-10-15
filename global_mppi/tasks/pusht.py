@@ -4,6 +4,7 @@ import jax
 import jax.numpy as jnp
 import jaxlie
 import mujoco
+import numpy as np
 from mujoco import mjx
 
 from global_mppi import ROOT
@@ -12,12 +13,30 @@ from global_mppi.task_base import Task
 class PushT(Task):
     """Push a T-shaped block to a desired pose."""
 
-    def __init__(self) -> None:
-        """Load the MuJoCo model and set task parameters."""
+    def __init__(
+        self,
+        xml_path: str | None = None,
+        w_pos: float = 50.0,
+        w_ori: float = 15.0,
+        w_approach: float = 0.0,
+    ) -> None:
+        """Load the MuJoCo model and set task parameters.
+
+        Args:
+            xml_path: Scene to load (default models/pusht/scene.xml: the 12 cm T / 5 mm rod
+                of the real setup; the original paper model is the git tag pusht-paper-v0).
+            w_pos: Weight on |block position error|^2 in the running cost.
+            w_ori: Weight on |block orientation error|^2 in the running cost.
+            w_approach: Weight on |block - pusher|^2 (pusher-to-T centre distance) in the running cost.
+                0 (default) keeps the paper cost, which has no incentive to approach the block.
+        """
         mj_model = mujoco.MjModel.from_xml_path(
-            ROOT + "/models/pusht/scene.xml"
+            xml_path or ROOT + "/models/pusht/scene.xml"
         )
         super().__init__(mj_model, trace_sites=["pusher"])
+        self.w_pos = w_pos
+        self.w_ori = w_ori
+        self.w_approach = w_approach
 
         # Get sensor ids
         self.block_position_sensor = mujoco.mj_name2id(
@@ -26,6 +45,13 @@ class PushT(Task):
         self.block_orientation_sensor = mujoco.mj_name2id(
             mj_model, mujoco.mjtObj.mjOBJ_SENSOR, "orientation"
         )
+
+    def start_qpos(self, name: str = "start_2") -> np.ndarray:
+        """qpos [T_x, T_y, T_theta, root_x, root_y] of the keyframe `name` defined in the xml."""
+        key = mujoco.mj_name2id(self.mj_model, mujoco.mjtObj.mjOBJ_KEY, name)
+        if key < 0:
+            raise KeyError(f"no keyframe {name!r} in the pusht xml")
+        return np.array(self.mj_model.key_qpos[key])
 
     def _get_position_err(self, state: mjx.Data) -> jax.Array:
         """Position of the block relative to the target position."""
@@ -71,7 +97,11 @@ class PushT(Task):
         orientation_cost = jnp.sum(jnp.square(orientation_err))
         close_to_block_cost = jnp.sum(jnp.square(close_to_block_err))
 
-        return 50 * position_cost + 15 * orientation_cost
+        return (
+            self.w_pos * position_cost
+            + self.w_ori * orientation_cost
+            + self.w_approach * close_to_block_cost
+        )
 
     def terminal_cost(self, state: mjx.Data) -> jax.Array:
         """The terminal cost ℓ_T(x_T)."""
