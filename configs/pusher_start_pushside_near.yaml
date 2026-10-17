@@ -1,0 +1,14 @@
+base:
+  x_m: 0.47056
+  y_m: -0.20535
+goal_frame:
+  x: -0.31735
+  y: -0.07421
+sim_pusher_qpos:
+- -0.31735
+- -0.17421
+flange_z_m: 0.34874
+frame: panda_link0
+note: 'geometric: from the T centre of start_2 outward along the goal->T-centre direction
+  to 20.0 mm from the T outline; computed by closed_loop_test setup, not recorded
+  with the arm'
