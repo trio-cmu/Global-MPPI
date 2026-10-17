@@ -16,3 +16,7 @@ MUJOCO_LOG.TXT
 logs/
 wandb/
 test/log/
+
+# Closed-loop / real-robot run outputs and generated scenes
+runs/
+global_mppi/models/pusht/scene_box_*.xml

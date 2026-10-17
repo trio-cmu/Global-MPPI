@@ -1,0 +1,81 @@
+# Closed-loop Push-T on the REAL setup (12 cm T, 5 mm rod). Used by closed_loop.py.
+# All poses are in the GOAL frame (= the sim task frame: the goal is the origin, theta = 0) unless a key says "base".
+# tests/test_pusht_consistency.py checks scene.start / scene.pusher_start / goal against models/pusht/pusht.xml
+# (the start_2 keyframe) and, when ~/trio_sim is present, against its yamls.
+
+scene:
+  xml: global_mppi/models/pusht/scene.xml      # relative to the repo root (or absolute); contains goal, keyframe, pusher
+  # Goal pose in the robot BASE frame (panda_link0), from trio_sim/src/pusht_align/pusht_goal.yaml. Only used to
+  # express the workspace box (a base-frame box) in the goal frame.
+  goal_base: {x_m: 0.39983, y_m: 0.11279, theta_rad: 1.55985}
+  # Start of the T (start_2 of pusht_starts.yaml) and of the pusher (pusher_start.yaml), goal frame.
+  start: {x_m: -0.22529, y_m: -0.05268, theta_deg: 45.362}
+  pusher_start: {x_m: -0.13329, y_m: -0.00978}
+  # Pusher speed limit [m/s]; must equal the ctrlrange of the pusher actuators in the xml (checked at load time).
+  vmax: 0.1
+  # Workspace box of the flange xy in the BASE frame (xy_driver box shrunk by 1 cm). The commanded pusher motion is
+  # clamped to it (outward velocity component zeroed, with a 5 mm margin because the pusher lags/overshoots).
+  box_base: {x_min: 0.26, x_max: 0.59, y_min: -0.29, y_max: 0.29, margin_m: 0.005}
+
+cost:                      # PushT running cost: w_pos*|pos err|^2 + w_ori*|ori err|^2 + w_approach*|T - pusher|^2
+  w_pos: 50.0              # paper value
+  w_ori: 15.0              # paper value
+  w_approach: 10.0         # NOT in the paper (0 there): pulls the pusher to the T so it does not idle at the start
+
+plant:                     # MuJoCo settings of the simulated "real" system (the planner uses the xml's own options)
+  timestep: 0.001
+  iterations: 100
+  ls_iterations: 50
+
+loop:
+  replan_s: 0.2            # sim seconds executed per plan (zero-order hold of the planned velocities)
+  max_time_s: 90.0         # simulation time limit
+  wall_limit_s: null       # optional real-time deadline of a run [s] (null: none)
+  viewer_every_steps: 40   # live window: refresh every N sim steps (and at most 25x per wall second)
+  realtime: false          # false: the sim waits for the planner; true: the sim runs on while planning (plan latency model)
+  run_to_time: false       # true: no early stop at convergence / stall
+  stall_exit_s: 0.0        # >0: stop when the position error did not improve by 1 mm during this many sim seconds
+  idle_move_mm: 2.0        # "the pusher started moving" threshold (reported as idle_s)
+
+convergence:               # success = both below tolerance for hold_s seconds
+  pos_tol_mm: 10.0
+  ang_tol_deg: 3.0
+  hold_s: 1.0
+
+# Hyper-parameters per algorithm: the keyword arguments of the controller constructor (examples/pusht.py defaults).
+# noise_level_vmax = noise_level / vmax (the noise is a multiple of the control range; an absolute noise_level
+# key is also accepted). Paper values with vmax = 0.1: ps 0.4 -> 4, mppi 1.0 -> 10, dial 1.0 -> 10, globalmppi 0.1 -> 1.
+algos:
+  ps:
+    num_samples: 256
+    noise_level_vmax: 4.0
+    num_randomizations: 1
+    plan_horizon: 1.0
+    spline_type: cubic
+    num_knots: 6
+  mppi:
+    num_samples: 256
+    noise_level_vmax: 10.0
+    temperature: 0.1
+    spline_type: cubic
+    plan_horizon: 1.0
+    num_knots: 6
+    iterations: 5
+  dial:
+    num_samples: 256
+    noise_level_vmax: 10.0
+    beta_opt_iter: 1.0
+    beta_horizon: 1.0
+    temperature: 0.01
+    plan_horizon: 1.0
+    spline_type: cubic
+    num_knots: 6
+  globalmppi:
+    num_samples: 256
+    noise_level_vmax: 1.0
+    temperature: 0.1
+    spline_type: cubic
+    plan_horizon: 1.0
+    num_knots: 6
+    iterations: 5
+    ksos_solver: newton-rs
