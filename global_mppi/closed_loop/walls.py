@@ -13,7 +13,7 @@ from global_mppi import ROOT
 R_PEN, THICK, LONG, H = 0.005, 0.05, 1.0, 0.03
 
 
-def write_walled_scene(box, goal_p, goal_th, name="scene_box_generated.xml") -> str:
+def write_walled_scene(box, goal_p, goal_th, name="scene_box_generated.xml", include="scene.xml") -> str:
     x0, x1, y0, y1 = box
     c, s = math.cos(-goal_th), math.sin(-goal_th)
     geoms = []
@@ -30,7 +30,7 @@ def write_walled_scene(box, goal_p, goal_th, name="scene_box_generated.xml") -> 
         geoms.append(f'    <geom name="wall_{k}" type="box" size="{hx:.5f} {hy:.5f} {H}" pos="{px:.6f} {py:.6f} 0.02" '
                      f'euler="0 0 {math.degrees(-goal_th):.6f}" contype="2" conaffinity="2" friction="0.02 0.001 0.001" priority="1" '
                      f'rgba="0.8 0.3 0.3 0.15"/>')
-    txt = ('<mujoco model="pusht_box">\n  <include file="scene.xml"/>\n  <worldbody>\n' + "\n".join(geoms)
+    txt = (f'<mujoco model="pusht_box">\n  <include file="{include}"/>\n  <worldbody>\n' + "\n".join(geoms)
            + "\n  </worldbody>\n</mujoco>\n")
     path = os.path.join(ROOT, "models", "pusht", name)
     with open(path, "w") as f:

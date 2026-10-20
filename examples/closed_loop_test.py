@@ -101,7 +101,7 @@ class Planner:
         if a.algo == "dial":        # examples/pusht.py DIAL defaults, none changed
             from global_mppi.algs import DIAL
             print("Running DIAL")
-            self.ctrl = DIAL(task, num_samples=256, noise_level=1.0, beta_opt_iter=1.0, beta_horizon=1.0, temperature=0.01,
+            self.ctrl = DIAL(task, num_samples=256, noise_level=a.dial_noise, beta_opt_iter=1.0, beta_horizon=1.0, temperature=0.01,
                              plan_horizon=1.0, spline_type="cubic", num_knots=6)
         else:
             print("Running predictive sampling")
@@ -1728,18 +1728,18 @@ def make_plots(out):
 def run(a, out):
     from global_mppi.closed_loop.config import load_config
     from global_mppi.closed_loop.scene import Scene
-    cfg = load_config(os.path.join(REPO, "configs", "pusht_real.yaml"))
+    cfg = load_config(os.path.join(REPO, a.config))
     xml = None
     if not a.no_walls:       # workspace box as 4 walls in the planner model and the plant (same as the xy_driver box)
         from global_mppi.closed_loop.walls import write_walled_scene
         sc_ = cfg["scene"]
         b, g_ = sc_["box_base"], sc_["goal_base"]
         xml = write_walled_scene((b["x_min"], b["x_max"], b["y_min"], b["y_max"]), (g_["x_m"], g_["y_m"]), g_["theta_rad"],
-                                 name=f"scene_box_{os.getpid()}.xml")
+                                 name=f"scene_box_{os.getpid()}.xml", include=os.path.basename(sc_["xml"]))
         cfg["scene"]["xml"] = xml
     scene = Scene(cfg)
     fr = Frames(scene)
-    planner = Planner(a, xml)
+    planner = Planner(a, xml or scene.xml)           # the planner model is the scene of the config (--config), walls or not
     planner.warmup()
     scene.start_P = fr.base_to_sim(a.pusher_start_base)        # --sim starts the pen here too
     be = SimBackend(a, scene, fr) if a.sim else RealBackend(a, scene, fr)
@@ -2071,7 +2071,10 @@ def main():
     out = a.out or os.path.join(REPO, "runs", "closed_loop_test", f"{'sim' if a.sim else 'real'}_{time.strftime('%Y%m%d_%H%M%S')}")
     run(a, out)
     return 0
+    ap.add_argument("--config", default=os.path.join("configs", "pusht_real.yaml"),
+                    help="scene / cost / vmax config, relative to the repo root; its scene.xml (next to pusht.xml) is also the planner model")
 
 
 if __name__ == "__main__":
     sys.exit(main())
+    ap.add_argument("--dial-noise", type=float, default=1.0, help="--algo dial: noise_level of DIAL (absolute, like --noise-level for PS)")
