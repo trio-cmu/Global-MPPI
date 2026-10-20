@@ -428,19 +428,31 @@ class Feed:
         self.lock = threading.Lock()
         self.T, self.X, self.last_T, self.last_X, self.flange = [], [], None, None, None
         self.all_T = []                       # (receive time, num_tags) of EVERY T_SHAPE_POSE frame, also the unusable ones
+        self.last_raw = None                  # receive time of the last T_SHAPE_POSE message of ANY kind (silence check: the camera stream, not the gates)
+        self.max_reproj, self.n_drop_reproj = 0.0, 0   # --max-reproj-px (0 = off); frames dropped by it
+        self.min_tags, self.n_drop_tags = 2, 0   # --min-tags (set by the backend from the arguments); frames dropped by it
         self.run = True
 
         def on_T(_c, d):
             m = object_pose_t.decode(d)
             with self.lock:
-                self.all_T.append((time.time(), m.num_tags))
+                self.last_raw = time.time()
+                self.all_T.append((self.last_raw, m.num_tags))
             if m.num_tags < 2:
+                return
+            if m.num_tags < self.min_tags:
+                with self.lock:
+                    self.n_drop_tags += 1
+                return
+            if self.max_reproj > 0 and m.reprojection_error_px > self.max_reproj:
+                with self.lock:
+                    self.n_drop_reproj += 1
                 return
             F.check_base_frame(m)
             th = F.theta_from_R(F.quat_xyzw_to_R(m.quaternion_xyzw))
             with self.lock:
                 self.last_T = time.time()
-                self.T.append((self.last_T, m.position_m[0], m.position_m[1], th, m.timestamp_us * 1e-6))
+                self.T.append((self.last_T, m.position_m[0], m.position_m[1], th, m.timestamp_us * 1e-6, m.num_tags, m.reprojection_error_px))
 
         def on_X(_c, d):
             s = xy_state_t.decode(d)
@@ -470,7 +482,7 @@ class Feed:
         self._fx = open(os.path.join(out_dir, "xy_state_raw.csv"), "w")
         self._fx.write("recv_epoch_s,x,y,cmd_x,cmd_y,plan_id,tracking\n")
         self._ft = open(os.path.join(out_dir, "t_pose_raw.csv"), "w")
-        self._ft.write("recv_epoch_s,stamp_epoch_s,x_base,y_base,theta_base_rad\n")
+        self._ft.write("recv_epoch_s,stamp_epoch_s,x_base,y_base,theta_base_rad,num_tags,reproj_px\n")
         self._ix = self._it = 0
         self._lth = threading.Thread(target=self._log_loop, daemon=True)
         self._lth.start()
@@ -480,7 +492,7 @@ class Feed:
             nx, nt = self.X[self._ix:], self.T[self._it:]
             self._ix, self._it = len(self.X), len(self.T)
         self._fx.write("".join(f"{r[0]:.6f},{r[1]:.5f},{r[2]:.5f},{r[3]:.5f},{r[4]:.5f},{r[5]},{r[6]}\n" for r in nx))
-        self._ft.write("".join(f"{r[0]:.6f},{r[4]:.6f},{r[1]:.5f},{r[2]:.5f},{r[3]:.5f}\n" for r in nt))
+        self._ft.write("".join(f"{r[0]:.6f},{r[4]:.6f},{r[1]:.5f},{r[2]:.5f},{r[3]:.5f},{r[5]},{r[6]:.3f}\n" for r in nt))
         self._fx.flush()
         self._ft.flush()
 
@@ -611,6 +623,7 @@ class RealBackend:
 
     def start_dry(self):
         self.feed = Feed(self.ol)
+        self.feed.min_tags, self.feed.max_reproj = self.a.min_tags, self.a.max_reproj_px
         if self.out_dir:
             self.feed.start_logging(self.out_dir)
         time.sleep(1.5)
@@ -651,6 +664,7 @@ class RealBackend:
         self.chk("XY_STATE / T_SHAPE_POSE alive", n["XY_STATE"] / dt >= 10 and n["T_SHAPE_POSE"] / dt >= 10,
                  f"XY_STATE {n['XY_STATE'] / dt:.0f} Hz, T_SHAPE_POSE {n['T_SHAPE_POSE'] / dt:.1f} Hz (need >= 10 each)")
         self.feed = Feed(ol)
+        self.feed.min_tags, self.feed.max_reproj = self.a.min_tags, self.a.max_reproj_px
         if self.out_dir:
             self.feed.start_logging(self.out_dir)
         time.sleep(1.5)
@@ -844,7 +858,7 @@ class RealBackend:
         f, now = self.feed, time.time()
         with f.lock:
             self._log(f)
-            gx, gt, X = f.last_X, f.last_T, (f.X[-1] if f.X else None)
+            gx, gt, X = f.last_X, f.last_raw, (f.X[-1] if f.X else None)
         if self.a.dry_run:
             return
         if gx is not None and now - gx > SOFT_XY_GAP_S:
@@ -890,7 +904,7 @@ class RealBackend:
             self.monitor([])
             with f.lock:
                 rows = [r for r in f.T if r[4] >= start]
-                gap = time.time() - f.last_T if f.last_T else 1e9
+                gap = time.time() - f.last_raw if f.last_raw else 1e9
             span = (self._content_time(rows[-1]) - self._content_time(rows[0])) if len(rows) > 1 else 0.0
             if (len(rows) >= MIN_FRAMES and span >= WINDOW_S - 0.02) or self.now() > t_found + READ_MAX_S:
                 break
@@ -908,7 +922,49 @@ class RealBackend:
             raise Stop("no pen position (XY_STATE / ROBOT_STATE)")
         return self._frames_pose(rows), pen
 
+    def _rest_read_fast(self):
+        """--fast-stop at a measurement point: no settle wait. Take the first 3 consecutive frames whose IMAGE time (stamp - exposure delay)
+        is >= stop - --fast-pre-s that differ by < 0.5 mm and < 0.3 deg (T has effectively stopped) and use their median. No such triple by
+        stop + ADAPT_MAX_S: the newest 3 frames. rd: settle = stop -> pose available, read = 0."""
+        t_rest = getattr(self, "t_rest", None)
+        t_rest = t_rest if t_rest is not None else self.now() - 10.0
+        t_lo, t_hi = t_rest - self.a.fast_pre_s, t_rest + ADAPT_MAX_S
+        f = self.feed
+        t_deadline = self.now() + READ_MAX_S + ADAPT_MAX_S
+        rows, stable = None, True
+        while rows is None:
+            self.monitor([])
+            with f.lock:
+                cand = [r for r in f.T if self._content_time(r) >= t_lo]
+            for i in range(len(cand) - 2):
+                w = cand[i:i + 3]
+                if all(math.hypot(w[j + 1][1] - w[j][1], w[j + 1][2] - w[j][2]) < ADAPT_DPOS_M
+                       and abs(wrap(w[j + 1][3] - w[j][3])) < ADAPT_DANG_RAD for j in range(2)):
+                    rows = w
+                    break
+            if rows is None and len(cand) >= 3 and self._content_time(cand[-1]) >= t_hi:
+                rows, stable = cand[-3:], False
+            if rows is None and self.now() > t_deadline:
+                raise Stop(f"T pose lost: no usable frames after the stop (by tags: {f.tag_stats(READ_MAX_S + 0.5)})")
+            if rows is None:
+                time.sleep(0.002)
+        with f.lock:
+            gap = time.time() - f.last_raw if f.last_raw else 1e9
+        t_got = self.now()
+        self.rd = dict(settle=t_got - t_rest, read=0.0, n=len(rows), low=0)
+        print(f"      fast-stop: stop->pose {t_got - t_rest:.3f} s, {len(rows)} frames, image time rel. stop "
+              f"{[round(self._content_time(r) - t_rest, 3) for r in rows]}, stamps {[round(r[4], 3) for r in rows]}"
+              f"{'' if stable else ' (NOT stable: newest 3 used)'}", flush=True)
+        if gap > SOFT_T_GAP_S:
+            raise Stop(f"T_SHAPE_POSE silent for {gap:.1f} s")
+        pen = f.pen()
+        if pen is None:
+            raise Stop("no pen position (XY_STATE / ROBOT_STATE)")
+        return self._frames_pose(rows), pen
+
     def rest_read(self):
+        if self.a.fast_stop:
+            return self._rest_read_fast()
         if self.a.adaptive_settle:
             return self._rest_read_adaptive()
         return self._rest_read_fixed()
@@ -925,7 +981,7 @@ class RealBackend:
             with f.lock:
                 rows = [r for r in f.T if ts <= self._content_time(r) <= te]
                 newest = self._content_time(f.T[-1]) if f.T else -1e9
-                gap = time.time() - f.last_T if f.last_T else 1e9
+                gap = time.time() - f.last_raw if f.last_raw else 1e9
             now = self.now()
             if newest >= te and len(rows) >= MIN_FRAMES:
                 break
@@ -1010,7 +1066,7 @@ class RealBackend:
         while True:                                 # keep collecting until MIN_FRAMES, at most READ_MAX_S after t_from
             with f.lock:
                 rows = [r for r in f.T if r[0] >= t_from]
-                gap = time.time() - f.last_T if f.last_T else 1e9
+                gap = time.time() - f.last_raw if f.last_raw else 1e9
             if len(rows) >= MIN_FRAMES or time.time() >= deadline:
                 break
             time.sleep(0.02)
@@ -1074,7 +1130,7 @@ class RealBackend:
             now = time.time()
             with f.lock:
                 X = f.X[-1] if f.X else None
-                gx, gt = f.last_X, f.last_T
+                gx, gt = f.last_X, f.last_raw
                 self._log(f)
             if X is None or gx is None:
                 if now - t_send > REJECT_WAIT_S:
@@ -1118,7 +1174,12 @@ class RealBackend:
         if self.feed:
             self.feed.stop()
         if self.state_nuc.get("driver") or self.state_nuc.get("down"):
-            self.ol.nuc_cleanup(self.state_nuc)
+            orig_pose = self.ol.nuc_start_pose        # the cleanup restarts the camera: with the binary of this run (e.g. the drain build), not the default
+            self.ol.nuc_start_pose = lambda *a_, **k_: orig_pose(interp=self.a.interp_flange, cam_delay_ms=self.a.cam_delay_ms, binary=self.a.pose_bin)
+            try:
+                self.ol.nuc_cleanup(self.state_nuc)
+            finally:
+                self.ol.nuc_start_pose = orig_pose
         self.trace = [r[:-1] for r in self.trace]
 
 
@@ -1293,6 +1354,7 @@ def blend_loop(a, be, planner, scene, fr, info, rows, plans):
     pend_meas = None                                    # timing of the last measurement phase, attached to the next chunk sent
     hist = [(-1e9, rest_traj(state_pen))]               # plans sent in the current group (for --cam-correct)
     Rg, cam_log = rot2(-scene.goal_th), []
+    pe_hist, conv_n = [], 0
     info["cam_corr"] = cam_log
     while True:
         be.monitor(chunks)
@@ -1361,6 +1423,20 @@ def blend_loop(a, be, planner, scene, fr, info, rows, plans):
             pen_pl, v_pl, a_pl = p_[0], v_[0], a_[0]
             prev["Tp_end"] = T_pl.copy()           # the prediction for the end of the interrupted chunk = its state at the hand-over
             clock += h
+        if a.converge_continuous > 0:               # --converge-continuous K: camera-corrected state within the tolerance at K consecutive hand-overs
+            corrected = bool(cam_log) and cam_log[-1][0] == k
+            pe_c, ae_c = float(np.linalg.norm(T_pl[:2])) * 1000, abs(math.degrees(wrap(T_pl[2])))
+            conv_n = conv_n + 1 if (corrected and pe_c < a.pos_tol_mm and ae_c < a.ang_tol_deg) else 0
+            if conv_n >= a.converge_continuous:
+                info["t_converged"] = be.now()
+                return f"converged (continuous): {pe_c:.1f} mm / {ae_c:.2f} deg at {conv_n} consecutive camera-corrected hand-overs", chunks
+        if a.plateau_chunks > 0:                    # --plateau-chunks: the distance of the planning state stopped improving
+            pe_hist.append(float(np.linalg.norm(T_pl[:2])) * 1000)
+            if len(pe_hist) >= a.plateau_chunks:
+                w_ = pe_hist[-a.plateau_chunks:]
+                if max(w_) - min(w_) < a.plateau_mm:
+                    return (f"plateau: distance within {max(w_) - min(w_):.2f} mm (< {a.plateau_mm:g}) over the last {a.plateau_chunks} chunks, "
+                            f"now {w_[-1]:.1f} mm / {abs(math.degrees(T_pl[2])):.2f} deg"), chunks
         t_pred = time.perf_counter() - t_pred0
         pen_sim = sim_pen(pen_pl)
         qpos = np.concatenate([T_pl, pen_sim - anchor])
@@ -1434,6 +1510,8 @@ def blend_loop(a, be, planner, scene, fr, info, rows, plans):
 
 def settle_pred(a):
     """Settling time added to the prediction of the chunk before a measurement (the camera reads soon after the stop with --adaptive-settle)."""
+    if a.fast_stop:
+        return 0.1
     return ADAPT_MIN_S + 0.15 if a.adaptive_settle else WAIT_AFTER_S
 
 
@@ -1480,6 +1558,7 @@ def pipeline_loop(a, be, planner, scene, fr, info, rows, plans):
     state_T, state_pen = T0.copy(), pen0.copy()
     pend_meas = None
     t_plan, k, chunks, t_edge, since = 0.0, 0, [], None, 0
+    pe_hist = []
     N = max(0, int(a.measure_every))
     while True:
         be.monitor(chunks)
@@ -1511,6 +1590,13 @@ def pipeline_loop(a, be, planner, scene, fr, info, rows, plans):
             return f"max cycles ({a.max_cycles})", chunks
         if be.now() > a.max_time:
             return f"time limit {a.max_time:g} s", chunks
+        if a.plateau_chunks > 0:                              # --plateau-chunks: the distance (state used for planning) stopped improving
+            pe_hist.append(float(np.linalg.norm(state_T[:2])) * 1000)
+            if len(pe_hist) >= a.plateau_chunks:
+                w_ = pe_hist[-a.plateau_chunks:]
+                if max(w_) - min(w_) < a.plateau_mm:
+                    return (f"plateau: distance within {max(w_) - min(w_):.2f} mm (< {a.plateau_mm:g}) over the last {a.plateau_chunks} chunks, "
+                            f"now {w_[-1]:.1f} mm / {abs(math.degrees(state_T[2])):.2f} deg"), chunks
         b_, m_ = scene.box, 0.006
         at_edge = bool(state_pen[0] <= b_[0] + m_ or state_pen[0] >= b_[1] - m_ or state_pen[1] <= b_[2] + m_ or state_pen[1] >= b_[3] - m_)
         t_edge = (t_edge if t_edge is not None else be.now()) if at_edge else None
@@ -1938,6 +2024,15 @@ def run(a, out):
             os.remove(xml)
         except OSError:
             pass
+    fd = getattr(be, "feed", None)
+    if fd is not None and hasattr(fd, "n_drop_tags"):
+        with fd.lock:
+            tg = [r[5] for r in fd.T if len(r) > 5]
+            nd = fd.n_drop_tags
+        nr = fd.n_drop_reproj
+        info["min_tags"], info["frames_dropped_min_tags"], info["frames_dropped_reproj"] = a.min_tags, nd, nr
+        print(f"== T frames: kept {len(tg)}, dropped by --min-tags {a.min_tags}: {nd}, by --max-reproj-px {a.max_reproj_px:g}: {nr}; min tags in kept frames {min(tg) if tg else '-'}; "
+              f"tag histogram of kept frames {({k_: tg.count(k_) for k_ in sorted(set(tg))})}")
     print(f"\n== stop: {reason}\n== final T error: {info['final_pos_mm']:.1f} mm, {info['final_ang_deg']:.2f} deg after {be.now() if a.sim else 0:.1f} s")
     os.makedirs(out, exist_ok=True)
     R, other = write_cycles(out, rows)
@@ -1976,6 +2071,8 @@ def main():
     g.add_argument("--real", action="store_true", help="real robot (NUC over ssh)")
     ap.add_argument("--dry-run", action="store_true", help="with --real: real poses, plan and print only, nothing sent / started")
     ap.add_argument("--max-cycles", type=int, default=None, help="default 1000 (sim/real), 5 with --dry-run")
+    ap.add_argument("--config", default=os.path.join("configs", "pusht_real.yaml"),
+                    help="scene / cost / vmax config, relative to the repo root; its scene.xml (next to pusht.xml) is also the planner model")
     ap.add_argument("--chunk-s", type=float, default=0.5, help="seconds of each plan that are sent")
     ap.add_argument("--max-time", type=float, default=90.0, help="run time limit [s]")
     ap.add_argument("--pos-tol-mm", type=float, default=10.0)
@@ -2009,12 +2106,23 @@ def main():
     ap.add_argument("--algo", choices=["ps", "dial"], default="ps", help="planner: ps (examples/pusht.py PS) or dial (examples/pusht.py DIAL defaults)")
     ap.add_argument("--n-opt", type=int, default=1, help="optimisation steps per round on the same state (time unchanged)")
     ap.add_argument("--link-check-every", type=int, default=5, help="--real: read the NUC carrier_changes every N rounds (any increase stops at once)")
-    ap.add_argument("--min-cam-hz", type=float, default=38.0, help="--real: camera check at bring-up (aprilcube_pose without --show runs at ~39-41 Hz)")
+    ap.add_argument("--min-cam-hz", type=float, default=32.0, help="--real: camera check at bring-up (aprilcube_pose without --show runs at ~36-60 Hz)")
+    ap.add_argument("--min-tags", type=int, default=2, help="--real: drop T frames with fewer detected tags (default 2 = only the unusable ones)")
+    ap.add_argument("--max-reproj-px", type=float, default=0.0, help="--real: drop T frames with a larger reprojection error (px); 0 = off")
+    ap.add_argument("--converge-continuous", type=int, default=0, help="--pipeline --blend: stop (converged (continuous)) when the camera-corrected state is "
+                    "within --pos-tol-mm/--ang-tol-deg at this many consecutive hand-overs (0 = off)")
+    ap.add_argument("--plateau-chunks", type=int, default=0, help="--pipeline: stop when the distance of the planning state to the goal varied by less than "
+                    "--plateau-mm over the last this many chunks (0 = off)")
+    ap.add_argument("--plateau-mm", type=float, default=1.0, help="--plateau-chunks: max spread of the distance (mm) that counts as a plateau")
+    ap.add_argument("--fast-stop", action="store_true", help="--pipeline measurement stops: no settle wait; median of the first 3 consecutive stable frames "
+                    "(< 0.5 mm, < 0.3 deg) with image time >= stop - --fast-pre-s (default off: --adaptive-settle path)")
+    ap.add_argument("--fast-pre-s", type=float, default=0.05, help="--fast-stop: frames taken up to this long before the arm stopped may be used")
     ap.add_argument("--max-dist-mm", type=float, default=350.0, help="stop when the T is further than this from the goal")
     ap.add_argument("--max-edge-s", type=float, default=5.0, help="stop when the pen has been at the box edge this long")
     # PS parameters: defaults = examples/pusht.py
     ap.add_argument("--num-samples", type=int, default=256)
     ap.add_argument("--noise-level", type=float, default=0.4)
+    ap.add_argument("--dial-noise", type=float, default=1.0, help="--algo dial: noise_level of DIAL (absolute, like --noise-level for PS)")
     ap.add_argument("--plan-horizon", type=float, default=1.0)
     ap.add_argument("--num-knots", type=int, default=6)
     # sim camera noise
@@ -2071,10 +2179,7 @@ def main():
     out = a.out or os.path.join(REPO, "runs", "closed_loop_test", f"{'sim' if a.sim else 'real'}_{time.strftime('%Y%m%d_%H%M%S')}")
     run(a, out)
     return 0
-    ap.add_argument("--config", default=os.path.join("configs", "pusht_real.yaml"),
-                    help="scene / cost / vmax config, relative to the repo root; its scene.xml (next to pusht.xml) is also the planner model")
 
 
 if __name__ == "__main__":
     sys.exit(main())
-    ap.add_argument("--dial-noise", type=float, default=1.0, help="--algo dial: noise_level of DIAL (absolute, like --noise-level for PS)")
