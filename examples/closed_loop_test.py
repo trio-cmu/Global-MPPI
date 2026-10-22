@@ -86,6 +86,10 @@ class Stop(Exception):
     pass
 
 
+class PoseLost(Stop):
+    """No usable T frame at a measurement stop (all frames dropped by the gates / too few). --blend can fall back to the prediction."""
+
+
 # ------------------------------------------------------------------ planner (copied from examples/pusht.py)
 class Planner:
     def __init__(self, a, xml=None):
@@ -103,6 +107,16 @@ class Planner:
             print("Running DIAL")
             self.ctrl = DIAL(task, num_samples=256, noise_level=a.dial_noise, beta_opt_iter=1.0, beta_horizon=1.0, temperature=0.01,
                              plan_horizon=1.0, spline_type="cubic", num_knots=6)
+        elif a.algo == "mppi":      # examples/pusht.py MPPI settings
+            from global_mppi.algs import MPPI
+            print("Running MPPI")
+            self.ctrl = MPPI(task, num_samples=256, noise_level=1.0, temperature=0.1, spline_type="cubic", plan_horizon=1.0, num_knots=6,
+                             iterations=5)
+        elif a.algo == "globalmppi":   # examples/pusht.py GlobalMPPI settings
+            from global_mppi.algs import GlobalMPPI
+            print(f"Running GlobalMPPI (ksos solver {a.ksos_solver})")
+            self.ctrl = GlobalMPPI(task, num_samples=256, noise_level=0.1, temperature=0.1, spline_type="cubic", plan_horizon=1.0, num_knots=6,
+                                   iterations=5, ksos_solver=a.ksos_solver)
         else:
             print("Running predictive sampling")
             self.ctrl = PredictiveSampling(task, num_samples=a.num_samples, noise_level=a.noise_level, num_randomizations=1,
@@ -430,6 +444,7 @@ class Feed:
         self.all_T = []                       # (receive time, num_tags) of EVERY T_SHAPE_POSE frame, also the unusable ones
         self.last_raw = None                  # receive time of the last T_SHAPE_POSE message of ANY kind (silence check: the camera stream, not the gates)
         self.max_reproj, self.n_drop_reproj = 0.0, 0   # --max-reproj-px (0 = off); frames dropped by it
+        self.fallbacks = []                   # receive times of the measurement stops that fell back to the prediction (logged as fallback=1 rows)
         self.min_tags, self.n_drop_tags = 2, 0   # --min-tags (set by the backend from the arguments); frames dropped by it
         self.run = True
 
@@ -482,17 +497,18 @@ class Feed:
         self._fx = open(os.path.join(out_dir, "xy_state_raw.csv"), "w")
         self._fx.write("recv_epoch_s,x,y,cmd_x,cmd_y,plan_id,tracking\n")
         self._ft = open(os.path.join(out_dir, "t_pose_raw.csv"), "w")
-        self._ft.write("recv_epoch_s,stamp_epoch_s,x_base,y_base,theta_base_rad,num_tags,reproj_px\n")
-        self._ix = self._it = 0
+        self._ft.write("recv_epoch_s,stamp_epoch_s,x_base,y_base,theta_base_rad,num_tags,reproj_px,fallback\n")
+        self._ix = self._it = self._if = 0
         self._lth = threading.Thread(target=self._log_loop, daemon=True)
         self._lth.start()
 
     def _flush_logs(self):
         with self.lock:
-            nx, nt = self.X[self._ix:], self.T[self._it:]
-            self._ix, self._it = len(self.X), len(self.T)
+            nx, nt, nf = self.X[self._ix:], self.T[self._it:], self.fallbacks[self._if:]
+            self._ix, self._it, self._if = len(self.X), len(self.T), len(self.fallbacks)
         self._fx.write("".join(f"{r[0]:.6f},{r[1]:.5f},{r[2]:.5f},{r[3]:.5f},{r[4]:.5f},{r[5]},{r[6]}\n" for r in nx))
-        self._ft.write("".join(f"{r[0]:.6f},{r[4]:.6f},{r[1]:.5f},{r[2]:.5f},{r[3]:.5f},{r[5]},{r[6]:.3f}\n" for r in nt))
+        self._ft.write("".join(f"{r[0]:.6f},{r[4]:.6f},{r[1]:.5f},{r[2]:.5f},{r[3]:.5f},{r[5]},{r[6]:.3f},0\n" for r in nt))
+        self._ft.write("".join(f"{t:.6f},nan,nan,nan,nan,0,0.000,1\n" for t in nf))   # fallback marker: no pose, the prediction was used
         self._fx.flush()
         self._ft.flush()
 
@@ -523,6 +539,10 @@ class Feed:
         with self.lock:
             rows = [n for t, n in self.all_T if t > time.time() - window]
         return {k: rows.count(k) for k in sorted(set(rows))}
+
+    def mark_fallback(self):
+        with self.lock:
+            self.fallbacks.append(time.time())
 
     def pen(self):
         with self.lock:
@@ -896,7 +916,7 @@ class RealBackend:
             if start is None and rows and self._content_time(rows[-1]) >= t_hi:
                 start = next(r[4] for r in rows if self._content_time(r) >= t_hi)
             if start is None and self.now() > t_deadline:
-                raise Stop(f"T pose lost: no usable frames after the stop (by tags: {f.tag_stats(READ_MAX_S + 0.5)})")
+                raise PoseLost(f"T pose lost: no usable frames after the stop (by tags: {f.tag_stats(READ_MAX_S + 0.5)})")
             if start is None:
                 time.sleep(0.01)
         t_found = self.now()
@@ -912,7 +932,7 @@ class RealBackend:
         low = int(len(rows) < MIN_FRAMES)
         self.rd = dict(settle=t_found - t_rest, read=self.now() - t_found, n=len(rows), low=low)
         if len(rows) < MIN_FRAMES_LOW:
-            raise Stop(f"T pose lost: {len(rows)} frames after the stop; by tags: {f.tag_stats(READ_MAX_S + 0.5)}")
+            raise PoseLost(f"T pose lost: {len(rows)} frames after the stop; by tags: {f.tag_stats(READ_MAX_S + 0.5)}")
         if low:
             print(f"      low_frames: only {len(rows)} frames in the rest window (used anyway)", flush=True)
         if gap > SOFT_T_GAP_S:
@@ -945,7 +965,7 @@ class RealBackend:
             if rows is None and len(cand) >= 3 and self._content_time(cand[-1]) >= t_hi:
                 rows, stable = cand[-3:], False
             if rows is None and self.now() > t_deadline:
-                raise Stop(f"T pose lost: no usable frames after the stop (by tags: {f.tag_stats(READ_MAX_S + 0.5)})")
+                raise PoseLost(f"T pose lost: no usable frames after the stop (by tags: {f.tag_stats(READ_MAX_S + 0.5)})")
             if rows is None:
                 time.sleep(0.002)
         with f.lock:
@@ -992,7 +1012,7 @@ class RealBackend:
         low = int(len(rows) < MIN_FRAMES)
         self.rd = dict(settle=WAIT_AFTER_S, read=self.now() - t_enter, n=len(rows), low=low)
         if len(rows) < MIN_FRAMES_LOW:
-            raise Stop(f"T pose lost: {len(rows)} frames with image time in the {WINDOW_S} s rest window; by tags: {f.tag_stats(READ_MAX_S + 0.5)}")
+            raise PoseLost(f"T pose lost: {len(rows)} frames with image time in the {WINDOW_S} s rest window; by tags: {f.tag_stats(READ_MAX_S + 0.5)}")
         if low:
             print(f"      low_frames: only {len(rows)} frames in the rest window (used anyway)", flush=True)
         if gap > SOFT_T_GAP_S:
@@ -1355,6 +1375,8 @@ def blend_loop(a, be, planner, scene, fr, info, rows, plans):
     hist = [(-1e9, rest_traj(state_pen))]               # plans sent in the current group (for --cam-correct)
     Rg, cam_log = rot2(-scene.goal_th), []
     pe_hist, conv_n = [], 0
+    fb_n, fb_log = 0, []                                # consecutive measurement stops without a usable frame (--max-fallbacks); chunk indices
+    info['fallback_chunks'] = fb_log
     info["cam_corr"] = cam_log
     while True:
         be.monitor(chunks)
@@ -1364,13 +1386,23 @@ def blend_loop(a, be, planner, scene, fr, info, rows, plans):
             finalize_last()
             t_m0 = be.now()
             be.drain(settle=False)
-            T_m, pen_m, pend_meas = meas_phase(be, a, t_m0)
+            T_m, pen_m, pend_meas = meas_phase(be, a, t_m0, fallback=fb_n < a.max_fallbacks)
             Tp = chunks[-1]["Tp_end"]
-            dpos, dang = float(np.linalg.norm(Tp[:2] - T_m[:2])) * 1000, math.degrees(wrap(Tp[2] - T_m[2]))
-            chunks[-1]["static"] = T_m.copy()
-            meas_log.append((k, dpos, dang))
-            print(f"      measure after chunk {k - 1}: predicted ({Tp[0]:+.4f},{Tp[1]:+.4f},{math.degrees(Tp[2]):+6.1f}deg) measured "
-                  f"({T_m[0]:+.4f},{T_m[1]:+.4f},{math.degrees(T_m[2]):+6.1f}deg) diff {dpos:.1f} mm {dang:+.1f} deg", flush=True)
+            if T_m is None:                                   # no usable frame: continue from the prediction propagated with the executed commands
+                fb_n += 1
+                fb_now = True
+                T_m = Tp.copy()
+                chunks[-1]["static"] = np.full(3, np.nan)
+                fb_log.append(k - 1)
+                print(f"      measure after chunk {k - 1}: FALLBACK {fb_n}/{a.max_fallbacks}: using the predicted "
+                      f"({T_m[0]:+.4f},{T_m[1]:+.4f},{math.degrees(T_m[2]):+6.1f}deg)", flush=True)
+            else:
+                fb_n, fb_now = 0, False
+                dpos, dang = float(np.linalg.norm(Tp[:2] - T_m[:2])) * 1000, math.degrees(wrap(Tp[2] - T_m[2]))
+                chunks[-1]["static"] = T_m.copy()
+                meas_log.append((k, dpos, dang))
+                print(f"      measure after chunk {k - 1}: predicted ({Tp[0]:+.4f},{Tp[1]:+.4f},{math.degrees(Tp[2]):+6.1f}deg) measured "
+                      f"({T_m[0]:+.4f},{T_m[1]:+.4f},{math.degrees(T_m[2]):+6.1f}deg) diff {dpos:.1f} mm {dang:+.1f} deg", flush=True)
             state_T, state_pen, since = T_m, pen_m, 0
             clock += chunks[-1]["dur"]
             world.reset(state_T, sim_pen(state_pen))
@@ -1381,7 +1413,7 @@ def blend_loop(a, be, planner, scene, fr, info, rows, plans):
                 return "T left the box", chunks
             if pe > a.max_dist_mm:
                 return f"T {pe:.0f} mm from the goal (> {a.max_dist_mm:g} mm)", chunks
-            if pe < a.pos_tol_mm and ae < a.ang_tol_deg:
+            if pe < a.pos_tol_mm and ae < a.ang_tol_deg and not fb_now:
                 info["t_converged"] = be.now()
                 return f"converged (measured at rest): {pe:.1f} mm / {ae:.2f} deg", chunks
         if k >= a.max_cycles:
@@ -1515,10 +1547,22 @@ def settle_pred(a):
     return ADAPT_MIN_S + 0.15 if a.adaptive_settle else WAIT_AFTER_S
 
 
-def meas_phase(be, a, t_m0):
-    """Timing of the measurement phase after be.drain(): returns (T, pen, dict). Link check (background with --bg-link-check) is timed too."""
+def meas_phase(be, a, t_m0, fallback=False):
+    """Timing of the measurement phase after be.drain(): returns (T, pen, dict). Link check (background with --bg-link-check) is timed too.
+    fallback=True: no usable T frame (PoseLost) -> T is None (the caller uses the prediction), the pen from XY_STATE, marked fallback=1."""
     t_m1 = be.now()
-    T_m, pen_m = be.rest_read()
+    try:
+        T_m, pen_m = be.rest_read()
+    except PoseLost as e:
+        if not fallback:
+            raise
+        pen_m = be.feed.pen()
+        if pen_m is None:
+            raise Stop("no pen position (XY_STATE / ROBOT_STATE)")
+        T_m = None
+        be.feed.mark_fallback()
+        be.rd = dict(settle=be.now() - getattr(be, "t_rest", t_m1), read=0.0, n=0, low=1)
+        print(f"      FALLBACK (fallback=1): {e}", flush=True)
     t_m2 = be.now()
     if not a.dry_run:
         be.check_link()
@@ -1842,6 +1886,12 @@ def run(a, out):
         if not a.sim:
             if not be.preflight():
                 raise Stop("pre-flight failed")
+            if a.auto_start and not a.dry_run:        # --auto-start: pre-flight passed, nothing has moved yet; Ctrl-C here cancels
+                print(f"\n  AUTO-START: the arm moves to the start point, goes down and the loop starts in {a.auto_start_s:g} s "
+                      f"(T must be on start_2, hand on the enable button). Ctrl-C cancels.", flush=True)
+                for i in range(int(a.auto_start_s), 0, -1):
+                    print(f"    {i} ...", flush=True)
+                    time.sleep(1.0)
             if a.dry_run:
                 be.start_dry()
             else:
@@ -2103,11 +2153,16 @@ def main():
                     "from T_SHAPE_POSE.timestamp_us to get the image time. Default: the --cam-delay-ms of the running aprilcube_pose (dry-run) / "
                     "of the one this script starts, else 0")
     ap.add_argument("--pipeline", action="store_true", help="plan the next chunk while the current one runs (sim only for now; default off)")
-    ap.add_argument("--algo", choices=["ps", "dial"], default="ps", help="planner: ps (examples/pusht.py PS) or dial (examples/pusht.py DIAL defaults)")
+    ap.add_argument("--algo", choices=["ps", "dial", "mppi", "globalmppi"], default="ps",
+                    help="planner: ps (PS with --noise-level etc.), dial / mppi / globalmppi (the examples/pusht.py settings; --dial-noise only changes DIAL)")
+    ap.add_argument("--ksos-solver", default="newton-rs", help="--algo globalmppi: KSOS solver (as examples/pusht.py)")
     ap.add_argument("--n-opt", type=int, default=1, help="optimisation steps per round on the same state (time unchanged)")
     ap.add_argument("--link-check-every", type=int, default=5, help="--real: read the NUC carrier_changes every N rounds (any increase stops at once)")
     ap.add_argument("--min-cam-hz", type=float, default=32.0, help="--real: camera check at bring-up (aprilcube_pose without --show runs at ~36-60 Hz)")
     ap.add_argument("--min-tags", type=int, default=2, help="--real: drop T frames with fewer detected tags (default 2 = only the unusable ones)")
+    ap.add_argument("--max-fallbacks", type=int, default=0, help="--pipeline --blend: when a measurement stop finds no usable T frame (e.g. all frames dropped by "
+                    "--min-tags), continue from the prediction propagated with the executed commands, at most this many times in a row, then stop "
+                    "(0 = stop at once, as before). Marked fallback=1 in the log and t_pose_raw.csv. EXPERIMENTAL")
     ap.add_argument("--max-reproj-px", type=float, default=0.0, help="--real: drop T frames with a larger reprojection error (px); 0 = off")
     ap.add_argument("--converge-continuous", type=int, default=0, help="--pipeline --blend: stop (converged (continuous)) when the camera-corrected state is "
                     "within --pos-tol-mm/--ang-tol-deg at this many consecutive hand-overs (0 = off)")
@@ -2127,6 +2182,10 @@ def main():
     ap.add_argument("--num-knots", type=int, default=6)
     # sim camera noise
     # real
+    ap.add_argument("--auto-start", action="store_true", help="--real: no go files / Enter: after the pre-flight a countdown (--auto-start-s, Ctrl-C cancels), then "
+                    "move to the start, go down and start the loop. The checks above the start point and after 'down' are unchanged and still abort. "
+                    "Skips --confirm. EXPERIMENTAL: assumes T is already on start_2 and the hand is on the enable button")
+    ap.add_argument("--auto-start-s", type=float, default=5.0, help="--auto-start: countdown length (s)")
     ap.add_argument("--confirm", action="store_true", help="--real: ask for a manual confirmation before 'down' and before the loop "
                     "(default: fully automatic; the automatic checks run in both cases)")
     ap.add_argument("--go-file", default=None, help="--real: instead of Enter, wait until this file exists (then it is removed)")
@@ -2148,6 +2207,10 @@ def main():
         ap.error("choose --sim or --real")
     if a.dry_run and not a.real:
         ap.error("--dry-run needs --real")
+    if a.auto_start:
+        if not a.real or a.dry_run:
+            ap.error("--auto-start needs --real (and not --dry-run)")
+        a.confirm = False                                           # --auto-start replaces the confirmations
     if a.cam_correct and not a.blend:
         ap.error("--cam-correct needs --pipeline --blend")
     if a.blend and not a.pipeline:
