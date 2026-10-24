@@ -117,7 +117,7 @@ def _record_newton_solves():
 
 
 class Planner:
-    def __init__(self, a, xml=None):
+    def __init__(self, a, xml=None, cost=None):
         import jax
         import jax.numpy as jnp
         import mujoco
@@ -125,7 +125,11 @@ class Planner:
         from global_mppi.algs import PredictiveSampling
         from global_mppi.tasks.pusht import PushT
         self.jax, self.jnp, self.mjx, self.mujoco = jax, jnp, mjx, mujoco
-        task = PushT(xml)         # xml=None: the default scene (as pusht.py); the box walls scene otherwise
+        print(f"== jax devices: {jax.devices()} (default backend {jax.default_backend()})", flush=True)
+        # cost: the config's cost section (w_pos / w_ori / w_approach), as global_mppi/closed_loop/scene.py builds its task;
+        # None: the PushT defaults (w_approach 0, as examples/pusht.py)
+        task = PushT(xml, **{k: float(cost[k]) for k in ("w_pos", "w_ori", "w_approach") if cost and k in cost})   # xml=None: default scene; the box walls scene otherwise
+        print(f"== planner cost: w_pos {task.w_pos:g}, w_ori {task.w_ori:g}, w_approach {task.w_approach:g}", flush=True)
         self.n_opt = max(1, int(a.n_opt))
         self.algo, self.ksos_every, self.n_plan = a.algo, max(1, int(getattr(a, "ksos_every", 1))), 0
         if a.algo == "dial":        # examples/pusht.py DIAL defaults, none changed
@@ -1962,7 +1966,7 @@ def run(a, out):
         cfg["scene"]["xml"] = xml
     scene = Scene(cfg)
     fr = Frames(scene)
-    planner = Planner(a, xml or scene.xml)           # the planner model is the scene of the config (--config), walls or not
+    planner = Planner(a, xml or scene.xml, None if a.no_config_cost else cfg["cost"])           # the planner model is the scene of the config (--config), walls or not
     planner.warmup()
     scene.start_P = fr.base_to_sim(a.pusher_start_base)        # --sim starts the pen here too
     be = SimBackend(a, scene, fr) if a.sim else RealBackend(a, scene, fr)
@@ -2253,6 +2257,7 @@ def main():
     ap.add_argument("--pipeline", action="store_true", help="plan the next chunk while the current one runs (sim only for now; default off)")
     ap.add_argument("--algo", choices=["ps", "dial", "mppi", "globalmppi"], default="ps",
                     help="planner: ps (PS with --noise-level etc.), dial / mppi / globalmppi (the examples/pusht.py settings; --dial-noise only changes DIAL)")
+    ap.add_argument("--no-config-cost", action="store_true", help="planner cost = the PushT defaults (w_approach 0) instead of the cost section of --config (the runs up to real_globalmppi_cpu_b1)")
     ap.add_argument("--ksos-every", type=int, default=1, help="--algo globalmppi: KSOS global step every N-th planning cycle (1 = every cycle, as simulation/deterministic.py); other cycles are plain MPPI")
     ap.add_argument("--ksos-solver", default="newton-rs", help="--algo globalmppi: KSOS solver (as examples/pusht.py)")
     ap.add_argument("--n-opt", type=int, default=1, help="optimisation steps per round on the same state (time unchanged)")
