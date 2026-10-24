@@ -57,7 +57,7 @@ CAM_LATENCY_S = 0.18
 CAM_SIGMA = (0.0002, 0.001, math.radians(0.3))          # --sim measurement noise: x, y (base frame) [m], theta [rad]
 PUSHER_START_YAML = os.path.join(TRIO_SIM, "src", "pusht_align", "pusher_start_pushside_near.yaml")   # default start: 2 cm from the T outline, pushing side
 PUSHER_START_STD_YAML = os.path.join(TRIO_SIM, "src", "pusht_align", "pusher_start.yaml")           # the old standard start
-UPRIGHT_BIN = "../trio_infra_upright/build_upright/bin/xy_driver"
+UPRIGHT_BIN = os.environ.get("XY_DRIVER_BIN", "../trio_infra_upright/build_upright/bin/xy_driver")   # relative to the NUC repo (env XY_DRIVER_BIN / --xy-driver-bin)
 
 
 def rot2(a):

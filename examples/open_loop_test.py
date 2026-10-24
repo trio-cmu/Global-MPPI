@@ -47,17 +47,18 @@ sys.path.insert(0, os.path.join(TRIO_SIM, "src", "pusht_align"))                
 sys.path.insert(0, os.path.join(TRIO_INFRA, "src", "mppi_bridge", "lcmtypes_py"))    # franka_driver_lcm, camera_driver_lcm
 os.environ.setdefault("LCM_DEFAULT_URL", "udpm://239.255.76.67:7667?ttl=1")
 
-NUC = "junlong@192.168.50.2"
-NUC_REPO = "~/projects/trio_infra"
-NUC_PY = "~/miniforge3/envs/cam_calib/bin/python"
+# The NUC account and its paths: override with environment variables (export NUC=<user>@192.168.50.2 ...); the defaults are junlong's.
+NUC = os.environ.get("NUC", "junlong@192.168.50.2")
+NUC_REPO = os.environ.get("NUC_REPO", "~/projects/trio_infra")
+NUC_PY = os.environ.get("NUC_PY", "~/miniforge3/envs/cam_calib/bin/python")
 FIFO = "~/xy_in"
 ROBOT_IP = "172.16.0.2"
 NUC_IFACE = "enp89s0"
-XY_DRIVER_BIN = "build_noee/bin/xy_driver"   # --xy-driver-bin; relative to NUC_REPO
+XY_DRIVER_BIN = os.environ.get("XY_DRIVER_BIN", "build_noee/bin/xy_driver")   # --xy-driver-bin; relative to NUC_REPO
 XY_DRIVER_EXTRA = ""                        # " --max-lead-mm=15" [+ " --upright [--yaw-deg=X]"], set in main()
 MAX_LEAD_MM = 15.0                          # --max-lead-mm (default 15; 0 = do not pass the flag)
 DEFAULT_RUN_DIR = os.path.join(TRIO_SIM, "runs", "closedloop_ps1_slow")   # the slow plan
-NUC_DISPLAY = ":2"      # junlong's Xwayland on the NUC (needs its XAUTHORITY, found below)
+NUC_DISPLAY = os.environ.get("NUC_DISPLAY", ":2")      # junlong's Xwayland on the NUC (needs its XAUTHORITY, found below)
 NUC_ENV = 'export LCM_DEFAULT_URL="udpm://239.255.76.67:7667?ttl=1"; '   # ttl=1, else nothing leaves the NUC
 WORK_Z = 0.34874
 HOME_Z = 0.4434
@@ -92,11 +93,11 @@ def report(ok, msg, warn=False):
 
 
 # ---------------------------------------------------------------- NUC / ssh
-SSH_HELP = """\
+SSH_HELP = f"""\
 ssh to the NUC without a password does not work. One-time setup on the 5090:
-    ssh-keyscan -H 192.168.50.2 >> ~/.ssh/known_hosts          # trust the host key (or ssh once and answer yes)
-    ssh-copy-id -i ~/.ssh/id_ed25519.pub junlong@192.168.50.2   # asks for the NUC password once
-  then check:  ssh -o BatchMode=yes junlong@192.168.50.2 true"""
+    ssh-keyscan -H {NUC.split("@")[-1]} >> ~/.ssh/known_hosts          # trust the host key (or ssh once and answer yes)
+    ssh-copy-id -i ~/.ssh/id_ed25519.pub {NUC}   # asks for the NUC password once
+  then check:  ssh -o BatchMode=yes {NUC} true"""
 
 
 def ssh(cmd, timeout=30):

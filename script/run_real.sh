@@ -9,6 +9,7 @@
 # Always use a NEW run name. After the run: fig_trajectory / fig_error_vs_time / fig_cycle_timeline / fig_plan_time .png in the run directory and
 # one row appended to runs/closed_loop_test/summary.csv (global_mppi/closed_loop/run_figures.py; /usr/bin/python3, override with FIGPY=).
 # Override the interpreter with PYTHON=/path/to/python.
+# NUC account and paths (defaults are junlong's): export NUC=<user>@192.168.50.2 NUC_REPO=... NUC_PY=... XY_DRIVER_BIN=... (see docs/ZHONGQI_QUICKSTART.md).
 set -euo pipefail
 if [ $# -lt 2 ]; then echo "usage: $0 <ps|dial|mppi|globalmppi> <run_name> [extra flags]" >&2; exit 2; fi
 ALGO=$1; NAME=$2; shift 2
@@ -18,7 +19,8 @@ OUT="runs/closed_loop_test/$NAME"
 if [ -e "$OUT" ]; then echo "$OUT already exists: use a new run name" >&2; exit 2; fi
 PYTHON=${PYTHON:-/home/junlong/miniforge3/envs/global-mppi/bin/python}
 rm -f /tmp/go /tmp/go.down
-unset JAX_PLATFORMS                                   # GPU (jax default)
+unset JAX_PLATFORMS                                   # GPU (jax default); for CPU: JAX_PLATFORM_NAME=cpu ./script/run_real.sh ...
+export XLA_PYTHON_CLIENT_PREALLOCATE=${XLA_PYTHON_CLIENT_PREALLOCATE:-false}   # no 75% GPU grab at start (a shared GPU gave "cuSolver internal error")
 export LCM_DEFAULT_URL="${LCM_DEFAULT_URL:-udpm://239.255.76.67:7667?ttl=1}"
 # The run (including its own cleanup: arm up, camera restored) finishes inside python; only THEN the figures / summary are made, and
 # whatever they do (or fail to do) cannot change the run's exit code. Ctrl-C (also during the countdown) goes to python; the script then

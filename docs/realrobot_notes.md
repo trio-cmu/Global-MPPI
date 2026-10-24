@@ -1,5 +1,7 @@
 # Real-robot Push-T closed loop: notes (2026-10-20)
 
+> **Zhongqi: start with [`ZHONGQI_QUICKSTART.md`](ZHONGQI_QUICKSTART.md)** (copy-paste setup for your own accounts on the 5090 and the NUC). This file has the details and the reasons.
+
 Branch `realrobot-pusht-pipeline`, script `examples/closed_loop_test.py`. Everything marked *experimental* is new, off by
 default (same behaviour as before) and only tried in a few single runs.
 
