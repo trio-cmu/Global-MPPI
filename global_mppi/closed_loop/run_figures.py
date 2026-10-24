@@ -34,7 +34,7 @@ def wrap(a):
 
 
 def load(path):
-    return np.genfromtxt(path, delimiter=",", names=True)
+    return np.atleast_1d(np.genfromtxt(path, delimiter=",", names=True))      # one row (a 1-cycle run) comes back 0-d
 
 
 def poly(x, y, th):
@@ -139,7 +139,7 @@ def main(run):
 
     # ===== 3. cycle timeline: walk / read pose / plan (same split as the latency breakdown)
     walk = np.nan_to_num(C["t_track_s"])
-    read = np.nan_to_num(C["meas_stop_to_pose_s"])
+    read = np.nan_to_num(C["meas_stop_to_pose_s"]) if "meas_stop_to_pose_s" in C.dtype.names else np.zeros(len(C))      # absent without --pipeline measurements
     plan = np.nan_to_num(C["plan_s"])
     fig, ax = plt.subplots(figsize=(12, 6.5))
     x = np.arange(n)

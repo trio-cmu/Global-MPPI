@@ -20,10 +20,16 @@ Outputs in runs/closed_loop_test/<backend>_<stamp>/: cycles.csv (T pose, pen, er
 plans.npz (waypoints per round), trace.csv (continuous T / pen), closed_loop_traj.png, closed_loop_errors.png, args.json.
 Real bring-up follows examples/open_loop_test.py (NUC over ssh, trio_infra script/openloop_cmds.md).
 """
+import os
+
+# numpy's BLAS must stay single-threaded: the 256x256 Cholesky / solves of the Global-MPPI sigma calibration (neg_lml) take 12 s with the
+# default thread pool (24 threads fighting the camera / pipeline threads and jax) against 15 ms with one thread. Before numpy is imported.
+for _v in ("OPENBLAS_NUM_THREADS",):
+    os.environ.setdefault(_v, "1")
+
 import argparse
 import json
 import math
-import os
 import subprocess
 import sys
 import threading
