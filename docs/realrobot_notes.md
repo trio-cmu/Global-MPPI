@@ -66,7 +66,7 @@ With `--min-tags 4` a run was soft-stopped near the goal because only 3-4 tags s
 | 机器 | 仓库 | 分支 | 我们这台机器上的位置 |
 |---|---|---|---|
 | 5090 | `git@github.com:trio-cmu/Global-MPPI.git`（`git clone --recurse-submodules`，`ksos-tools` 是子模块） | `realrobot-pusht-pipeline` | `~/projects/Global-MPPI` |
-| NUC | `git@github.com:trio-cmu/trio_infra.git` | `main`（`ba58f94`） | `~/projects/trio_infra` |
+| NUC | `git@github.com:trio-cmu/trio_infra.git` | 要的是 `main`（`ba58f94`）。**我们这台 NUC 实际在 `positions-1015`（`db37dca`），比 `main` 落后 15 个提交**（2026-10-24 只读检查），工作区还有未提交改动（`config/calibration.yaml`，内容和 `main` 的 2026-10-20 重标版**逐字相同**；`data/*_robot.yaml`；被跟踪的 `build/` 里的文件） | `~/projects/trio_infra` |
 | NUC | 同一个 trio_infra（驱动用的 git worktree） | 我们现在用 `noee-z-upright-blend`；其中的 blend 提交 `7e628c7` **已经是 `origin/main` 的祖先** | `~/projects/trio_infra_upright`（二进制 `build_upright/bin/xy_driver`） |
 
 - `trio_infra` 的 `main` 已经包含：相机帧队列 drain 补丁（`b1858fa`）、`script/t_shape_pose_drain.sh`、`script/setup_lcm_route.sh`、`docs/camera_frame_drain.md`、`--interp-flange`、2026-10-20 的相机到法兰重新标定（`config/calibration.yaml`）、xy_driver 的 `--upright` / 计划限制 / `--max-lead-mm` / `--blend`。
@@ -74,7 +74,8 @@ With `--min-tags 4` a run was soft-stopped near the goal because only 3-4 tags s
 - **xy_driver 分步归位（转角 >30° 时拆成多步）还没有提交**：它只是 `~/projects/trio_infra_upright` 工作区里的未提交改动（`upright.hpp`、`xy_driver.cpp`、`test_upright.cpp`），**没有在真机上验证过**，默认二进制 `build_upright/bin/xy_driver` 里**没有**它。推到哪个分支：**待确认（还没决定）**。
 - 5090 上还有两个外部依赖，`Global-MPPI` 的代码按固定路径去读（不在 Global-MPPI 仓库里）：
   - `~/trio_sim`：trio_infra 的另一个克隆（我们这里是 detached HEAD `acf03b6`，且有很多**未提交的本地改动**：`config/lcm_relay.yaml`、`src/pusht_align/{frames.py,pusht_goal.yaml,pusht_starts.yaml,render_run.py,tshape.py,verify_alignment.py,pusher_start.yaml}`）。代码用到其中的 `src/pusht_align/frames.py`、`pusher_start_pushside_near.yaml`、`pusher_start.yaml`、`pusht_starts.yaml`、`pusht_goal.yaml`（`closed_loop_test.py` 里的 `TRIO_SIM`）。**待确认**：哪些本地改动是必须的、`main` 里的 `src/pusht_align` 能不能替代它。
-  - `~/projects/trio_infra/src/mppi_bridge/lcmtypes_py`：**生成出来的** LCM Python 类型（不在 git 里），用 `script/generate_lcm_python.sh` 生成（需要先编出 `lcm-gen`，见该脚本开头的提示）。`closed_loop_test.py` 里的 `TRIO_INFRA`。
+  - `~/projects/trio_infra/src/mppi_bridge/lcmtypes_py`：**生成出来的** LCM Python 类型（不在 git 里，已 gitignore），用 `script/generate_lcm_python.sh` 生成。**不需要先编 `lcm-gen`**：`main` 里**提交了** `build/third_party/lcm/lcmgen/lcm-gen`（x86-64 二进制，来自 Zhongqi 的机器），2026-10-24 在全新克隆里直接运行脚本，生成了 `camera_driver_lcm` 和 `franka_driver_lcm`。没有这个目录，真机运行一开始就会 `ModuleNotFoundError: No module named 'camera_driver_lcm'`（`--sim` 不需要它）。`closed_loop_test.py` 里的 `TRIO_INFRA`。
+  - **`pusher_start_pushside_near.yaml` 不在 `trio_infra` 的 `main` 里**，但 `closed_loop_test.py` 默认从 `~/trio_sim/src/pusht_align/` 读它，缺了就在启动时 `FileNotFoundError`（`--sim` 也一样）。同样内容的文件在本仓库的 `configs/pusher_start_pushside_near.yaml`（和我们的 `~/trio_sim` 里那份逐字相同）：`cp configs/pusher_start_pushside_near.yaml ~/trio_sim/src/pusht_align/`。`--sim` 只读 `TRIO_SIM` 里的这一个文件（`frames.py` 等只在真机路径里导入），补上它就通；真机路径（`frames.py`、`pusher_start.yaml`、`pusht_starts.yaml`、`pusht_goal.yaml`）没有用 `main` 的版本验证过。
 
 ### b. 首次构建
 
@@ -108,6 +109,7 @@ pip install -e .
 - 我们这个环境的实际版本：Python 3.12.14，jax 0.5.3（`jax[cuda12]`），mujoco / mujoco-mjx 3.13.0，lcm 1.5.2（pip），驱动 595.99.02，RTX 5090。
 - 我们这个环境里**没有 matplotlib**，所以 `run_real.sh` 画图用 `/usr/bin/python3`（有 numpy 和 matplotlib）；你可以在环境里装 matplotlib，或用 `FIGPY=/path/to/python` 覆盖。`environment.yml` 里写了 matplotlib，**待确认**为什么我们的环境里没有。
 - 真机还需要 `lcm`（pip）和上面的 `~/trio_sim`、`~/projects/trio_infra/src/mppi_bridge/lcmtypes_py`。
+- **依赖声明不全（全新克隆检查，2026-10-24）**：`pyproject.toml` 和 `ksos-tools` 都**没有**声明 `lcm`（真机用）和 `newton_sos`（Global-MPPI 默认的 `newton-rs` 求解器，只写在 `ksos-tools/ksos_env.yml` 里；我们的版本是 0.2.3），要自己 `pip install lcm newton_sos`。`environment.yml` 只装 conda 部分（cuda、cudnn、cvxpy、eigenpy、matplotlib 等），jax / mujoco 靠随后的 `pip install -e .`；`environment.yml` 里有 matplotlib，但我们是纯 pip 装的环境，所以没有。
 
 **ssh 免密（5090 控制 NUC，脚本里全部用 `ssh -o BatchMode=yes`）**
 ```bash
@@ -141,6 +143,11 @@ ssh -o BatchMode=yes junlong@192.168.50.2 true                  # 检查
    nvidia-smi                                   # 确认 GPU 可用、没有别的进程占满显存
    ./script/run_real.sh <ps|dial|mppi|globalmppi> <run名>     # run 名必须是新的
    ```
+   - **`run_real.sh` 不能做 dry-run**（它带 `--auto-start`，和 `--dry-run` 冲突，报 `--auto-start needs --real (and not --dry-run)`）。dry-run 直接调用 python（不动机器人）：`python examples/closed_loop_test.py --real --dry-run --algo globalmppi --pipeline --blend --measure-every 1 --cam-correct --max-cycles 2 --adaptive-settle --read-s 0.1 --bg-link-check --fast-stop --min-tags 3 --max-reproj-px 2.0 --pose-bin build_interp_drain/bin/aprilcube_pose --out <新目录>`。没有真机时 `--sim` 可以走完整个规划。
+   - **规划器的 cost 默认读 `--config` 里的 `cost` 段**（`w_pos` 50、`w_ori` 15、`w_approach` 10；2026-10-24 起，提交 `f59292d`）。此前的真机 run（到 `real_globalmppi_cpu_b1` 为止）规划器用的是 `PushT` 默认值，**`w_approach` = 0**，和 yaml 不符；现在的 run 和它们**不可直接比较**。`--no-config-cost` 恢复旧行为。启动日志会打印 `== planner cost: ...` 和 `== jax devices: ...`，先看这两行。
+   - **用 CPU 跑**：`JAX_PLATFORM_NAME=cpu ./script/run_real.sh ...`。`JAX_PLATFORMS=cpu` 不行，因为脚本里 `unset JAX_PLATFORMS`。Global-MPPI 在 CPU 上基本不可用：每个 KSOS 规划步的 rollout 约 107 s（`real_globalmppi_cpu_b1`，负载下）。
+   - **globalmppi**：每个规划步做 5 次重启（rollout → sigma 标定 → KSOS → MPPI），GPU 上约 5–10 s（负载下），而一个 chunk 只有 0.5 s；`--ksos-every N` 只每 N 个周期做一次完整求解（默认 1）。`cycles.csv` 末尾多了 `ksos_*` 和 `t_*_s` 列（迭代数、收敛比例、各段耗时），run 结束时会打印 `== KSOS:` 汇总行。脚本开头把 `OPENBLAS_NUM_THREADS` 设成 1（默认线程池下 sigma 标定慢约 1000 倍，b3 第一步 201 s）。
+   - GPU 被别的任务占着时可能报 `cuSolver internal error`：设 `XLA_PYTHON_CLIENT_PREALLOCATE=false`。
    - 流程：预检（链路、相机频率、tag 数、起点偏差，失败就不动机器人）→ 5 秒倒计时（Ctrl-C 可取消，此时还没动）→ 归位到起点、下降 → 闭环（`--measure-every 1`，每个 chunk 后停下读姿态）→ 收尾（抬起、恢复相机和 state_pub）→ 出图并追加汇总行。
    - JIT 编译约 28 s（GPU），在预检前完成。
    - 额外参数直接加在后面，例如 `--xy-driver-bin <相对 NUC 仓库的路径>`（默认 `../trio_infra_upright/build_upright/bin/xy_driver`）。
@@ -157,8 +164,8 @@ ssh -o BatchMode=yes junlong@192.168.50.2 true                  # 检查
 - **链路抖动检查**：NUC 上 `enp89s0`（连机器人的网口）的 `carrier_changes` 必须**等于** `~/linkwatch_baseline.txt` 里最后一行 `carrier_changes=` 的值（NUC 重启后计数会清零，所以重启后一定要重记）。
   - 先确认链路是好的：在 NUC 上 `ping -c 60 172.16.0.2` 0% 丢包，`tail ~/linkwatch.log` 看 `Link is Down/Up` 的时间。
   - 更新基线：在 NUC 上运行 `~/linkwatch_sample.sh`（它给 `~/linkwatch_baseline.txt` 追加一行当前值）。**只有确认抖动已经查清、可以接受时才追加，不要为了让检查通过而追加。**
-  - 谁定期调用 `linkwatch_sample.sh`：**待确认**（文件里有周期性采样行，但我们没查到调度它的 cron/systemd）。
-- **归位被拒**（`Refusing to start: --upright turn of X deg exceeds 30 deg`）：手引末端，让 yaw 离 59.7° 在 30° 以内、tilt 接近 0，再重跑。分步归位还没有进默认二进制（见 a）。
+  - 谁定期调用 `linkwatch_sample.sh`：2026-10-24 在 NUC 上只读查过：**没有**用户 crontab、`/etc/cron.d` 里没有它（root 的 crontab 没查）、`systemctl --user` 里没有 timer、也没有它的进程；`~/linkwatch.log` 最后写入是 2026-10-19，所以现在**没有任何东西在定期采样**，基线文件只在有人手动追加时变。
+- **归位被拒**（`Refusing to start: --upright turn of X deg exceeds 30 deg`）：手引末端，让 yaw 离 59.7° 在 30° 以内、tilt 接近 0，再重跑。30° 是 `xy_driver.cpp` 里的 `kUprightMaxRotDeg`（`main` 和我们的二进制一致）。分步归位还没有进默认二进制（见 a）。
 - **tag 丢失**：`T pose lost`、`T_SHAPE_POSE silent for 1.0 s`。含义：测量停止时没有合格帧（被 `--min-tags 3` / `--max-reproj-px 2.0` 丢掉）或相机连续 1 s 没有任何 ≥2 个 tag 的帧（NUC 对少于 2 个 tag 的帧不发消息）。`run_real.sh` 默认带 `--max-fallbacks 2`（读不到位姿时用预测继续，最多连续 2 次，日志和 `t_pose_raw.csv` 标 `fallback=1`）。我们的 PS 两次都是笔跑得很远（离 T 中心 130–200 mm）时丢帧，其他三个算法没有；原因（手臂遮挡相机？）**待确认**，没有验证。
 
 ### e. 我们这台机器特有的东西（Zhongqi 要改）
@@ -178,3 +185,23 @@ ssh -o BatchMode=yes junlong@192.168.50.2 true                  # 检查
 | yaw | `--yaw-deg=59.7`（在 `closed_loop_test.py` 里传给 xy_driver） | `--yaw-deg` |
 | 组播 | `239.255.76.67`，`ttl=1` | `LCM_DEFAULT_URL` |
 | 其他 | NUC 上 xy_driver 的 stdin 管道 `~/xy_in`，NUC 的 Xwayland `:2`（只用于 viser 叠图） | `open_loop_test.py` |
+
+### f. 全新克隆检查结果（2026-10-24，没有机器人）
+
+在临时目录克隆 `Global-MPPI`（`realrobot-pusht-pipeline`，`f59292d`，含子模块 `ksos-tools` `640ae32`）和 `trio_infra`（`origin/main`，`ba58f94`），`~/` 指到临时目录（`~/trio_sim` 指向 `trio_infra` 克隆）。NUC 只读。
+
+**git 里缺的 / 要注意的**
+- `pusher_start_pushside_near.yaml` 不在 `trio_infra` `main`（见 a）；缺了就是启动即 `FileNotFoundError`。
+- `lcmtypes_py` 不在 git，要自己生成（见 a，`lcm-gen` 是提交了的）。
+- `trio_infra` 的 `main` **跟踪了一个 205 个文件的 `build/` 目录**（`.gitignore` 里写明"tracked build/"）：`CMakeCache.txt` 指向 `/home/zhongqi/Documents/camera_driver`，里面有 `build/bin/aprilcube_pose`、`t_shape_pose_lcm_subscriber`、`lcm-gen` 二进制。不要把 `build/` 当成自己的构建目录（`script/build_franka_driver.sh` 默认输出到这里，会和别人机器上的 `CMakeCache.txt` 冲突）；文档里的 `build_interp_drain/`、`build_upright/` 是被 gitignore 的本地目录，**fresh clone 里不存在**，要按 b 自己编。
+- `build_interp_drain/bin/aprilcube_pose`、`build_upright/bin/xy_driver`（含 `--upright` 和 `--blend`）都不在 git，要在 NUC 上编；`main` 的源码里有 `--upright`、`--blend`、`--max-lead-mm`、`--interp-flange`，但没有分步归位。
+- `lcm` 和 `newton_sos` 没写进依赖（见 b）。
+- 环境变量：`LCM_DEFAULT_URL`（`closed_loop_test.py` 和 `run_real.sh` 自己设默认值）、`JAX_PLATFORM_NAME=cpu`（CPU）、`XLA_PYTHON_CLIENT_PREALLOCATE=false`（GPU 被占时）、`PYTHON` / `FIGPY`（`run_real.sh`）。
+
+**验证过的**：全新克隆里 `--sim --algo mppi` 和 `--sim --algo globalmppi` 都能跑（补上 `pusher_start_pushside_near.yaml` 之后）；`globalmppi` 日志里有 KSOS 迭代数（约 33，全部收敛）。真机 dry-run 在缺 `camera_driver_lcm` 处就停了（补上之后没有再跑，因为 NUC 这次只读）。
+
+**NUC 实际状态（只读）**
+- `~/projects/trio_infra`：`positions-1015` / `db37dca`，比 `main` 落后 15 个提交（`b1858fa` drain 补丁、`t_shape_pose_drain.sh`、2026-10-20 重标在 `main` 里；NUC 的 `config/calibration.yaml` 是未提交的本地改动，和 `main` 相同）。有未跟踪的 `Log/`、`build-local/`、`build/bin/franka_lcm_server`、`build/bin/xy_driver`。
+- 二进制：`~/projects/trio_infra/build_interp_drain/bin/aprilcube_pose`（2026-10-20）、`~/projects/trio_infra_upright/build_upright/bin/xy_driver`（2026-10-17）、`~/projects/trio_infra/build/bin/{aprilcube_pose,franka_lcm_server,t_shape_pose_lcm_subscriber}`（2026-10-06，旧）。`trio_infra_upright` 在 `noee-z-upright-blend`（`7e628c7`），`upright.hpp` / `xy_driver.cpp` / `test_upright.cpp` 有未提交改动，`build_upright/` 未跟踪（和 a 里写的一致）。
+- 进程：`robot_state_readonly_pub.py`（`cam_calib` 环境）和 `build_interp_drain/bin/aprilcube_pose … --width 848 --height 530 --fps 60` 在跑；没有 `xy_driver`、`franka_lcm_server`。
+- `~/miniforge3/envs/cam_calib` 存在（`lcm`、`yaml`、`numpy` 可导入），仍然没有它的建立记录；`lcmtypes_py` 已生成；组播路由经 `enp88s0`；`~/xy_in` 目前不存在；NUC 上还有 `~/projects/Global-MPPI-main`（没查内容）；`lcm-gen` 不在 PATH 里。
