@@ -91,6 +91,25 @@ class PoseLost(Stop):
 
 
 # ------------------------------------------------------------------ planner (copied from examples/pusht.py)
+KSOS_LOG = {}        # plan index -> KSOS stats of that planning step (Planner.log_ksos); cycles.csv columns KSOS_HDR
+NEWTON_LOG = []      # (iterations, converged) of every newton_sos.solve of the current planning step
+
+
+def _record_newton_solves():
+    """Wrap newton_sos.solve so every KSOS solve reports its iteration count and convergence flag (ksos_tools drops them)."""
+    import newton_sos
+    if getattr(newton_sos.solve, "_recorded", False):
+        return
+    orig = newton_sos.solve
+
+    def solve(*args, **kw):
+        r = orig(*args, **kw)
+        NEWTON_LOG.append((int(r.iterations), bool(r.converged)))
+        return r
+    solve._recorded = True
+    newton_sos.solve = solve
+
+
 class Planner:
     def __init__(self, a, xml=None):
         import jax
@@ -102,6 +121,7 @@ class Planner:
         self.jax, self.jnp, self.mjx, self.mujoco = jax, jnp, mjx, mujoco
         task = PushT(xml)         # xml=None: the default scene (as pusht.py); the box walls scene otherwise
         self.n_opt = max(1, int(a.n_opt))
+        self.algo, self.ksos_every, self.n_plan = a.algo, max(1, int(getattr(a, "ksos_every", 1))), 0
         if a.algo == "dial":        # examples/pusht.py DIAL defaults, none changed
             from global_mppi.algs import DIAL
             print("Running DIAL")
@@ -117,6 +137,10 @@ class Planner:
             print(f"Running GlobalMPPI (ksos solver {a.ksos_solver})")
             self.ctrl = GlobalMPPI(task, num_samples=256, noise_level=0.1, temperature=0.1, spline_type="cubic", plan_horizon=1.0, num_knots=6,
                                    iterations=5, ksos_solver=a.ksos_solver)
+            # paper Table I: N=80 elites, N_lse=100, N_MPPI=256, N_restart=5, Laplace kernel (the class defaults), sigma_lse from 0.4
+            self.ctrl.elite_num, self.ctrl.lse_num_samples, self.ctrl.ksos_num_restart = 80, 100, 5
+            self.ctrl.ksos_kernel = "Laplace"
+            self.ctrl.lse_smoothing_sigma = jnp.array([0.4, 0.2, 0.1, 0.05, 0.001])
         else:
             print("Running predictive sampling")
             self.ctrl = PredictiveSampling(task, num_samples=a.num_samples, noise_level=a.noise_level, num_randomizations=1,
@@ -133,6 +157,9 @@ class Planner:
         self.params = self.ctrl.init_params(initial_knots=None, seed=a.seed)
         self.jit_optimize = jax.jit(self.ctrl.optimize)
         self.jit_interp = jax.jit(self.ctrl.interp_func)
+        if a.algo == "globalmppi":                # KSOS global step before the MPPI refinement (global_mppi/closed_loop/algos.py)
+            self.jit_ksos_rollout = jax.jit(self.ctrl.ksos_rollout)
+            _record_newton_solves()
         self.vmax = float(np.abs(m.actuator_ctrlrange).max())
 
     def warmup(self):
@@ -141,7 +168,58 @@ class Planner:
         for _ in range(2):                      # the same call path as the loop (traced types must match)
             self.plan(q0, 0.0, 0.5)
         self.jax.block_until_ready(self.params.mean)
+        self.n_plan = 0
+        KSOS_LOG.clear()
         print(f"Time to jit: {time.time() - t0:.2f} s")
+
+    def global_step(self, s, params):
+        """Global-MPPI planning step, as simulation/deterministic.py (globalmppi branch): per restart ksos_rollout -> GP length-scale
+        auto-calibration (neg_lml + L-BFGS-B) -> solve_ksos (KSOS, newton-rs) -> ksos_mean -> MPPI refinement (jit_optimize).
+        Timings and the Newton iterations / convergence of every restart go to KSOS_LOG (-> cycles.csv)."""
+        from global_mppi.simulation.deterministic import neg_lml
+        from scipy.optimize import minimize
+        jax, jnp, c = self.jax, self.jnp, self.ctrl
+        t_roll = t_cal = t_ksos = t_mppi = 0.0
+        del NEWTON_LOG[:]
+        for it in range(c.ksos_num_restart):
+            t0 = time.perf_counter()
+            params = params.replace(iter=it)
+            params = jax.block_until_ready(self.jit_ksos_rollout(s, params))
+            t1 = time.perf_counter()
+            n = params.lse_cost.shape[0]
+            X = np.asarray(params.knots.reshape(n, -1))
+            y = np.asarray(params.lse_cost)
+            Xn = (X - X.mean(0, keepdims=True)) / (X.std(0, keepdims=True) + 1e-8)
+            yn = y - y.mean()
+            grid = np.log(np.linspace(0.01, 30.0, 10))
+            ls0 = grid[int(np.argmin([neg_lml(g, Xn, yn) for g in grid]))]
+            res = minimize(neg_lml, x0=np.array([ls0]), args=(Xn, yn), method="L-BFGS-B", bounds=[(np.log(1e-2), np.log(30.0))])
+            c.ksos_sigma = float(np.exp(res.x[0]))
+            t2 = time.perf_counter()
+            before = params
+            params = c.solve_ksos(params)
+            t3 = time.perf_counter()
+            # solve_ksos puts numpy / elite-count-shaped leaves into params: back to the shapes and types of the rollout's params,
+            # or jit_optimize recompiles (seconds) for every new elite count. A failed solve (params returned unchanged) keeps the mean.
+            params = params.replace(lse_cost=before.lse_cost, ksos_mean=jnp.asarray(params.ksos_mean, jnp.float32),
+                                    ksos_result_cost=jnp.asarray(params.ksos_result_cost, jnp.float32))
+            if params.ksos_mean is not None and before.ksos_mean is not None and not np.array_equal(np.asarray(before.ksos_mean), np.asarray(params.ksos_mean)):
+                params = params.replace(mean=params.ksos_mean)
+            params, _, _ = self.jit_optimize(s, params)
+            jax.block_until_ready(params.mean)
+            t4 = time.perf_counter()
+            t_roll, t_cal, t_ksos, t_mppi = t_roll + t1 - t0, t_cal + t2 - t1, t_ksos + t3 - t2, t_mppi + t4 - t3
+        self.log_ksos((t_roll, t_cal, t_ksos, t_mppi))
+        return params
+
+    def log_ksos(self, times):
+        """KSOS_LOG[plan index] = (ran, iters mean, min, max, converged fraction, t_rollout, t_calib, t_ksos, t_mppi, n solves)."""
+        if times is None:
+            KSOS_LOG[self.n_plan - 1] = (0.0,) + (np.nan,) * 8 + (0.0,)
+            return
+        it = np.array([r[0] for r in NEWTON_LOG], float)
+        cv = np.array([r[1] for r in NEWTON_LOG], float)
+        KSOS_LOG[self.n_plan - 1] = ((1.0, it.mean(), it.min(), it.max(), cv.mean()) if len(it) else (1.0,) + (np.nan,) * 4) + times + (float(len(it)),)
 
     def plan(self, qpos, t_clock, chunk_s):
         """Plan from qpos (planner model coordinates) at planner time t_clock. Returns (pusher velocity u (n,2) in the
@@ -149,8 +227,13 @@ class Planner:
         jnp = self.jnp
         s = self.mjx_data.replace(qpos=jnp.array(qpos), qvel=jnp.zeros_like(self.mjx_data.qvel), time=t_clock)
         t0 = time.time()
-        for _ in range(self.n_opt):               # --n-opt: repeated optimisation of the same state, time unchanged
-            self.params, _, _ = self.jit_optimize(s, self.params)
+        self.n_plan += 1
+        if self.algo == "globalmppi" and (self.n_plan - 1) % self.ksos_every == 0:
+            self.params = self.global_step(s, self.params)
+        else:
+            for _ in range(self.n_opt):           # --n-opt: repeated optimisation of the same state, time unchanged
+                self.params, _, _ = self.jit_optimize(s, self.params)
+            self.log_ksos(None)
         n = int(round(chunk_s / self.dt))
         tq = jnp.arange(0, n) * self.dt + t_clock
         us = np.asarray(self.jit_interp(tq, self.params.tk, self.params.mean[None, ...]))[0]
@@ -1744,6 +1827,7 @@ def pipeline_rows(a, be, scene, chunks, rows):
 CYCLES_HDR = ("cycle,t_s,T_x,T_y,T_th_deg,pen_bx,pen_by,pos_err_mm,ang_err_deg,plan_s,n_wp,dur_s,peak_v,peak_a,clamped,"
               "pred_x,pred_y,pred_th_deg,meas_x,meas_y,meas_th_deg,pred_err_mm,pred_err_deg,"
               "t_link_s,t_settle_s,t_read_s,n_frames,low_frames,t_publish_s,t_start_lat_s,t_track_s,t_exec_total_s,t_round_s,t_other_s")
+KSOS_HDR = ",ksos_ran,ksos_iters_mean,ksos_iters_min,ksos_iters_max,ksos_converged_frac,t_ksos_rollout_s,t_sigma_calib_s,t_ksos_solve_s,t_mppi_s,ksos_n_solves"
 SPEC_HDR = ",spec_hit,spec_plan_s,spec_dpos_mm,spec_dang_deg,spec_hit_rate"
 MEAS_HDR = ",meas_drain_wait_s,meas_stop_to_pose_s,meas_standstill_s,meas_standstill_other_s"   # --pipeline: rows of the first chunk after a measurement
 
@@ -1758,6 +1842,9 @@ def write_cycles(out, rows):
     tmp = os.path.join(out, "cycles.csv.tmp")
     cols = [R, other] + ([R_all[:, 34:NC]] if NC > 34 else [])
     hdr = CYCLES_HDR + (SPEC_HDR if NC == 39 else MEAS_HDR if NC == 38 else "")
+    if KSOS_LOG:                                              # --algo globalmppi: KSOS stats of each planning step (row cycle = plan index)
+        cols.append(np.array([KSOS_LOG.get(int(r[0]), (np.nan,) * 10) for r in R_all]))
+        hdr += KSOS_HDR
     np.savetxt(tmp, np.column_stack(cols), delimiter=",", fmt="%.6f", header=hdr, comments="")
     os.replace(tmp, os.path.join(out, "cycles.csv"))
     return R, other
@@ -2103,6 +2190,11 @@ def run(a, out):
     pt = [r[9] for r in rows]
     if pt:
         print(f"== plan time: mean {np.mean(pt):.3f} s, max {np.max(pt):.3f} s over {len(pt)} rounds; outputs in {out}")
+    ks = np.array([v for v in KSOS_LOG.values() if v[0] == 1.0 and v[1] == v[1]], float)
+    if len(ks):
+        print(f"== KSOS: {len(ks)} planning steps, Newton iterations per solve mean {ks[:, 1].mean():.1f} (min {ks[:, 2].min():.0f}, max {ks[:, 3].max():.0f}), "
+              f"converged {ks[:, 4].mean() * 100:.0f}% of solves; per step rollout {ks[:, 5].mean():.3f} + sigma calib {ks[:, 6].mean():.3f} "
+              f"+ KSOS solve {ks[:, 7].mean():.3f} + MPPI {ks[:, 8].mean():.3f} s")
 
 
 def plot(out):
@@ -2155,6 +2247,7 @@ def main():
     ap.add_argument("--pipeline", action="store_true", help="plan the next chunk while the current one runs (sim only for now; default off)")
     ap.add_argument("--algo", choices=["ps", "dial", "mppi", "globalmppi"], default="ps",
                     help="planner: ps (PS with --noise-level etc.), dial / mppi / globalmppi (the examples/pusht.py settings; --dial-noise only changes DIAL)")
+    ap.add_argument("--ksos-every", type=int, default=1, help="--algo globalmppi: KSOS global step every N-th planning cycle (1 = every cycle, as simulation/deterministic.py); other cycles are plain MPPI")
     ap.add_argument("--ksos-solver", default="newton-rs", help="--algo globalmppi: KSOS solver (as examples/pusht.py)")
     ap.add_argument("--n-opt", type=int, default=1, help="optimisation steps per round on the same state (time unchanged)")
     ap.add_argument("--link-check-every", type=int, default=5, help="--real: read the NUC carrier_changes every N rounds (any increase stops at once)")
