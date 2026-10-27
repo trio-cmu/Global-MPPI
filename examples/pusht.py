@@ -39,7 +39,7 @@ parser.add_argument(
 parser.add_argument(
     "--ksos-solver",
     choices=["newton", "newton-rs"],
-    default="newton-rs",
+    default="newton",
     help="KSOS solver used by GlobalMPPI (default: newton-rs)",
 )
 parser.add_argument(
@@ -144,7 +144,7 @@ elif args.algorithm == "dial":
         num_knots=6,
     )
 elif args.algorithm == "globalmppi":
-    print("Running GlobalMPPI")
+    print(f"Running GlobalMPPI (KSOS solver: {args.ksos_solver})")
     ctrl = GlobalMPPI(
         task,
         num_samples=256,
@@ -159,7 +159,7 @@ elif args.algorithm == "globalmppi":
 
 # Run the interactive simulation
 start_seed = 0
-for trial_idx in range(start_seed, 6):
+for trial_idx in range(start_seed, 1):
     # Define the model used for simulation
     mj_model = task.mj_model
     mj_model.opt.timestep = 0.001

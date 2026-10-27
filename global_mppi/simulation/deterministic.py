@@ -367,32 +367,38 @@ def run_interactive(  # noqa: PLR0912, PLR0915
 
             # run ksos update to initilize the mean
             if controller.ctrl_name == "globalmppi":
-                enable_auto_calib = True          # run ksos update
+                enable_auto_calib = False          # run ksos update
                 
-                log_dir = "test/log"
-                os.makedirs(log_dir, exist_ok=True)
-                timing_file = os.path.join(log_dir, "globalmppi_timing.txt")
-                
+                timing_file = os.path.join(
+                    run_log_dir, f"globalmppi_timing_seed{current_seed}.txt"
+                )
+                if cycle_count == 0:
+                    with open(timing_file, "w") as f:
+                        f.write(
+                            "# per-cycle planning time breakdown (seconds), "
+                            "KSOS phases summed over all restarts, "
+                            "mppi run once after the last restart\n"
+                            "# cycle num_restart sampling_rollout autocalib "
+                            "ksos_solve mppi total\n"
+                        )
+
                 if cycle_count % 1 == 0:          # 5 for pushT with ksos
                     total_ksos_rollout_time = 0.0
+                    total_autocalib_time = 0.0
                     total_ksos_solver_time = 0.0
-                    total_other_time = 0.0
+                    total_mppi_time = 0.0
                     total_all_time = 0.0
                     for iter in range(controller.ksos_num_restart):
                         iter_start_time = time.perf_counter()
-                        # ============================================================
-                        # 1. Time KSOS rollout
-                        # ============================================================
+                        # 1. Sample KSOS candidates and roll them out (LSE costs)
                         ksos_rollout_start = time.perf_counter()
-                        
                         policy_params = policy_params.replace(iter=iter)
                         policy_params = jit_ksos_rollout(mjx_data, policy_params)
                         policy_params = jax.block_until_ready((policy_params))
-
                         ksos_rollout_time = time.perf_counter() - ksos_rollout_start
-                        
-                        other_start = time.perf_counter()
-                        # hyperparameter autocalibration
+
+                        # 2. Hyperparameter (kernel sigma) autocalibration
+                        autocalib_start = time.perf_counter()
                         if enable_auto_calib:
                             n_samples = policy_params.lse_cost.shape[0]
                             X = policy_params.knots.reshape(n_samples, -1)
@@ -425,25 +431,28 @@ def run_interactive(  # noqa: PLR0912, PLR0915
                             )
                             controller.ksos_sigma = np.exp(res.x[0])
                             print(f"Auto-calibrated sigma: {controller.ksos_sigma}")
+                        autocalib_time = time.perf_counter() - autocalib_start
+
+                        # 3. KernelSOS global solve
                         ksos_solver_start = time.perf_counter()
                         policy_params = controller.solve_ksos(policy_params)
                         ksos_solver_time = time.perf_counter() - ksos_solver_start
 
                         policy_params = policy_params.replace(mean=policy_params.ksos_mean)
 
-                        # run MPPI optimization loop as a local search
-                        policy_params, rollouts, rollouts_best = jit_optimize(mjx_data, policy_params)    
-                        
-                        other_time = time.perf_counter() - other_start
-
                         iter_total_time = time.perf_counter() - iter_start_time
 
                         total_ksos_rollout_time += ksos_rollout_time
+                        total_autocalib_time += autocalib_time
                         total_ksos_solver_time += ksos_solver_time
+                        total_all_time += iter_total_time
 
-                        total_other_time += other_time
-
-                        total_all_time += iter_total_time 
+                    # 4. run MPPI once, after all KSOS restarts, as a local
+                    # search around the final KSOS solution
+                    mppi_start = time.perf_counter()
+                    policy_params, rollouts, rollouts_best = jit_optimize(mjx_data, policy_params)
+                    total_mppi_time = time.perf_counter() - mppi_start
+                    total_all_time += total_mppi_time
             else:
                 policy_params, rollouts, rollouts_best = jit_optimize(mjx_data, policy_params)
             
@@ -454,25 +463,21 @@ def run_interactive(  # noqa: PLR0912, PLR0915
             if controller.ctrl_name == "globalmppi":
                 with open(timing_file, "a") as f:
                     f.write(
-                        f"cycle={cycle_count}, "
-                        f"num_restart={controller.ksos_num_restart}, "
-                        f"total_ksos_rollout_time={total_ksos_rollout_time:.6f}, "
-                        f"total_ksos_solver_time={total_ksos_solver_time:.6f}, "
-                        f"total_other_time={total_other_time:.6f}, "
-                        f"total_all_time={total_all_time:.6f}, "
-                        f"avg_ksos_rollout_time={total_ksos_rollout_time / controller.ksos_num_restart:.6f}, "
-                        f"avg_ksos_solver_time={total_ksos_solver_time / controller.ksos_num_restart:.6f}, "
-                        f"avg_other_time={total_other_time / controller.ksos_num_restart:.6f}, "
-                        f"avg_all_time={total_all_time / controller.ksos_num_restart:.6f}, "
-                        f"sigma={getattr(controller, 'ksos_sigma', None)}\n"
+                        f"{int(cycle_count)} {controller.ksos_num_restart} "
+                        f"{total_ksos_rollout_time:.6f} "
+                        f"{total_autocalib_time:.6f} "
+                        f"{total_ksos_solver_time:.6f} "
+                        f"{total_mppi_time:.6f} "
+                        f"{total_all_time:.6f}\n"
                     )
                 print(
                     f"[Timing total] cycle={cycle_count}, "
                     f"num_restart={controller.ksos_num_restart}, "
-                    f"total_ksos_rollout={total_ksos_rollout_time:.3f}s, "
-                    f"total_ksos_solver={total_ksos_solver_time:.3f}s, "
-                    f"total_other={total_other_time:.3f}s, "
-                    f"total_all={total_all_time:.3f}s"
+                    f"sampling_rollout={total_ksos_rollout_time:.3f}s, "
+                    f"autocalib={total_autocalib_time:.3f}s, "
+                    f"ksos_solve={total_ksos_solver_time:.3f}s, "
+                    f"mppi={total_mppi_time:.3f}s, "
+                    f"total={total_all_time:.3f}s"
                 )
             # data logging: rollouts_best (from jit_optimize) is already the
             # rollout of params.mean, so its summed cost is the "best cost" -

@@ -52,7 +52,7 @@ class GlobalMPPI(SamplingBasedController):
         num_knots: int = 4,
         iterations: int = 1,
         ctrl_name : str = "globalmppi",
-        ksos_solver: str = "newton-rs",
+        ksos_solver: str = "newton",
     ) -> None:
         """Initialize the controller.
 
@@ -95,7 +95,7 @@ class GlobalMPPI(SamplingBasedController):
 
         # ksos parameters
         self.ksos_num_samples = 256
-        self.elite_num = 80
+        self.elite_num = 130
         self.ksos_lambda = 1e-5
         self.ksos_sigma = 0.01
         self.ksos_epsilon = 1e-2
@@ -106,7 +106,7 @@ class GlobalMPPI(SamplingBasedController):
         self.ksos_solver = ksos_solver
         self.ksos_sampling = "uniform"
         self.decay_rate = 0.80
-        self.is_lse_smoothing = True
+        self.is_lse_smoothing = False
 
     def init_params(
         self, initial_knots: jax.Array = None, seed: int = 0
@@ -145,16 +145,16 @@ class GlobalMPPI(SamplingBasedController):
     def sample_ksos_knots(self, params: GlobalMPPIParams) -> Tuple[jax.Array, GlobalMPPIParams]:
         """Sample `ksos_num_samples` candidate knot sequences for the KSOS
         solver. Candidates are drawn from a trust region centered at the
-        previous KSOS mean (or zero on the first iteration) whose radius
-        shrinks geometrically with `decay_rate` each iteration. The sampling
-        distribution is controlled by `self.ksos_sampling`
+        previous restart's MPPI-refined mean (or zero on the first iteration)
+        whose radius shrinks geometrically with `decay_rate` each iteration.
+        The sampling distribution is controlled by `self.ksos_sampling`
         ("linspace", "uniform", "gaussian", or "Sobol")."""
         rng, sample_rng = jax.random.split(params.rng)
 
         center = lax.cond(
             jnp.equal(params.iter, 0),
-            lambda _: jnp.zeros_like(params.ksos_mean),
-            lambda _: params.ksos_mean,
+            lambda _: jnp.zeros_like(params.mean),
+            lambda _: params.mean,
             operand=None,
         )
         radius = (
@@ -336,21 +336,25 @@ class GlobalMPPI(SamplingBasedController):
         `ksos_mean`. Falls back to returning `params` unchanged if every
         elite is filtered out or the solver fails."""
 
-        indices = jnp.argsort(params.lse_cost)
+        # Elite selection/filtering runs on the host in numpy: the filter
+        # below has a data-dependent output shape, which in jnp would trigger
+        # a fresh XLA compile almost every cycle.
+        lse_cost = np.asarray(params.lse_cost)
+        indices = np.argsort(lse_cost)
         elites = indices[: self.elite_num]
 
         if self.is_lse_smoothing == False:
-            costs = params.cost[elites]
+            costs = np.asarray(params.cost)[elites]
         else:
-            costs = params.cost.mean(axis=1)[elites]
-        lse_costs = params.lse_cost[elites]
-        knots_elites = params.knots[elites]
+            costs = np.asarray(params.cost).mean(axis=1)[elites]
+        lse_costs = lse_cost[elites]
+        knots_elites = np.asarray(params.knots)[elites]
 
         # filter out bad rollouts
         first_20 = costs[:, :20]
-        diff = first_20[:, 1:] - first_20[:, :-1]  
-        rollout_index = (diff < 0).any(axis=1).astype(int)   
-        idx_ones = jnp.where(rollout_index == 1)[0]
+        diff = first_20[:, 1:] - first_20[:, :-1]
+        rollout_index = (diff < 0).any(axis=1).astype(int)
+        idx_ones = np.where(rollout_index == 1)[0]
 
         if idx_ones.shape[0] == 0:
             print("All elites are bad rollouts !!!")
@@ -394,8 +398,8 @@ class GlobalMPPI(SamplingBasedController):
 
         return params.replace(
             ksos_mean=updated_knots,
-            ksos_result_cost=info["cost"],
-            lse_cost=lse_costs,
+            # keep params' array shapes fixed so jitted calls don't re-trace
+            ksos_result_cost=jnp.asarray(info["cost"], dtype=jnp.float32),
         )
 
     def update_params(
