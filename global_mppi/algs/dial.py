@@ -4,7 +4,12 @@ import jax
 import jax.numpy as jnp
 from flax.struct import dataclass
 
-from global_mppi.alg_base import SamplingBasedController, SamplingParams, Trajectory
+from global_mppi.alg_base import (
+    SamplingBasedController,
+    SamplingParams,
+    Trajectory,
+    normalize_costs,
+)
 from global_mppi.risk import RiskStrategy
 from global_mppi.task_base import Task
 
@@ -61,6 +66,7 @@ class DIAL(SamplingBasedController):
         num_knots: int = 4,
         iterations: int = 1,
         ctrl_name : str = "dial",
+        normalize_costs: bool = False,
     ) -> None:
         """Initialize the controller.
 
@@ -83,6 +89,9 @@ class DIAL(SamplingBasedController):
             spline_type: The type of spline used for control interpolation.
                          Defaults to "zero" (zero-order hold).
             num_knots: The number of knots in the control spline.
+            normalize_costs: Rescale rollout costs to (c - min) / (median - min)
+                             before the softmax, so `temperature` is relative
+                             to the cost spread rather than in cost units.
         """
         super().__init__(
             task,
@@ -102,6 +111,7 @@ class DIAL(SamplingBasedController):
         assert self.beta_horizon > 0.0, "beta_horizon must be positive"
         self.num_samples = num_samples
         self.temperature = temperature
+        self.normalize_costs = normalize_costs
 
     def init_params(
         self, initial_knots: jax.Array = None, seed: int = 0
@@ -145,6 +155,8 @@ class DIAL(SamplingBasedController):
     ) -> DIALParams:
         """Update the mean with an exponentially weighted average."""
         costs = jnp.sum(rollouts.costs, axis=1)  # sum over time steps
+        if self.normalize_costs:
+            costs = normalize_costs(costs)
         # N.B. jax.nn.softmax takes care of details like baseline subtraction.
         weights = jax.nn.softmax(-costs / self.temperature, axis=0)
         mean = jnp.sum(weights[:, None, None] * rollouts.knots, axis=0)

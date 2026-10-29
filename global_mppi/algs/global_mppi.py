@@ -7,8 +7,11 @@ from global_mppi.alg_base import SamplingBasedController, SamplingParams, Trajec
 from global_mppi.risk import RiskStrategy
 from global_mppi.task_base import Task
 from mujoco import mjx
-from ksos_tools.solvers import ksos
+from ksos_tools.solvers import ksos, ADMM
+from ksos_tools.problems.features import build_problem
+from ksos_tools.problems.sampling import rcm_order
 from jax import lax
+from scipy.stats import qmc
 
 @dataclass
 class GlobalMPPIParams(SamplingParams):
@@ -53,6 +56,8 @@ class GlobalMPPI(SamplingBasedController):
         iterations: int = 1,
         ctrl_name : str = "globalmppi",
         ksos_solver: str = "newton",
+        ksos_num_restart: int = 5,
+        wendland_sigma: float = 1.75,
     ) -> None:
         """Initialize the controller.
 
@@ -71,6 +76,10 @@ class GlobalMPPI(SamplingBasedController):
                          Defaults to "zero" (zero-order hold).
             num_knots: The number of knots in the control spline.
             iterations: The number of optimization iterations to perform.
+            ksos_solver: "newton", "newton-rs" or "ADMM-sparse".
+            ksos_num_restart: The number of KSOS restarts per planning cycle.
+            wendland_sigma: Wendland kernel radius at restart 0 (ADMM-sparse
+                            only); it shrinks with `decay_rate` per restart.
         """
         super().__init__(
             task,
@@ -102,11 +111,27 @@ class GlobalMPPI(SamplingBasedController):
         self.ksos_kernel = "Laplace"
         self.ksos_iterations = 100
         self.ksos_linesearch = True
-        self.ksos_num_restart = 5
+        self.ksos_num_restart = ksos_num_restart
         self.ksos_solver = ksos_solver
-        self.ksos_sampling = "uniform"
+        # ADMM-sparse: compactly supported Wendland kernel (dimension-correct
+        # form chosen by ksos-tools' build_problem), RCM-ordered samples
+        self.wendland_sigma = wendland_sigma
+        self.admm_options = dict(
+            eps_abs=1e-6, eps_rel=1e-5, time_limit=2.0, record_history=False
+        )
+        self.ksos_sampling = "Sobol"
         self.decay_rate = 0.80
         self.is_lse_smoothing = False
+
+        # Scrambled Sobol points in the unit cube, (ksos_num_samples, dim),
+        # generated once; `sample_ksos_knots` applies a random shift each
+        # call and maps them onto the trust region.
+        self.sobol_unit = jnp.asarray(
+            qmc.Sobol(
+                d=self.num_knots * self.task.model.nu, scramble=True, seed=seed
+            ).random(self.ksos_num_samples),
+            dtype=jnp.float32,
+        )
 
     def init_params(
         self, initial_knots: jax.Array = None, seed: int = 0
@@ -145,8 +170,9 @@ class GlobalMPPI(SamplingBasedController):
     def sample_ksos_knots(self, params: GlobalMPPIParams) -> Tuple[jax.Array, GlobalMPPIParams]:
         """Sample `ksos_num_samples` candidate knot sequences for the KSOS
         solver. Candidates are drawn from a trust region centered at the
-        previous restart's MPPI-refined mean (or zero on the first iteration)
-        whose radius shrinks geometrically with `decay_rate` each iteration.
+        previous restart's KSOS solution, `params.mean` (or zero on the first
+        iteration), whose radius shrinks geometrically with `decay_rate` each
+        iteration.
         The sampling distribution is controlled by `self.ksos_sampling`
         ("linspace", "uniform", "gaussian", or "Sobol")."""
         rng, sample_rng = jax.random.split(params.rng)
@@ -371,16 +397,21 @@ class GlobalMPPI(SamplingBasedController):
         )
         sample_costs = np.asarray(lse_costs, dtype=np.float64).reshape(-1)
         try:
-            updated_knots, info = ksos.solve(
-                f=None,
-                samples=samples,
-                f_samples=sample_costs,
-                lambd=self.ksos_lambda,
-                sigma=float(self.ksos_sigma),
-                epsilon=self.ksos_epsilon,
-                kernel=self.ksos_kernel,
-                solver=self.ksos_solver,
-            )
+            if self.ksos_solver == "ADMM-sparse":
+                updated_knots, info = self._solve_admm(
+                    samples, sample_costs, int(params.iter)
+                )
+            else:
+                updated_knots, info = ksos.solve(
+                    f=None,
+                    samples=samples,
+                    f_samples=sample_costs,
+                    lambd=self.ksos_lambda,
+                    sigma=float(self.ksos_sigma),
+                    epsilon=self.ksos_epsilon,
+                    kernel=self.ksos_kernel,
+                    solver=self.ksos_solver,
+                )
             if updated_knots is None:
                 raise RuntimeError(
                     info.get("status", "KSOS solver returned no solution")
@@ -396,11 +427,47 @@ class GlobalMPPI(SamplingBasedController):
             print(f"KSOS solver failed: {error}")
             return params
 
+        # The new KSOS solution becomes the mean, so the next restart's trust
+        # region (and MPPI after the last restart) is centered on it. On any
+        # failure above, `mean` keeps the previous solution.
         return params.replace(
+            mean=updated_knots,
             ksos_mean=updated_knots,
             # keep params' array shapes fixed so jitted calls don't re-trace
             ksos_result_cost=jnp.asarray(info["cost"], dtype=jnp.float32),
         )
+
+    def _solve_admm(self, samples: np.ndarray, f: np.ndarray, it: int):
+        """ADMM-sparse KSOS on the elites, with a Wendland kernel of radius
+        `wendland_sigma * decay_rate**it` (shrinking with the trust region).
+        The samples are RCM-ordered so K's band, and so the cliques, stay
+        small; the solution is an alpha-weighted mean of the samples, so the
+        order does not need undoing."""
+        sigma = self.wendland_sigma * self.decay_rate**it
+        perm = rcm_order(samples, sigma)
+        problem = build_problem(
+            samples[perm], sigma, lambda _: f[perm], lambd=self.ksos_lambda
+        )
+        x, info = ADMM.solve_ksos(
+            problem.Phi,
+            problem.f,
+            problem.lambd,
+            samples=problem.samples,
+            **self.admm_options,
+        )
+        print(
+            f"ADMM-sparse: n={problem.n} sigma={sigma:.3f} "
+            f"band={problem.bandwidth} "
+            f"max_clique={info['admm_stats']['max_clique']} "
+            f"mean_clique={info['admm_stats']['mean_clique']:.1f} "
+            f"num_cliques={info['admm_stats']['num_cliques']} "
+            f"status={info['status']} "
+            f"iters={info['iterations']} cost={info['cost']:.4f} "
+            f"time={info['setup_time'] + info['solve_time']:.3f}s"
+        )
+        if not info["success"]:
+            return None, info
+        return x, info
 
     def update_params(
         self, params: GlobalMPPIParams, rollouts: Trajectory

@@ -1,0 +1,442 @@
+[
+ {
+  "method": "PS\n\u03c3 = 0.4",
+  "seed": 0,
+  "cost": 12.51112174987793,
+  "best_sample": 12.508861541748047,
+  "time": 0.3818617560009443,
+  "rollouts": 10005
+ },
+ {
+  "method": "PS\n\u03c3 = 0.4",
+  "seed": 1,
+  "cost": 11.326240539550781,
+  "best_sample": 11.326980590820312,
+  "time": 0.3916808989997662,
+  "rollouts": 10005
+ },
+ {
+  "method": "PS\n\u03c3 = 0.4",
+  "seed": 2,
+  "cost": 11.582426071166992,
+  "best_sample": 11.58212947845459,
+  "time": 0.38293712999984564,
+  "rollouts": 10005
+ },
+ {
+  "method": "PS\n\u03c3 = 0.4",
+  "seed": 3,
+  "cost": 23.959049224853516,
+  "best_sample": 23.95470428466797,
+  "time": 0.38326279099965177,
+  "rollouts": 10005
+ },
+ {
+  "method": "PS\n\u03c3 = 0.4",
+  "seed": 4,
+  "cost": 12.294068336486816,
+  "best_sample": 12.294051170349121,
+  "time": 0.3819319545000326,
+  "rollouts": 10005
+ },
+ {
+  "method": "MPPI\n\u03c3 = 1.0",
+  "seed": 0,
+  "cost": 7.897107124328613,
+  "best_sample": 7.846817970275879,
+  "time": 0.3843055120014469,
+  "rollouts": 10005
+ },
+ {
+  "method": "MPPI\n\u03c3 = 1.0",
+  "seed": 1,
+  "cost": 8.359519958496094,
+  "best_sample": 7.807534694671631,
+  "time": 0.3923799224994582,
+  "rollouts": 10005
+ },
+ {
+  "method": "MPPI\n\u03c3 = 1.0",
+  "seed": 2,
+  "cost": 7.814825534820557,
+  "best_sample": 7.787110805511475,
+  "time": 0.3832068720003008,
+  "rollouts": 10005
+ },
+ {
+  "method": "MPPI\n\u03c3 = 1.0",
+  "seed": 3,
+  "cost": 26.357723236083984,
+  "best_sample": 7.888516902923584,
+  "time": 0.38382084949989803,
+  "rollouts": 10005
+ },
+ {
+  "method": "MPPI\n\u03c3 = 1.0",
+  "seed": 4,
+  "cost": 7.661922454833984,
+  "best_sample": 7.588242530822754,
+  "time": 0.3825351534997026,
+  "rollouts": 10005
+ },
+ {
+  "method": "DIAL\n\u03c3\u2080 = 1.0",
+  "seed": 0,
+  "cost": 7.390990257263184,
+  "best_sample": 7.387019157409668,
+  "time": 0.3837737260000722,
+  "rollouts": 10005
+ },
+ {
+  "method": "DIAL\n\u03c3\u2080 = 1.0",
+  "seed": 1,
+  "cost": 7.074403762817383,
+  "best_sample": 7.0623979568481445,
+  "time": 0.3927741009993042,
+  "rollouts": 10005
+ },
+ {
+  "method": "DIAL\n\u03c3\u2080 = 1.0",
+  "seed": 2,
+  "cost": 7.561039447784424,
+  "best_sample": 7.643318176269531,
+  "time": 0.3836052734986879,
+  "rollouts": 10005
+ },
+ {
+  "method": "DIAL\n\u03c3\u2080 = 1.0",
+  "seed": 3,
+  "cost": 7.704187393188477,
+  "best_sample": 7.706567764282227,
+  "time": 0.38318941199941037,
+  "rollouts": 10005
+ },
+ {
+  "method": "DIAL\n\u03c3\u2080 = 1.0",
+  "seed": 4,
+  "cost": 7.122115135192871,
+  "best_sample": 7.121524333953857,
+  "time": 0.3824541220001265,
+  "rollouts": 10005
+ },
+ {
+  "method": "KSOS \u00d75\nno LSE, no MPPI",
+  "seed": 0,
+  "cost": 7.272608280181885,
+  "best_sample": 7.29122257232666,
+  "time": 1.9642700019994663,
+  "rollouts": 5005,
+  "trace": [
+   {
+    "best_sample": 14.490198135375977,
+    "x_cost": 14.37978458404541,
+    "solution": 14.37978458404541,
+    "status": "converged",
+    "iterations": 40
+   },
+   {
+    "best_sample": 9.143980026245117,
+    "x_cost": 8.766786575317383,
+    "solution": 8.766786575317383,
+    "status": "converged",
+    "iterations": 230
+   },
+   {
+    "best_sample": 7.956571102142334,
+    "x_cost": 7.895449638366699,
+    "solution": 7.895449638366699,
+    "status": "converged",
+    "iterations": 220
+   },
+   {
+    "best_sample": 7.908186435699463,
+    "x_cost": 7.9156646728515625,
+    "solution": 7.895449638366699,
+    "status": "converged",
+    "iterations": 4840
+   },
+   {
+    "best_sample": 7.29122257232666,
+    "x_cost": 7.272608280181885,
+    "solution": 7.272608280181885,
+    "status": "converged",
+    "iterations": 90
+   }
+  ],
+  "time_parts": {
+   "sampling": 0.006095981996622868,
+   "rollout": 0.1960811980025028,
+   "rcm+kernel": 0.02192185100102506,
+   "admm": 1.636090604499259,
+   "x rollout": 0.1040803665000567
+  }
+ },
+ {
+  "method": "KSOS \u00d75\nno LSE, no MPPI",
+  "seed": 1,
+  "cost": 7.895938873291016,
+  "best_sample": 7.895938873291016,
+  "time": 0.7810720994948497,
+  "rollouts": 5005,
+  "trace": [
+   {
+    "best_sample": 10.008403778076172,
+    "x_cost": 11.261896133422852,
+    "solution": 10.008403778076172,
+    "status": "converged",
+    "iterations": 170
+   },
+   {
+    "best_sample": 8.480049133300781,
+    "x_cost": 8.786484718322754,
+    "solution": 8.480049133300781,
+    "status": "converged",
+    "iterations": 130
+   },
+   {
+    "best_sample": 7.895938873291016,
+    "x_cost": 8.171344757080078,
+    "solution": 7.895938873291016,
+    "status": "converged",
+    "iterations": 90
+   },
+   {
+    "best_sample": 7.9963884353637695,
+    "x_cost": 8.471435546875,
+    "solution": 7.895938873291016,
+    "status": "converged",
+    "iterations": 70
+   },
+   {
+    "best_sample": 8.980823516845703,
+    "x_cost": 8.825922012329102,
+    "solution": 7.895938873291016,
+    "status": "converged",
+    "iterations": 260
+   }
+  ],
+  "time_parts": {
+   "sampling": 0.003068752999752178,
+   "rollout": 0.19644608300041,
+   "rcm+kernel": 0.021051948497188278,
+   "admm": 0.456589506000455,
+   "x rollout": 0.10391580899704422
+  }
+ },
+ {
+  "method": "KSOS \u00d75\nno LSE, no MPPI",
+  "seed": 2,
+  "cost": 8.039814949035645,
+  "best_sample": 8.070330619812012,
+  "time": 0.7149310505028552,
+  "rollouts": 5005,
+  "trace": [
+   {
+    "best_sample": 13.819008827209473,
+    "x_cost": 14.002347946166992,
+    "solution": 13.819008827209473,
+    "status": "converged",
+    "iterations": 70
+   },
+   {
+    "best_sample": 10.648775100708008,
+    "x_cost": 10.614157676696777,
+    "solution": 10.614157676696777,
+    "status": "converged",
+    "iterations": 190
+   },
+   {
+    "best_sample": 8.809207916259766,
+    "x_cost": 8.994192123413086,
+    "solution": 8.809207916259766,
+    "status": "converged",
+    "iterations": 90
+   },
+   {
+    "best_sample": 9.929096221923828,
+    "x_cost": Infinity,
+    "solution": 8.809207916259766,
+    "status": "converged",
+    "iterations": 210
+   },
+   {
+    "best_sample": 8.070330619812012,
+    "x_cost": 8.039814949035645,
+    "solution": 8.039814949035645,
+    "status": "converged",
+    "iterations": 200
+   }
+  ],
+  "time_parts": {
+   "sampling": 0.003029907502423157,
+   "rollout": 0.19538730699787266,
+   "rcm+kernel": 0.021290203500029747,
+   "admm": 0.4127596594989882,
+   "x rollout": 0.08246397300354147
+  }
+ },
+ {
+  "method": "KSOS \u00d75\nno LSE, no MPPI",
+  "seed": 3,
+  "cost": 8.811161994934082,
+  "best_sample": 8.811161994934082,
+  "time": 11.135537406002186,
+  "rollouts": 5005,
+  "trace": [
+   {
+    "best_sample": 18.51906967163086,
+    "x_cost": 17.93511962890625,
+    "solution": 17.93511962890625,
+    "status": "converged",
+    "iterations": 140
+   },
+   {
+    "best_sample": 15.503117561340332,
+    "x_cost": 15.431014060974121,
+    "solution": 15.431014060974121,
+    "status": "converged",
+    "iterations": 100
+   },
+   {
+    "best_sample": 12.267675399780273,
+    "x_cost": 12.100147247314453,
+    "solution": 12.100147247314453,
+    "status": "converged",
+    "iterations": 340
+   },
+   {
+    "best_sample": 9.31560230255127,
+    "x_cost": 20.964059829711914,
+    "solution": 9.31560230255127,
+    "status": "max_iterations",
+    "iterations": 50000
+   },
+   {
+    "best_sample": 8.811161994934082,
+    "x_cost": 8.966089248657227,
+    "solution": 8.811161994934082,
+    "status": "converged",
+    "iterations": 780
+   }
+  ],
+  "time_parts": {
+   "sampling": 0.003347997497257893,
+   "rollout": 0.1958387250015221,
+   "rcm+kernel": 0.021588027497273288,
+   "admm": 10.810592948502745,
+   "x rollout": 0.10416970750338805
+  }
+ },
+ {
+  "method": "KSOS \u00d75\nno LSE, no MPPI",
+  "seed": 4,
+  "cost": 8.965414047241211,
+  "best_sample": 8.965414047241211,
+  "time": 11.09793204300513,
+  "rollouts": 5005,
+  "trace": [
+   {
+    "best_sample": 15.443953514099121,
+    "x_cost": 15.67819881439209,
+    "solution": 15.443953514099121,
+    "status": "converged",
+    "iterations": 50
+   },
+   {
+    "best_sample": 10.691097259521484,
+    "x_cost": 10.515949249267578,
+    "solution": 10.515949249267578,
+    "status": "converged",
+    "iterations": 490
+   },
+   {
+    "best_sample": 8.965414047241211,
+    "x_cost": 25.057601928710938,
+    "solution": 8.965414047241211,
+    "status": "max_iterations",
+    "iterations": 50000
+   },
+   {
+    "best_sample": 9.245737075805664,
+    "x_cost": 9.262102127075195,
+    "solution": 8.965414047241211,
+    "status": "converged",
+    "iterations": 250
+   },
+   {
+    "best_sample": 8.987820625305176,
+    "x_cost": 9.007405281066895,
+    "solution": 8.965414047241211,
+    "status": "converged",
+    "iterations": 120
+   }
+  ],
+  "time_parts": {
+   "sampling": 0.003107073998762644,
+   "rollout": 0.19577755450154655,
+   "rcm+kernel": 0.021871209501114208,
+   "admm": 10.773739279502479,
+   "x rollout": 0.10343692550122796
+  }
+ },
+ {
+  "method": "KSOS \u00d75 + LSE\n\u03c3 0.2\u21920.01, \u03bb = 1\n+ MPPI \u03c3 = 0.2",
+  "seed": 0,
+  "cost": 7.095004081726074,
+  "ksos_cost": 7.926996231079102,
+  "time": 13.38226600800408,
+  "time_parts": {
+   "ksos": 13.061954468001204,
+   "refine": 0.3203115400028764
+  },
+  "rollouts": 505015
+ },
+ {
+  "method": "KSOS \u00d75 + LSE\n\u03c3 0.2\u21920.01, \u03bb = 1\n+ MPPI \u03c3 = 0.2",
+  "seed": 1,
+  "cost": 7.100295543670654,
+  "ksos_cost": 7.579145431518555,
+  "time": 11.412359824000305,
+  "time_parts": {
+   "ksos": 11.093404249000741,
+   "refine": 0.3189555749995634
+  },
+  "rollouts": 505015
+ },
+ {
+  "method": "KSOS \u00d75 + LSE\n\u03c3 0.2\u21920.01, \u03bb = 1\n+ MPPI \u03c3 = 0.2",
+  "seed": 2,
+  "cost": 7.103909492492676,
+  "ksos_cost": 8.157236099243164,
+  "time": 8.509162097001536,
+  "time_parts": {
+   "ksos": 8.191085586000554,
+   "refine": 0.31807651100098155
+  },
+  "rollouts": 505015
+ },
+ {
+  "method": "KSOS \u00d75 + LSE\n\u03c3 0.2\u21920.01, \u03bb = 1\n+ MPPI \u03c3 = 0.2",
+  "seed": 3,
+  "cost": 7.3149333000183105,
+  "ksos_cost": 7.339956760406494,
+  "time": 9.2165866380019,
+  "time_parts": {
+   "ksos": 8.895996064002247,
+   "refine": 0.3205905739996524
+  },
+  "rollouts": 505015
+ },
+ {
+  "method": "KSOS \u00d75 + LSE\n\u03c3 0.2\u21920.01, \u03bb = 1\n+ MPPI \u03c3 = 0.2",
+  "seed": 4,
+  "cost": 7.220951080322266,
+  "ksos_cost": 7.826026916503906,
+  "time": 10.593816890999733,
+  "time_parts": {
+   "ksos": 10.275366747999215,
+   "refine": 0.31845014300051844
+  },
+  "rollouts": 505015
+ }
+]

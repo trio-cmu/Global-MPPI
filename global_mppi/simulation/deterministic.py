@@ -438,8 +438,6 @@ def run_interactive(  # noqa: PLR0912, PLR0915
                         policy_params = controller.solve_ksos(policy_params)
                         ksos_solver_time = time.perf_counter() - ksos_solver_start
 
-                        policy_params = policy_params.replace(mean=policy_params.ksos_mean)
-
                         iter_total_time = time.perf_counter() - iter_start_time
 
                         total_ksos_rollout_time += ksos_rollout_time

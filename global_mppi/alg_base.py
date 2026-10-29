@@ -50,6 +50,18 @@ class SamplingParams:
     best_cost: jax.Array
     best_trace: jax.Array 
 
+def normalize_costs(costs: jax.Array) -> jax.Array:
+    """Rescale rollout costs to (c - min) / (median - min).
+
+    Makes the softmax weights independent of the cost scale: the best sample
+    maps to 0 and the median sample to 1, so the temperature is a fraction of
+    the min-to-median cost spread. Without this, costs with large jumps (e.g.
+    a collision penalty) put all the weight on a single sample.
+    """
+    c_min = jnp.min(costs)
+    return (costs - c_min) / (jnp.median(costs) - c_min + 1e-8)
+
+
 class SamplingBasedController(ABC):
     """An abstract sampling-based MPC algorithm interface."""
 

@@ -12,12 +12,19 @@ from global_mppi.task_base import Task
 class PushT(Task):
     """Push a T-shaped block to a desired pose."""
 
-    def __init__(self) -> None:
-        """Load the MuJoCo model and set task parameters."""
+    def __init__(self, close_to_block_weight: float = 0.0) -> None:
+        """Load the MuJoCo model and set task parameters.
+
+        Args:
+            close_to_block_weight: weight of the squared pusher-to-block distance
+                in the running cost. 0 (the default) keeps the original task:
+                then every rollout that never touches the block costs the same.
+        """
         mj_model = mujoco.MjModel.from_xml_path(
             ROOT + "/models/pusht/scene.xml"
         )
         super().__init__(mj_model, trace_sites=["pusher"])
+        self.close_to_block_weight = close_to_block_weight
 
         # Get sensor ids
         self.block_position_sensor = mujoco.mj_name2id(
@@ -71,7 +78,11 @@ class PushT(Task):
         orientation_cost = jnp.sum(jnp.square(orientation_err))
         close_to_block_cost = jnp.sum(jnp.square(close_to_block_err))
 
-        return 50 * position_cost + 15 * orientation_cost
+        return (
+            50 * position_cost
+            + 15 * orientation_cost
+            + self.close_to_block_weight * close_to_block_cost
+        )
 
     def terminal_cost(self, state: mjx.Data) -> jax.Array:
         """The terminal cost ℓ_T(x_T)."""

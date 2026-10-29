@@ -38,9 +38,21 @@ parser.add_argument(
 )
 parser.add_argument(
     "--ksos-solver",
-    choices=["newton", "newton-rs"],
+    choices=["newton", "newton-rs", "ADMM-sparse"],
     default="newton",
-    help="KSOS solver used by GlobalMPPI (default: newton-rs)",
+    help="KSOS solver used by GlobalMPPI (default: newton)",
+)
+parser.add_argument(
+    "--ksos-restarts",
+    type=int,
+    default=5,
+    help="KSOS restarts per planning cycle for GlobalMPPI (default: 5)",
+)
+parser.add_argument(
+    "--wendland-sigma",
+    type=float,
+    default=1.75,
+    help="Wendland kernel radius at restart 0 for ADMM-sparse (default: 1.75)",
 )
 parser.add_argument(
     "--wandb-project",
@@ -117,6 +129,7 @@ if args.algorithm == "ps" or args.algorithm is None:
         plan_horizon=1.0,
         spline_type="cubic",
         num_knots=6,
+        iterations = 5,
     ) 
 elif args.algorithm == "mppi":
     print("Running MPPI")
@@ -142,6 +155,7 @@ elif args.algorithm == "dial":
         plan_horizon=1.0,
         spline_type="cubic",
         num_knots=6,
+        iterations = 5,
     )
 elif args.algorithm == "globalmppi":
     print(f"Running GlobalMPPI (KSOS solver: {args.ksos_solver})")
@@ -155,6 +169,8 @@ elif args.algorithm == "globalmppi":
         num_knots=6,
         iterations=5,
         ksos_solver=args.ksos_solver,
+        ksos_num_restart=args.ksos_restarts,
+        wendland_sigma=args.wendland_sigma,
     )
 
 # Run the interactive simulation

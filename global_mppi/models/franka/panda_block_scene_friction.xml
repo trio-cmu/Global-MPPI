@@ -1,0 +1,189 @@
+<mujoco model="panda_block_scene">
+  <!-- Swapped from franka_panda/panda.xml to the FR3 model -- see
+       assets/franka_fr3/fr3_gripper.xml's own header comment for how the hand/gripper was
+       ported over. Body/site names this scene file and the Python driver depend on (hand,
+       block, block_y, block_geom, pusher_site) are unchanged. -->
+  <include file="franka_fr3/fr3_gripper.xml"/>
+
+  <compiler angle="radian" meshdir="franka_fr3/assets"/>
+  <option timestep="0.002" integrator="implicitfast" gravity="0 0 -9.81"/>
+
+  <asset>
+    <texture type="2d" name="grid" builtin="checker" rgb1="0.2 0.3 0.4" rgb2="0.9 0.9 0.9"
+             width="300" height="300"/>
+    <material name="grid" texture="grid" texrepeat="10 10" texuniform="true" reflectance="0.1"/>
+    <material name="zone_hi"  rgba="0.75 0.30 0.30 1"/>
+    <material name="zone_mid" rgba="0.75 0.65 0.25 1"/>
+    <material name="zone_lo"  rgba="0.30 0.55 0.75 1"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0.6 0 2.2" dir="0 0 -1" diffuse="0.8 0.8 0.8"/>
+    <geom name="ground" type="plane" size="5 5 0.1" pos="0 0 0" material="grid"/>
+
+    <!-- ONE continuous board, matching the real rig photo -- the arm bolts directly onto the
+         SAME plywood sheet the friction zones/block sit on, near one END of it, not onto a
+         separate pedestal standing next to a smaller table (that was the previous version's
+         structure: a 0.4m-tall standalone pedestal block plus an adjacent thin table_top,
+         which read as two different objects rather than one board). Fixed by deleting the
+         pedestal body entirely and extending table_top's own footprint back to cover the
+         arm's own mounting point (x now starts at -0.15 instead of 0.15), with its top
+         surface (pos.z + size.z = 0.37+0.03 = 0.40) landing EXACTLY at the arm base's own
+         height (base body pos.z=0.4 in franka_fr3/fr3_gripper.xml) -- flush, not stacked on
+         a taller riser underneath.
+         Y-asymmetric for the same corner-mount reason as before, RESHUFFLED again below --
+         the zone strip (originally centered on the arm's own y=0, then just shifted whole)
+         now starts AT y=0 (zone_hi/red) and runs to y=-0.8 (zone_lo/blue), so the arm faces
+         zone_hi PERPENDICULARLY -- straight on, not at the diagonal angle the earlier
+         (arm-off-to-one-side) versions had -- see zone_hi's own comment below for the
+         corresponding HOME_QPOS_ARM re-solve this required. pos.y=-0.45, size.y=0.75 spans
+         y in [-1.2, 0.3], so the arm (at y=0) sits near the HIGH end, most of the board
+         extending away toward -y, the same direction the push travels. Its z shifted up by
+         0.01 (0.39 -> 0.40) to meet the arm base flush, so zone/block z below were bumped by
+         the same 0.01 to keep the same small resting gap above the new surface height. Real
+         board dimensions from the photo aren't known precisely -- this is a placeholder
+         sized to read as "arm at one end of a single board", adjust once real measurements
+         exist. Four thin corner legs added below purely for visual support (no collision --
+         contype/conaffinity 0 -- so they can't interact with the arm or block). -->
+    <geom name="table_top" type="box" size="0.65 0.75 0.03" pos="0.5 -0.45 0.37" rgba="0.76 0.65 0.47 1"/>
+    <geom name="leg_1" type="cylinder" size="0.02 0.185" pos="-0.1 -1.15 0.185"
+          rgba="0.3 0.3 0.3 1" contype="0" conaffinity="0"/>
+    <geom name="leg_2" type="cylinder" size="0.02 0.185" pos="1.1 -1.15 0.185"
+          rgba="0.3 0.3 0.3 1" contype="0" conaffinity="0"/>
+    <geom name="leg_3" type="cylinder" size="0.02 0.185" pos="-0.1 0.25 0.185"
+          rgba="0.3 0.3 0.3 1" contype="0" conaffinity="0"/>
+    <geom name="leg_4" type="cylinder" size="0.02 0.185" pos="1.1 0.25 0.185"
+          rgba="0.3 0.3 0.3 1" contype="0" conaffinity="0"/>
+
+    <!-- Three EQUAL-WIDTH friction zones side by side along y, all at the
+         SAME forward distance (x) from the arm. The push direction is now
+         SIDEWAYS (+/-y), not forward -- one continuous push carries the
+         block laterally from one end zone, across the middle, into the
+         other end zone, all within the same, constant reach from the arm's
+         fixed base (no re-basing, no reach-vs-friction confound). Replaces
+         an earlier version with a much narrower middle zone (a leftover
+         from a since-abandoned steering-based design) and forward-pushing
+         geometry. condim=3 for full tangential friction. -->
+    <!-- Real friction values live here again (see contype/conaffinity note
+         below for why this is now safe). Earlier attempt at an "instant
+         whole-block switch" set the BLOCK's own friction dynamically
+         instead of touching these geoms, which fixed the friction
+         COEFFICIENT but not the underlying problem: while the block
+         geometrically straddles a boundary it still generates a SEPARATE
+         set of contacts with the old zone's geom (in addition to the new
+         one), and two exactly-coplanar, independently-solved floor patches
+         both constraining the same block produced a real, reproducible
+         solver artifact -- confirmed with a pure constant-force test (no
+         controller at all): velocity FROZE at a single constant value for
+         the entire straddle period (over 3500 steps / 7 seconds) and only
+         jumped once the trailing edge fully cleared the boundary, i.e. once
+         only one zone's contacts remained. contype/conaffinity below make
+         the block only ever collision-detectable against ONE zone geom at
+         a time (chosen the instant any part of the block enters it, via
+         the leading edge -- see _update_active_zone in
+         mujoco_panda_block_sim.py), so there's never a second, redundant
+         contact to cause this. conaffinity="0" here means these geoms
+         cannot initiate collision on their own; contype bits 8/16/32
+         (unused elsewhere in this model) are matched against the block's
+         dynamically-set conaffinity. -->
+    <!-- x,y derived from an explicitly given HOME_QPOS_ARM -- see that constant's own
+         comment in mujoco_panda_block_sim_friction.py. Forward kinematics at the given joint
+         configuration puts pusher_site at (0.4482605, 0.10211381, 0.44531385); zone_hi's
+         (x,y) = pusher (x,y) minus REF_OFFSET's (0, 0.055), same convention as every other
+         placement in this file. zone_mid/zone_lo keep the same -0.4/-0.8 y-offset from
+         zone_hi as before.
+         z is FIXED at 0.405 (table_top's own surface, 0.37+0.03=0.40, plus this box's own
+         0.005 half-thickness) -- NOT derived from the arm/block, unlike x,y. A previous
+         revision incorrectly computed z the same way as x,y (from the pusher's FK position
+         minus an offset), which put zone_hi's top at 0.3953 -- BELOW table_top's actual
+         surface (0.40) -- silently clipping the zone (and the block resting on it) into the
+         table. Caught via a direct ncon/contact check (world<->block table_top contacts at
+         reset), not assumed correct. -->
+    <!-- Width reverted back to the original 0.20 half-size (0.4m per zone) -- the halved
+         (0.10/0.2m) version was too short. Friction stays REORDERED (kept, not reverted):
+         zone_mid (yellow) is the highest-friction zone (was zone_hi/red), zone_hi (red, the
+         starting zone) is the LOWEST, and zone_lo (blue) sits between them
+         (0.2 < 0.25 < 0.5).
+         zone_mid/zone_lo's y-centers are back to -0.4/-0.8 from zone_hi's own y, matching
+         the reverted width -- zone_hi's own position is UNCHANGED throughout (the block
+         still starts there, at the same reach-verified spot). -->
+    <geom name="zone_hi"  type="box" size="0.20 0.20 0.005" pos="0.4482605 0.04711381 0.405" material="zone_hi"
+          friction="0.2 0.005 0.0001" condim="3" contype="8" conaffinity="0"/>
+    <geom name="zone_mid" type="box" size="0.20 0.20 0.005" pos="0.4482605 -0.35288619 0.405" material="zone_mid"
+          friction="0.5 0.005 0.0001" condim="3" contype="16" conaffinity="0"/>
+    <geom name="zone_lo"  type="box" size="0.20 0.20 0.005" pos="0.4482605 -0.75288619 0.405" material="zone_lo"
+          friction="0.25 0.005 0.0001" condim="3" contype="32" conaffinity="0"/>
+
+    <!-- Continuous collision surface used only by benchmark_tests. It spans the complete
+         three-zone strip but is invisible and collision-disabled during normal experiments.
+         The benchmark helper gives the block conaffinity bit 64, which disables all three
+         segmented zone contacts and eliminates contact resets at their boundaries. -->
+    <geom name="benchmark_surface" type="box" size="0.20 0.60 0.005"
+          pos="0.4482605 -0.35288619 0.405" rgba="0 0 0 0"
+          friction="0.2 0.005 0.0001" condim="3" contype="64" conaffinity="0"/>
+
+    <!-- The pushable block: same size as the point-force model, but lighter
+         (0.5 kg vs. that model's 1.0 kg). The impedance controller pushing
+         this block has a damping term (KD) acting on the pusher's own
+         velocity, which fights against speed increases independent of the
+         block; steady-state speed roughly follows v ~ (F - mu*m*g)/KD, so
+         the mu*m*g term determines whether a requested force can sustain
+         sliding. Starts in zone_hi (mu=0.2, the lower-friction end); pushed in -y
+         it crosses zone_mid (mu=0.5, the stickiest zone) and ends in zone_lo
+         (mu=0.25). -->
+    <!-- Keep the experiment planar with Y and Z slide joints. Z must remain a
+         real degree of freedom: otherwise the world joint, rather than the
+         table, supports the block's weight. That makes the floor-normal
+         contact row redundant and leaves its multiplier unrelated to m*g,
+         which in turn corrupts the friction cone. X and all rotations remain
+         locked so the block still follows the intended straight path. -->
+    <!-- z is zone_hi's own top surface (0.405+0.005=0.41) plus this block's OWN half-height
+         (now 0.025 for the 10x10x5cm size, was 0.05 for the old 10cm cube) -- 0.41+0.025 =
+         0.435. Derived from the FIXED zone/table surface height, NOT from HOME_QPOS_ARM's
+         pusher_site FK -- an earlier revision of this comment did it the other way around
+         (derived zone z from the block, block z from the pusher) and that's what caused the
+         table-clipping bug fixed in zone_hi's own comment above; z here must always trace
+         back to the table surface, only x,y trace back to the arm.
+         Pusher_site's own z (0.44531385, from the GIVEN HOME_QPOS_ARM, unchanged) is NOT
+         exactly at this block's center (0.435) -- it's off by ~1cm, landing a bit above
+         center but still well within the block's new 5cm height span [0.41, 0.46]. Small
+         enough that reset()'s existing settle phase (already relied on to absorb the
+         connect constraint's initial pose error) absorbs it -- verified directly: block
+         settles with zero table/ground penetration and the pusher tip visibly touching the
+         block. HOME_QPOS_ARM was deliberately NOT re-solved for this -- it was given
+         explicitly and left as-is; flag if perfectly centered contact height matters more
+         than keeping that exact given pose. -->
+    <body name="block" pos="0.4482605 0.04711381 0.435">
+      <joint name="block_y" type="slide" axis="0 1 0"/>
+      <joint name="block_z" type="slide" axis="0 0 1"/>
+      <!-- friction is a tiny placeholder -- MuJoCo combines two contacting
+           geoms' friction via elementwise MAX, so keeping this below all
+           three zones' real values (0.2 is the lowest) means the ACTIVE
+           zone geom's own friction always wins the combination, uncontaminated
+           by the block's own value. conaffinity is set dynamically in Python
+           each step (see _update_active_zone) to match exactly one zone's
+           contype bit -- default here (1) matches nothing zone-related
+           (zones use bits 8/16/32) so the block starts with no zone contact
+           until reset() sets it correctly. -->
+      <geom name="block_geom" type="box" size="0.05 0.05 0.025" mass="0.5" rgba="0.8 0.15 0.15 1"
+            friction="0.001 0.005 0.0001" condim="3"/>
+    </body>
+  </worldbody>
+
+  <!-- REMOVED: the <equality><connect .../></equality> rigid hand<->block tie, and the
+       <contact><exclude .../></contact> block that used to suppress real hand/finger<->block
+       contact (both quoted in git history / earlier conversation turns if needed). Explicit
+       request: no "magic" constraint guaranteeing contact -- the closed gripper (hand_c mesh
+       + fingertip pad collision geoms) now has to genuinely, physically touch and push the
+       block via real contact/friction, same as the underlying S-curve MIMO gripper pipeline
+       this project's real-hardware work is based on. This reintroduces the exact risk this
+       file's own module docstring documents as "1st attempt" (mujoco_panda_block_sim_friction.py):
+       a light end effector CAN accelerate away from a much heavier block and lose contact.
+       The current controller therefore holds X/Z and orientation with hybrid Cartesian
+       impedance while leaving Y compliant for force-controlled motion; contact remains real
+       and breakable, not guaranteed by the controller. pusher_site was also moved (see
+       fr3_gripper.xml) from a
+       virtual point out past the fingers to the REAL fingertip-pad depth, and HOME_QPOS_ARM
+       was re-solved accordingly -- see that constant's own comment. -->
+
+</mujoco>
