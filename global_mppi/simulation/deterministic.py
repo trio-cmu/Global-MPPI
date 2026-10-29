@@ -202,6 +202,8 @@ def run_interactive(  # noqa: PLR0912, PLR0915
         jit_optimize = jax.jit(controller.optimize)
         policy_params, rollouts, rollouts_best = jit_optimize(mjx_data, policy_params)
         policy_params, rollouts, rollouts_best = jit_optimize(mjx_data, policy_params)
+        jit_plan_rollout = jax.jit(controller.plan_rollout)
+        jit_plan_rollout(mjx_data, policy_params)
     else:
 
         jit_optimize = jax.jit(controller.optimize)
@@ -435,7 +437,7 @@ def run_interactive(  # noqa: PLR0912, PLR0915
 
                         # 3. KernelSOS global solve
                         ksos_solver_start = time.perf_counter()
-                        policy_params = controller.solve_ksos(policy_params)
+                        policy_params = controller.solve_ksos(policy_params, mjx_data)
                         ksos_solver_time = time.perf_counter() - ksos_solver_start
 
                         iter_total_time = time.perf_counter() - iter_start_time
@@ -448,7 +450,10 @@ def run_interactive(  # noqa: PLR0912, PLR0915
                     # 4. run MPPI once, after all KSOS restarts, as a local
                     # search around the final KSOS solution
                     mppi_start = time.perf_counter()
-                    policy_params, rollouts, rollouts_best = jit_optimize(mjx_data, policy_params)
+                    if controller.ksos_refine:
+                        policy_params, rollouts, rollouts_best = jit_optimize(mjx_data, policy_params)
+                    else:  # execute the KSOS solution as it is
+                        rollouts_best = jax.block_until_ready(jit_plan_rollout(mjx_data, policy_params))
                     total_mppi_time = time.perf_counter() - mppi_start
                     total_all_time += total_mppi_time
             else:
