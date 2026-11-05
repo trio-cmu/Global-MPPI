@@ -1,0 +1,110 @@
+Failed to import warp: No module named 'warp'
+Failed to import mujoco.mjx.third_party.mujoco_warp as mujoco_warp: No module named 'warp'
+Running GlobalMPPI (KSOS solver: ADMM-cuda, two-level sampling, no LSE)
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/algs/global_mppi.py:212: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  ).random(self.ksos_num_samples),
+
+=== Seed 4 ===
+Planning with 100 steps over a 1.0 second horizon with 6 knots.
+Planning at 50.0 Hz, simulating at 1000.0 Hz
+Jitting the controller...
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+Time to jit: 18.385 seconds
+Recording video to /home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/logs/pushT_globalmppi_globalmppi/20261104_143831/simulation_20261104_143850.mp4
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 10.8476 admm 0.8824 guard 4.5236
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1081 rounds=3 replaced=0 status=converged iters=230 best sample 11.7814 warm 15.4147 x 11.6939 -> solution 11.6939
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 5.4893 admm 0.3393 guard 0.0233
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1080 rounds=3 replaced=0 status=converged iters=100 best sample 9.3851 x 9.3434 -> solution 9.3434
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.2062 admm 0.5470 guard 0.0248
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1080 rounds=3 replaced=0 status=converged iters=210 best sample 7.6151 x 7.6015 -> solution 7.6015
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.2109 admm 0.5815 guard 0.0228
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1080 rounds=3 replaced=0 status=converged iters=220 best sample 7.3632 x 7.3562 -> solution 7.3562
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.2247 admm 1.2087 guard 0.0229
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1080 rounds=3 replaced=0 status=converged iters=320 best sample 7.6113 x 7.6076 -> solution 7.3562
+Fatal Python error: Segmentation fault
+
+Current thread 0x0000730851e51740 (most recent call first):
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/partial_eval.py", line 2116 in default_process_primitive
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/partial_eval.py", line 2073 in process_primitive
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/core.py", line 638 in bind_with_trace
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/batching.py", line 528 in process_primitive
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/core.py", line 638 in bind_with_trace
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/core.py", line 628 in _true_bind
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/core.py", line 612 in bind
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/core.py", line 722 in eval_jaxpr
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/core.py", line 309 in jaxpr_as_fun
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/batching.py", line 873 in _batch_jaxpr_inner
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/batching.py", line 883 in _match_axes_jaxpr
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/batching.py", line 904 in _batch_jaxpr_outer
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/linear_util.py", line 212 in call_wrapped
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/partial_eval.py", line 2350 in trace_to_jaxpr_dynamic
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/profiler.py", line 364 in wrapper
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/batching.py", line 860 in _batch_jaxpr_axes
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/batching.py", line 845 in batch_jaxpr_axes
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/batching.py", line 842 in _batch_jaxpr
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/batching.py", line 832 in batch_jaxpr
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/lax/control_flow/loops.py", line 1215 in _scan_batching_rule
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/batching.py", line 524 in process_primitive
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/core.py", line 638 in bind_with_trace
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/core.py", line 628 in _true_bind
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/core.py", line 612 in bind
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/lax/control_flow/loops.py", line 352 in scan
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/traceback_util.py", line 180 in reraise_with_filtered_traceback
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/alg_base.py", line 340 in eval_rollouts
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/linear_util.py", line 397 in _get_result_paths_thunk
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/batching.py", line 342 in flatten_fun_for_vmap
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/batching.py", line 660 in _batch_inner
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/batching.py", line 644 in _batch_outer
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/linear_util.py", line 212 in call_wrapped
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/api.py", line 1112 in vmap_f
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/traceback_util.py", line 180 in reraise_with_filtered_traceback
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/alg_base.py", line 256 in rollout
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/alg_base.py", line 212 in _optimize_scan_body
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/linear_util.py", line 397 in _get_result_paths_thunk
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/api_util.py", line 90 in flatten_fun_nokwargs
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/linear_util.py", line 212 in call_wrapped
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/partial_eval.py", line 2350 in trace_to_jaxpr_dynamic
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/profiler.py", line 364 in wrapper
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/lax/control_flow/common.py", line 55 in _initial_style_open_jaxpr
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/lax/control_flow/common.py", line 63 in _initial_style_jaxpr
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/lax/control_flow/loops.py", line 281 in _create_jaxpr
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/lax/control_flow/loops.py", line 299 in scan
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/traceback_util.py", line 180 in reraise_with_filtered_traceback
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/alg_base.py", line 216 in optimize
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/linear_util.py", line 397 in _get_result_paths_thunk
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/api_util.py", line 73 in flatten_fun
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/linear_util.py", line 212 in call_wrapped
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/partial_eval.py", line 2350 in trace_to_jaxpr_dynamic
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/profiler.py", line 364 in wrapper
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/pjit.py", line 1351 in _create_pjit_jaxpr
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/linear_util.py", line 472 in memoized_fun
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/pjit.py", line 564 in _infer_params_impl
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/pjit.py", line 667 in _infer_params_internal
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/pjit.py", line 643 in _infer_params
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/pjit.py", line 139 in _python_pjit_helper
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/pjit.py", line 270 in cache_miss
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/traceback_util.py", line 180 in reraise_with_filtered_traceback
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/simulation/deterministic.py", line 454 in run_interactive
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/examples/pusht.py", line 311 in <module>
+
+Extension modules: numpy.core._multiarray_umath, numpy.core._multiarray_tests, numpy.linalg._umath_linalg, numpy.fft._pocketfft_internal, numpy.random._common, numpy.random.bit_generator, numpy.random._bounded_integers, numpy.random._mt19937, numpy.random.mtrand, numpy.random._philox, numpy.random._pcg64, numpy.random._sfc64, numpy.random._generator, scipy._lib._ccallback_c, scipy.sparse._sparsetools, _csparsetools, _cyutility, scipy._cyutility, scipy.sparse._csparsetools, jaxlib.cpu_feature_guard, msgpack._cmsgpack, yaml._yaml, scipy.spatial._ckdtree, scipy._lib.messagestream, scipy.linalg._fblas, scipy.linalg._flapack, scipy.linalg.cython_lapack, scipy.linalg._cythonized_array_utils, scipy.linalg._solve_toeplitz, scipy.linalg._decomp_lu_cython, scipy.linalg._matfuncs_schur_sqrtm, scipy.linalg._matfuncs_expm, scipy.linalg._linalg_pythran, scipy.linalg.cython_blas, scipy.linalg._decomp_update, scipy.spatial._qhull, scipy.spatial._voronoi, scipy.special._ufuncs_cxx, scipy.special._ellip_harm_2, scipy.special._special_ufuncs, scipy.special._gufuncs, scipy.special._ufuncs, scipy.special._specfun, scipy.special._comb, scipy.spatial._hausdorff, scipy.spatial._distance_wrap, scipy.spatial.transform._rotation, scipy.spatial.transform._rigid_transform, xxhash._xxhash, PIL._imaging, scipy.sparse.linalg._dsolve._superlu, scipy.sparse.linalg._eigen.arpack._arpack, scipy.sparse.linalg._propack._spropack, scipy.sparse.linalg._propack._dpropack, scipy.sparse.linalg._propack._cpropack, scipy.sparse.linalg._propack._zpropack, scipy.optimize._group_columns, scipy.optimize._trlib._trlib, scipy.optimize._lbfgsb, _moduleTNC, scipy.optimize._moduleTNC, scipy.optimize._slsqplib, scipy.optimize._minpack, scipy.optimize._lsq.givens_elimination, scipy.optimize._zeros, scipy._lib._uarray._uarray, scipy.linalg._decomp_interpolative, scipy.optimize._bglu_dense, scipy.optimize._lsap, scipy.optimize._direct, scipy.sparse.csgraph._tools, scipy.sparse.csgraph._shortest_path, scipy.sparse.csgraph._traversal, scipy.sparse.csgraph._min_spanning_tree, scipy.sparse.csgraph._flow, scipy.sparse.csgraph._matching, scipy.sparse.csgraph._reordering, scipy.ndimage._nd_image, scipy.ndimage._rank_filter_1d, _ni_label, scipy.ndimage._ni_label, _cvxcore, scipy.signal._sigtools, scipy.signal._max_len_seq_inner, scipy.signal._upfirdn_apply, scipy.signal._spline, scipy.interpolate._fitpack, scipy.interpolate._dfitpack, scipy.interpolate._dierckx, scipy.interpolate._ppoly, scipy.interpolate._interpnd, scipy.interpolate._rbfinterp_pythran, scipy.interpolate._rgi_cython, scipy.signal._sosfilt, scipy.integrate._odepack, scipy.integrate._quadpack, scipy.integrate._vode, scipy.integrate._dop, scipy.integrate._lsoda, scipy.special.cython_special, scipy.stats._stats, scipy.stats._biasedurn, scipy.stats._stats_pythran, scipy.stats._levy_stable.levyst, scipy.stats._ansari_swilk_statistics, scipy.stats._sobol, scipy.stats._qmc_cy, scipy.stats._rcont.rcont, scipy.stats._qmvnt_cy, scipy.signal._peak_finding_utils, _scs_direct, osqp._osqp, eigenpy.eigenpy_pywrap (total: 113)
+EXIT CODE 139

@@ -54,6 +54,10 @@ parser.add_argument("--lse-samples", type=int, default=0,
 parser.add_argument("--lse-sigmas", type=float, nargs=2, default=[0.2, 0.01], metavar=("FIRST", "LAST"),
                     help="LSE perturbation scale at the first and last restart (geometric in between)")
 parser.add_argument("--lse-lambda", type=float, default=0.1, help="LSE temperature")
+parser.add_argument("--gnc", type=float, nargs=2, default=None, metavar=("FIRST", "LAST"),
+                    help="KSOS: kernel-surrogate GNC instead of plain costs: each sample's cost is the Gaussian-"
+                         "weighted mean of this restart's costs, bandwidth = factor x the sampler's kernel radius, "
+                         "the factor geometric from FIRST to LAST over the restarts (no extra rollouts)")
 parser.add_argument("--lse-chunk", type=int, default=20000, help="rollouts per GPU call for the perturbations")
 parser.add_argument("--cold", action="store_true",
                     help="no KSOS: every refiner starts from zero knots (the plain baselines at --samples x --iters)")
@@ -110,6 +114,17 @@ def lse_costs(X, sig, rng):
     return m - args.lse_lambda * np.log(np.mean(np.exp(-(J - m[:, None]) / args.lse_lambda), axis=1))
 
 
+gnc_factors = np.geomspace(*args.gnc, args.restarts) if args.gnc else None
+
+
+def gnc_costs(X, f, h):
+    """Nadaraya-Watson smoothing of the costs f over the samples X themselves, Gaussian kernel of
+    bandwidth h (each sample keeps weight 1 on itself)."""
+    d2 = np.sum((X[:, None] - X[None]) ** 2, axis=-1)
+    w = np.exp(-0.5 * d2 / h ** 2)
+    return (w @ f) / w.sum(axis=1)
+
+
 def ksos(seed):
     """The KSOS solution after --restarts restarts: (knots, cost, seconds, trace)."""
     sample = jax.jit(TwoLevelSampler(args.n, dim, cluster_size=args.cluster_size, seed=seed).sample)
@@ -126,6 +141,9 @@ def ksos(seed):
         points, sigma, _ = sample(sub, jnp.asarray(lo, jnp.float32), jnp.asarray(hi, jnp.float32))
         X, sigma = np.asarray(points, np.float64), float(sigma)
         f = lse_costs(X, lse_sigmas[i], lse_rng) if args.lse_samples else rollout(X)
+        f_true = f
+        if args.gnc:
+            f = gnc_costs(X, f_true, gnc_factors[i] * sigma)
         order = rcm_order(X, sigma)
         prob = build_problem(X[order], sigma, lambda _: f[order], lambd=args.lambd)
         with warnings.catch_warnings():
@@ -137,7 +155,8 @@ def ksos(seed):
         ok = info["success"] and np.all(np.isfinite(x))
         x_cost = float(rollout(x)[0]) if ok else np.inf
         best = X[np.argmin(f)]  # with LSE, f is smoothed: judge the best sample by its own rollout
-        best_cost = float(rollout(best)[0]) if args.lse_samples else float(f.min())
+        best_cost = (float(rollout(best)[0]) if args.lse_samples
+                     else float(f_true[np.argmin(f)]) if args.gnc else float(f.min()))
         for cand, c in ((x, x_cost), (best, best_cost)):
             if c < center_cost:
                 center, center_cost = cand, c
@@ -170,7 +189,7 @@ for seed in args.seeds if not args.cold else []:
 
 tag = "cold" if args.cold else f"KSOS x{args.restarts} (n {args.n}, decay {args.decay:g})" + (
     f" + LSE {args.lse_sigmas[0]:g}->{args.lse_sigmas[1]:g} L {args.lse_samples} lambda {args.lse_lambda:g}"
-    if args.lse_samples else "")
+    if args.lse_samples else "") + (f" + GNC {args.gnc[0]:g}->{args.gnc[1]:g} sigma" if args.gnc else "")
 records = []
 for spec in args.configs:
     refiner = make_refiner(spec)

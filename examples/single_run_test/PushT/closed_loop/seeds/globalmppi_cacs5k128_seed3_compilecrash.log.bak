@@ -1,0 +1,72 @@
+Failed to import warp: No module named 'warp'
+Failed to import mujoco.mjx.third_party.mujoco_warp as mujoco_warp: No module named 'warp'
+Running GlobalMPPI (KSOS solver: ADMM-cuda, two-level sampling, no LSE)
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/algs/global_mppi.py:212: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  ).random(self.ksos_num_samples),
+
+=== Seed 3 ===
+Planning with 100 steps over a 1.0 second horizon with 6 knots.
+Planning at 50.0 Hz, simulating at 1000.0 Hz
+Jitting the controller...
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+Time to jit: 18.257 seconds
+Recording video to /home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/logs/pushT_globalmppi_globalmppi/20261104_105041/simulation_20261104_105100.mp4
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 10.7896 admm 1.6257 guard 4.5165
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=8 replaced=0 status=converged iters=810 best sample 8.5239 warm 8.7319 x 8.5304 -> solution 8.5239
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 5.6217 admm 0.9733 guard 0.0233
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=8 replaced=0 status=converged iters=290 best sample 9.1968 x 9.1067 -> solution 8.5239
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.3537 admm 1.5053 guard 0.0246
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=8 replaced=0 status=converged iters=1070 best sample 7.8885 x 7.8885 -> solution 7.8885
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.3621 admm 1.6770 guard 0.0243
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=8 replaced=0 status=converged iters=1100 best sample 7.9473 x 7.9593 -> solution 7.8885
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.3849 admm 2.8990 guard 0.0251
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=8 replaced=0 status=converged iters=2500 best sample 8.0180 x 8.0138 -> solution 7.8885
+Traceback (most recent call last):
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/examples/pusht.py", line 311, in <module>
+    run_interactive(
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/simulation/deterministic.py", line 454, in run_interactive
+    policy_params, rollouts, rollouts_best = jit_optimize(mjx_data, policy_params)
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+jaxlib._jax.XlaRuntimeError: INTERNAL: ptxas exited with non-zero error code 139, output: 
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+Exception ignored in: <function Renderer.__del__ at 0x7d2352eeb9c0>
+Traceback (most recent call last):
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/mujoco/renderer.py", line 340, in __del__
+    self.close()
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/mujoco/renderer.py", line 326, in close
+    self._gl_context.free()
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 131, in free
+    EGL.eglMakeCurrent(EGL_DISPLAY, EGL.EGL_NO_SURFACE,
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x7d2364100e00>
+Traceback (most recent call last):
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 131, in free
+    EGL.eglMakeCurrent(EGL_DISPLAY, EGL.EGL_NO_SURFACE,
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+EXIT CODE 1

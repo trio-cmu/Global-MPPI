@@ -1,4 +1,5 @@
 import time
+from dataclasses import replace
 from typing import Any, Literal, Tuple
 import numpy as np
 import jax
@@ -14,6 +15,7 @@ from ksos_tools.problems.sampling import rcm_order
 from jax import lax
 from scipy.stats import qmc
 from global_mppi.sampling import TwoLevelSampler
+from global_mppi.cacs import CacsConfig, cacs_sample
 
 @dataclass
 class GlobalMPPIParams(SamplingParams):
@@ -69,6 +71,10 @@ class GlobalMPPI(SamplingBasedController):
         ksos_lse_sigmas: Tuple[float, float] = (0.2, 0.01),
         ksos_lse_lambda: float = 1.0,
         ksos_lse_chunk: int = 10000,
+        ksos_cluster_size: int = 10,
+        ksos_gnc: Tuple[float, float] = None,
+        ksos_warm_start: bool = False,
+        ksos_cacs_options: dict = None,
     ) -> None:
         """Initialize the controller.
 
@@ -92,9 +98,12 @@ class GlobalMPPI(SamplingBasedController):
             wendland_sigma: Wendland kernel radius at restart 0 (ADMM-sparse
                             only); it shrinks with `decay_rate` per restart.
             ksos_sampling: KSOS candidate design, "Sobol" (plain, in the
-                           trust region) or "two-level" (two-level Sobol
+                           trust region), "two-level" (two-level Sobol
                            clusters in the trust region; the sampler also
-                           sets the kernel radius).
+                           sets the kernel radius) or "cacs" (budgeted
+                           cost-aware chordal sampling over the whole box,
+                           global_mppi/cacs.py; ADMM-cuda only, it rolls
+                           out its own candidates in `solve_ksos`).
             ksos_num_samples: KSOS candidates per restart.
             mppi_noise: Fixed noise level of the MPPI step after the
                         restarts; None keeps `lse_smoothing_sigma[iter]`.
@@ -107,6 +116,21 @@ class GlobalMPPI(SamplingBasedController):
                              restart (geometric in between).
             ksos_lse_lambda: LSE temperature.
             ksos_lse_chunk: Perturbed rollouts per sequential GPU batch.
+            ksos_cluster_size: Points per cluster of the two-level design,
+                               which is the clique size of the ADMM problem.
+            ksos_gnc: ADMM-cuda path: kernel-surrogate GNC. Each candidate's
+                      cost becomes the Gaussian-weighted mean of the
+                      restart's costs, bandwidth = factor x the sampler's
+                      kernel radius, the factor geometric from the first to
+                      the last value over the restarts (no extra rollouts).
+                      None keeps the plain costs.
+            ksos_warm_start: CACS path: at restart 0, the previous cycle's
+                             plan (shifted to the current time) joins the
+                             CACS initial batch and is a guard candidate,
+                             so the KSOS result is never worse than it.
+            ksos_cacs_options: CACS path: overrides of the CacsConfig defaults
+                               (global_mppi/cacs.py), e.g. {"k": 128}; n is
+                               ksos_num_samples.
         """
         super().__init__(
             task,
@@ -155,14 +179,21 @@ class GlobalMPPI(SamplingBasedController):
         )
         self.ksos_lse_lambda = ksos_lse_lambda
         self.ksos_lse_chunk = ksos_lse_chunk
+        self.ksos_warm_start = ksos_warm_start
+        self.ksos_gnc_factors = (
+            np.geomspace(*ksos_gnc, max(ksos_num_restart, 1)) if ksos_gnc else None
+        )
         # ADMM-cuda: cuKernelSOS's GPU ADMM, the single-step test's settings
         self.admm_cuda_options = dict(
             eps_abs=1e-6, eps_rel=1e-5, time_limit=2.0, record_history=False,
             backend="cuda", cuda_options={"anderson_reg": 1e-10},
         )
+        self.cacs_config = CacsConfig(**{**(ksos_cacs_options or {}), "n": ksos_num_samples})
+        self._cacs_rng = np.random.default_rng(seed + 101)
+        self._cacs_calls = 0
         if ksos_sampling == "two-level":
             self.two_level = TwoLevelSampler(
-                ksos_num_samples, self.num_knots * self.task.model.nu, cluster_size=10, seed=seed
+                ksos_num_samples, self.num_knots * self.task.model.nu, cluster_size=ksos_cluster_size, seed=seed
             )
         # total rollout cost of knot sequences (m, num_knots, nu), for the
         # ADMM-cuda guard (x and the best sample)
@@ -432,6 +463,8 @@ class GlobalMPPI(SamplingBasedController):
         new_tk = (jnp.linspace(0.0, self.plan_horizon, self.num_knots) + state.time)
         new_mean = self.interp_func(new_tk, tk, params.mean[None, ...])[0]
         params = params.replace(tk=new_tk, mean=new_mean)
+        if self.ksos_sampling == "cacs":  # CACS samples and rolls out on the host, in solve_ksos
+            return params
 
         # sample knots
         knots, params = self.sample_ksos_knots(params)
@@ -464,6 +497,8 @@ class GlobalMPPI(SamplingBasedController):
         `ksos_mean`. Falls back to returning `params` unchanged if every
         elite is filtered out or the solver fails."""
 
+        if self.ksos_solver == "ADMM-cuda" and self.ksos_sampling == "cacs":
+            return self._solve_cacs(params, state)
         if self.ksos_solver == "ADMM-cuda":
             return self._solve_admm_cuda(params, state)
 
@@ -574,6 +609,82 @@ class GlobalMPPI(SamplingBasedController):
             return None, info
         return x, info
 
+    def _solve_cacs(self, params: GlobalMPPIParams, state: mjx.Data) -> GlobalMPPIParams:
+        """CACS in this restart's trust region (it rolls out its own candidates):
+        the box of half-width decay_rate**iter around the previous restart's
+        solution (the whole control box at restart 0), with the kernel radius h
+        shrunk by the same factor,
+        then KSOS with cuKernelSOS's GPU ADMM on the CACS samples in reverse
+        insertion order (a perfect elimination order of the CACS certificate),
+        Wendland kernel of the CACS radius h, then the guard: the cheapest (by a
+        fresh rollout) of x, the best sample and, after restart 0, the previous
+        restart's solution."""
+        shape = (self.num_knots, self.task.model.nu)
+        lo = np.tile(np.asarray(self.task.u_min, dtype=np.float64), self.num_knots)
+        hi = np.tile(np.asarray(self.task.u_max, dtype=np.float64), self.num_knots)
+        it = int(params.iter)
+        scale = self.decay_rate ** it
+        center = np.asarray(params.mean, dtype=np.float64).reshape(-1) if it > 0 else np.zeros_like(lo)
+        box_lo = np.maximum(center - scale * hi, lo)
+        box_hi = np.minimum(center + scale * hi, hi)
+        cfg = replace(self.cacs_config, h=self.cacs_config.h * scale)
+
+        def roll(points, pad_to=None):
+            points = np.clip(np.atleast_2d(points), lo, hi)
+            m = len(points)
+            if pad_to is not None and m < pad_to:  # fixed batch shape: no recompile per round
+                points = np.vstack([points, np.zeros((pad_to - m, len(lo)))])
+            c = self._jit_costs(state, params.tk, jnp.asarray(points.reshape(-1, *shape), jnp.float32))
+            return np.asarray(c, dtype=np.float64)[:m]
+
+        t0 = time.perf_counter()
+        # warm start: the previous cycle's plan, already shifted to this cycle's knot times
+        warm = np.asarray(params.mean, dtype=np.float64).reshape(1, -1) if self.ksos_warm_start and it == 0 else None
+        samples, f, stats = cacs_sample(
+            roll, box_lo, box_hi, cfg, seed=self._cacs_calls, rng=self._cacs_rng, extra=warm
+        )
+        self._cacs_calls += 1
+        t1 = time.perf_counter()
+        order = np.arange(len(samples))[::-1]
+        problem = build_problem(samples[order], cfg.h, lambda _: f[order], lambd=self.ksos_lambda)
+        try:
+            x, info = ADMM.solve_ksos(
+                problem.Phi, problem.f, problem.lambd, samples=problem.samples,
+                **self.admm_cuda_options,
+            )
+            ok = bool(info["success"]) and np.all(np.isfinite(x))
+        except Exception as error:
+            print(f"KSOS solver failed: {error}")
+            x, info, ok = None, {"status": "error", "iterations": 0}, False
+        t2 = time.perf_counter()
+        candidates = [(samples[np.argmin(f)], float(f.min()))]
+        if warm is not None:
+            candidates.append((np.clip(warm[0], lo, hi), float(stats["extra_costs"][0])))
+        x_cost = None
+        if ok:
+            x = np.clip(np.asarray(x).reshape(-1), lo, hi)
+            x_cost = float(roll(x)[0])
+            candidates.append((x, x_cost))
+        if int(params.iter) > 0:
+            candidates.append((np.asarray(params.mean).reshape(-1), float(params.ksos_result_cost)))
+        knots, cost = min(candidates, key=lambda c: c[1])
+        t3 = time.perf_counter()
+        print(f"KSOS timing: cacs {t1 - t0:.4f} admm {t2 - t1:.4f} guard {t3 - t2:.4f}")
+        print(
+            f"ADMM-cuda: restart {it} CACS n={len(samples)} h={cfg.h:.3f} rollouts={stats['rollouts']} "
+            f"rounds={stats['rounds']} replaced={stats['replaced']} status={info['status']} "
+            f"iters={info['iterations']} best sample {f.min():.4f}"
+            + (f" warm {float(stats['extra_costs'][0]):.4f}" if warm is not None else "")
+            + (f" x {x_cost:.4f}" if x_cost is not None else "")
+            + f" -> solution {cost:.4f}"
+        )
+        knots = jnp.asarray(np.asarray(knots, dtype=np.float32).reshape(shape))
+        return params.replace(
+            mean=knots,
+            ksos_mean=knots,
+            ksos_result_cost=jnp.asarray(cost, dtype=jnp.float32),
+        )
+
     def _solve_admm_cuda(
         self, params: GlobalMPPIParams, state: mjx.Data
     ) -> GlobalMPPIParams:
@@ -586,6 +697,12 @@ class GlobalMPPI(SamplingBasedController):
         samples = np.asarray(params.knots, dtype=np.float64).reshape(self.ksos_num_samples, -1)
         f = np.asarray(params.lse_cost, dtype=np.float64).reshape(-1)
         sigma = float(params.ksos_sigma)
+        f_true = f
+        if self.ksos_gnc_factors is not None:
+            h = self.ksos_gnc_factors[int(params.iter)] * sigma
+            d2 = np.sum((samples[:, None] - samples[None]) ** 2, axis=-1)
+            w = np.exp(-0.5 * d2 / h ** 2)
+            f = (w @ f_true) / w.sum(axis=1)
         t1 = time.perf_counter()
         perm = rcm_order(samples, sigma)
         problem = build_problem(samples[perm], sigma, lambda _: f[perm], lambd=self.ksos_lambda)
@@ -605,8 +722,8 @@ class GlobalMPPI(SamplingBasedController):
         best = samples[np.argmin(f)]
         if self.ksos_lse_samples:  # f is smoothed: judge the best candidate by its own rollout
             best_cost = float(self._jit_costs(state, params.tk, jnp.asarray(best.reshape(1, self.num_knots, -1), jnp.float32))[0])
-        else:
-            best_cost = float(f.min())
+        else:  # with GNC, f is smoothed: the candidate's own cost is already known
+            best_cost = float(f_true[np.argmin(f)])
         candidates = [(best, best_cost)]
         if ok:
             x = np.clip(x.reshape(shape), self.task.u_min, self.task.u_max).reshape(-1)
@@ -625,6 +742,7 @@ class GlobalMPPI(SamplingBasedController):
             f"status={info['status']} iters={info['iterations']} "
             f"best sample {best_cost:.4f}"
             + (f" (LSE {f.min():.4f})" if self.ksos_lse_samples else "")
+            + (f" (GNC {f.min():.4f})" if self.ksos_gnc_factors is not None else "")
             + (f" x {x_cost:.4f}" if ok else "")
             + f" -> solution {cost:.4f}"
         )

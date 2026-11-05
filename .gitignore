@@ -16,3 +16,10 @@ MUJOCO_LOG.TXT
 logs/
 wandb/
 test/log/
+
+# paper folder (kept out of the code repo)
+RSS2026_Zhongqi_SparseKernel/
+
+# tool caches
+.claude/
+.pytest_cache/

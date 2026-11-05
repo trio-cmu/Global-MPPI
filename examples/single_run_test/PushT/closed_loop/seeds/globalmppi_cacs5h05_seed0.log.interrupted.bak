@@ -1,0 +1,24 @@
+Failed to import warp: No module named 'warp'
+Failed to import mujoco.mjx.third_party.mujoco_warp as mujoco_warp: No module named 'warp'
+Running GlobalMPPI (KSOS solver: ADMM-cuda, two-level sampling, no LSE)
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/algs/global_mppi.py:212: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  ).random(self.ksos_num_samples),
+
+=== Seed 0 ===
+Planning with 100 steps over a 1.0 second horizon with 6 knots.
+Planning at 50.0 Hz, simulating at 1000.0 Hz
+Jitting the controller...
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+Time to jit: 18.286 seconds
+Recording video to /home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/logs/pushT_globalmppi_globalmppi/20261104_171830/simulation_20261104_171849.mp4
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo

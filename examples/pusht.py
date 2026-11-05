@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import sys
 import getpass
@@ -66,6 +67,12 @@ parser.add_argument(
     "MPPI step (default: 1000)",
 )
 parser.add_argument(
+    "--ksos-cluster-size",
+    type=int,
+    default=10,
+    help="GlobalMPPI ADMM-cuda: points per two-level cluster = ADMM clique size (default: 10)",
+)
+parser.add_argument(
     "--ksos-samples",
     type=int,
     default=1000,
@@ -96,6 +103,35 @@ parser.add_argument(
     type=float,
     default=1.0,
     help="GlobalMPPI ADMM-cuda: LSE temperature (default: 1)",
+)
+parser.add_argument(
+    "--ksos-sampling",
+    choices=["two-level", "cacs"],
+    default="two-level",
+    help="GlobalMPPI ADMM-cuda: KSOS candidates from two-level Sobol in shrinking boxes (default), or budgeted "
+    "cost-aware chordal sampling (CACS) in the same shrinking boxes, at every restart",
+)
+parser.add_argument(
+    "--ksos-warm-start",
+    action="store_true",
+    help="GlobalMPPI ADMM-cuda with --ksos-sampling cacs: start from the previous cycle's plan (it joins the "
+    "CACS initial batch and the guard)",
+)
+parser.add_argument(
+    "--cacs",
+    type=json.loads,
+    default=None,
+    help='GlobalMPPI ADMM-cuda with --ksos-sampling cacs: CacsConfig overrides as JSON, e.g. \'{"k": 128}\' '
+    "(global_mppi/cacs.py; n is --ksos-samples)",
+)
+parser.add_argument(
+    "--gnc",
+    type=float,
+    nargs=2,
+    default=None,
+    metavar=("FIRST", "LAST"),
+    help="GlobalMPPI ADMM-cuda: kernel-surrogate GNC of the KSOS costs, bandwidth factor x sigma from FIRST to "
+    "LAST over the restarts (e.g. 1.0 0.1; default: off)",
 )
 parser.add_argument(
     "--no-ksos-mppi",
@@ -230,7 +266,7 @@ elif args.algorithm == "globalmppi" and args.ksos_solver == "ADMM-cuda":
         iterations=5,
         ksos_solver="ADMM-cuda",
         ksos_num_restart=args.ksos_restarts,
-        ksos_sampling="two-level",
+        ksos_sampling=args.ksos_sampling,
         ksos_num_samples=args.ksos_samples,
         mppi_noise=args.mppi_noise,
         seed=args.seed,
@@ -238,6 +274,10 @@ elif args.algorithm == "globalmppi" and args.ksos_solver == "ADMM-cuda":
         ksos_lse_samples=args.lse_samples,
         ksos_lse_sigmas=tuple(args.lse_sigmas),
         ksos_lse_lambda=args.lse_lambda,
+        ksos_cluster_size=args.ksos_cluster_size,
+        ksos_gnc=tuple(args.gnc) if args.gnc else None,
+        ksos_warm_start=args.ksos_warm_start,
+        ksos_cacs_options=args.cacs,
     )
 elif args.algorithm == "globalmppi":
     print(f"Running GlobalMPPI (KSOS solver: {args.ksos_solver})")
