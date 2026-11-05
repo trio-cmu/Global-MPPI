@@ -10,7 +10,8 @@ No planner is involved: each panel is J(c + a d1 + b d2) on a grid of (a, b), wi
 orthonormal directions in z and c
   top     "hold still": every knot = the current joint angles (the analog of x = 0 in PushT, where
           the pusher holds still), |a|, |b| <= --wide
-  bottom  the cheapest of --n uniform random samples in the inner box |z| <= --interior, |a|, |b| <= --local
+  bottom  the cheapest of --n uniform random samples in the inner box |z| <= --interior, |a|, |b| <= --local,
+          on --interior-planes random planes (different d1, d2 through the same center)
 Each center gets a row of 3-D surfaces and below it the same planes seen from above (log color in
 ParaView's cool-to-warm map, center starred). Grid points outside the box are left out (white / holes),
 not clipped: a clipped point lies on a box face, not on the plane.
@@ -50,6 +51,8 @@ parser.add_argument("--wide", type=float, default=1.0, help="half-width of the r
 parser.add_argument("--local", type=float, default=0.5, help="half-width of the bottom planes (normalized z)")
 parser.add_argument("--interior", type=float, default=0.6,
                     help="the bottom center is the best random sample with |z| <= interior")
+parser.add_argument("--interior-planes", type=int, default=12,
+                    help="random planes through the best interior sample (the first 3 match --planes 3)")
 parser.add_argument("--chunk", type=int, default=2048, help="rollouts per GPU call")
 parser.add_argument("--lse-sigma", type=float, default=0.0, help="LSE perturbation scale (0 = plain cost)")
 parser.add_argument("--lse-samples", type=int, default=100, help="LSE perturbations per point (GlobalMPPI: 100)")
@@ -127,14 +130,16 @@ print(f"{args.n} random samples: min {f.min():.3f}, median {median:.3f}, max {f.
 
 Zi = rng.uniform(-args.interior, args.interior, (args.n, dim))
 fi = rollout(to_u(Zi))
-print(f"{args.n} random samples with |z| <= {args.interior:g}: min {fi.min():.3f}")
-rows = [("hold still (knots = current joint angles)", (hold - mid) / half_box, args.wide),
-        (f"best of {args.n} random samples, |z| ≤ {args.interior:g}", Zi[np.argmin(fi)], args.local)]
+print(f"{args.n} random samples with |z| <= {args.interior:g}: min {fi.min():.3f}, median {np.median(fi):.3f}, "
+      f"max {fi.max():.3f}")
+rows = [("hold still (knots = current joint angles)", (hold - mid) / half_box, args.wide, args.planes),
+        (f"best of {args.n} random samples, |z| ≤ {args.interior:g}", Zi[np.argmin(fi)], args.local,
+         args.interior_planes)]  # planes drawn in order, so the first 3 interior planes are the earlier ones
 a = np.linspace(-1, 1, args.grid)
 A, B = np.meshgrid(a, a)
 surfaces = []
-for title, center, half in rows:
-    for p in range(args.planes):
+for title, center, half, n_planes in rows:
+    for p in range(n_planes):
         d1, d2 = np.linalg.qr(rng.standard_normal((dim, 2)))[0].T  # random orthonormal directions in z
         P = center + half * (A.reshape(-1, 1) * d1 + B.reshape(-1, 1) * d2)
         inside = np.all(np.abs(P) <= 1, axis=1)
@@ -160,11 +165,16 @@ norm = LogNorm(zmin, zmax)
 zfloor = 0.9 * zmin  # the cost spans < 1 decade, so the z axis starts just below the minimum, not at 0
 cmap = plt.get_cmap("coolwarm").copy()  # ParaView's cool to warm, the colors of Li et al. / SAM
 cmap.set_bad("white")
-fig = plt.figure(figsize=(6 * args.planes, 20), layout="constrained")
-gs = fig.add_gridspec(2 * len(rows), args.planes, height_ratios=[1.15, 1] * len(rows))
+ncol = 3
+slots, grid_rows = [], 0  # (grid row, column) of each plane: every center starts a new row
+for title, center, half, n_planes in rows:
+    slots += [(grid_rows + k // ncol, k % ncol) for k in range(n_planes)]
+    grid_rows += -(-n_planes // ncol)
+fig = plt.figure(figsize=(6 * ncol, 10 * grid_rows), layout="constrained")
+gs = fig.add_gridspec(2 * grid_rows, ncol, height_ratios=[1.15, 1] * grid_rows)
 for i, (title, p, half, J, c0) in enumerate(surfaces):
-    r = i // args.planes
-    ax = fig.add_subplot(gs[2 * r, p], projection="3d")
+    r, col = slots[i]
+    ax = fig.add_subplot(gs[2 * r, col], projection="3d")
     face = cmap(norm(np.where(np.isfinite(J), J, zmax)))
     ax.plot_surface(half * A, half * B, np.ma.masked_invalid(J), facecolors=face, rstride=1, cstride=1,
                     linewidth=0, antialiased=False, shade=True, lightsource=LightSource(azdeg=315, altdeg=50))
@@ -175,7 +185,7 @@ for i, (title, p, half, J, c0) in enumerate(surfaces):
     ax.set_zlabel("cost")
     ax.view_init(elev=35, azim=-60)
     ax.set_title(f"{title}\nrandom plane {p + 1}, |a|, |b| ≤ {half:g}   (center cost {c0:.3f})", fontsize=10)
-    ax = fig.add_subplot(gs[2 * r + 1, p])
+    ax = fig.add_subplot(gs[2 * r + 1, col])
     im = ax.pcolormesh(half * A, half * B, J, norm=norm, cmap=cmap, shading="auto")
     ax.contour(half * A, half * B, J, levels=np.geomspace(zmin, zmax, 12), colors="k", linewidths=0.35, alpha=0.5)
     ax.plot(0, 0, "*", ms=16, mfc="gold", mec="k", mew=1.0)
@@ -184,7 +194,7 @@ for i, (title, p, half, J, c0) in enumerate(surfaces):
     ax.set_ylabel("b (d2)")
     ax.set_title(f"from above: min {np.nanmin(J):.3f}, white = outside the box ({np.mean(~np.isfinite(J)):.0%})",
                  fontsize=9)
-fig.colorbar(im, ax=fig.axes, shrink=0.4, label="rollout cost (log)", pad=0.01)
+fig.colorbar(im, ax=fig.axes, shrink=min(0.4, 1.6 / grid_rows), label="rollout cost (log)", pad=0.01)
 fig.suptitle(f"In-hand cube rotation planning cost ({label}) J(c + a d1 + b d2) on random planes, "
              f"z ∈ [−1, 1]^{dim} (normalized control box)\n"
              f"(start: cube.py default pose; hold still = {f_hold:.3f}, median of {args.n} random samples = "

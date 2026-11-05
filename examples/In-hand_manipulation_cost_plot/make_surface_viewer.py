@@ -129,7 +129,14 @@ function buttons(el, labels, key) {
 
 function current() { D = ALL[state.data]; return D.planes.filter(p => p.center === centers[state.center])[state.plane]; }
 
+function planeButtons() {
+  const nums = ALL[state.data].planes.filter(p => p.center === centers[state.center]).map(p => String(p.plane));
+  if (state.plane >= nums.length) state.plane = 0;
+  buttons(document.getElementById("planeSeg"), nums, "plane");
+}
+
 function draw() {
+  planeButtons();
   const p = current(), n = D.grid, ax = Array.from({ length: n }, (_, i) => -p.half + 2 * p.half * i / (n - 1));
   const color = p.J.map(row => row.map(v => v === null ? null : Math.log10(v)));
   const height = state.log ? p.J.map(row => row.map(v => v === null ? null : Math.log10(v))) : p.J;
@@ -185,14 +192,13 @@ const short = d => { const s = (d.label || "").match(/σ = ([\d.]+)/), l = (d.la
 buttons(document.getElementById("costSeg"), ALL.map(short), "data");
 document.getElementById("costGroup").hidden = ALL.length < 2;
 buttons(document.getElementById("centerSeg"), centers.map(c => c.startsWith("hold") ? "hold still" : "best interior sample"), "center");
-buttons(document.getElementById("planeSeg"), [...new Set(D.planes.map(p => p.plane))].map(String), "plane");
 for (const [id, v] of [["hLin", false], ["hLog", true]]) document.getElementById(id).addEventListener("click", () => {
   state.log = v; document.getElementById("hLin").setAttribute("aria-pressed", String(!v));
   document.getElementById("hLog").setAttribute("aria-pressed", String(v)); draw(); });
 
 document.getElementById("notes").innerHTML = `
   <p><b>Reading it.</b> c is the center point, d1 and d2 are two random orthonormal directions in the normalized 64-D control space (u = box midpoint + box half-width · z), and a, b are the distances along them. Every grid point (${D.grid} × ${D.grid} per plane) is one MuJoCo rollout of the LEAP hand from the examples/cube.py start pose.</p>
-  <p><b>Centers.</b> “Hold still” sets every knot to the current joint angles (cost ${D.hold_cost.toFixed(3)}), planes of half-width 1. “Best interior sample” is the cheapest of 1000 uniform samples with |z| ≤ 0.6, planes of half-width 0.5, so they stay inside the box. Median cost of 1000 uniform samples: ${D.median.toFixed(3)}.</p>
+  <p><b>Centers.</b> ${D.hold_cost != null ? `“Hold still” sets every knot to the current joint angles (cost ${D.hold_cost.toFixed(3)}), planes of half-width 1. ` : ""}“Best interior sample” is the cheapest of 1000 uniform samples with |z| ≤ 0.6, cut by many random planes (different d1, d2 through the same center), half-width 0.5, so they stay inside the box. Median cost of 1000 uniform samples: ${D.median.toFixed(3)}.</p>
   <p><b>LSE smoothing.</b> J<sub>lse</sub>(u) = −λ log mean<sub>l</sub> exp(−J(clip(u + σ ε<sub>l</sub>)) / λ), as GlobalMPPI's LSE rollout (σ in joint-target units), with the same perturbations ε<sub>l</sub> at every grid point, so the surface has no sampling noise from point to point. Same centers and planes as the plain cost; switching keeps the camera.</p>
   <p><b>Box.</b> Points outside the control box are left blank, not clipped.</p>`;
 
