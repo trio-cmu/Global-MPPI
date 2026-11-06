@@ -23,3 +23,5 @@ RSS2026_Zhongqi_SparseKernel/
 # tool caches
 .claude/
 .pytest_cache/
+runs/
+global_mppi/models/pusht/scene_box_*.xml
