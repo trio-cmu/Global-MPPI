@@ -187,6 +187,10 @@ class GlobalMPPI(SamplingBasedController):
         self.admm_cuda_options = dict(
             eps_abs=1e-6, eps_rel=1e-5, time_limit=2.0, record_history=False,
             backend="cuda", cuda_options={"anderson_reg": 1e-10},
+            # post-processing that does not change the plan: _solve_cacs / _solve_admm_cuda use x only if the solve
+            # converged, so skip the eigenvalue check + repair of the others; the repair bisection to 1e-6 relative
+            # (returns the feasible end of the bracket); no eigmin diagnostic of the repaired alpha
+            postprocess="converged", repair_tol=1e-6, diagnostics=False,
         )
         self.cacs_config = CacsConfig(**{**(ksos_cacs_options or {}), "n": ksos_num_samples})
         self._cacs_rng = np.random.default_rng(seed + 101)
