@@ -45,6 +45,8 @@ def run(a):
     def init(self, *args, **kw):
         orig_init(self, *args, **kw)
         self.admm_cuda_options.update(time_limit=None, max_iter=a.max_iter)
+        if a.repair_tol is not None:   # tighten the bisection, see the module docstring
+            self.admm_cuda_options.update(repair_tol=a.repair_tol)
 
     def solve_ksos(*args, **kw):
         x, info = orig_solve(*args, **kw)
@@ -121,6 +123,10 @@ def main():
     r.add_argument("--cycles", type=int, default=3)
     r.add_argument("--seed", type=int, default=0)
     r.add_argument("--max-iter", type=int, default=150)
+    r.add_argument("--repair-tol", type=float, default=None,
+                   help="override the planner's repair_tol. The planner's 1e-6 moves x by ~1e-10; stored as float32 and fed through the float32 "
+                        "rollouts that can flip a CACS decision a few restarts later, so a run with the planner's repair_tol matches a run of "
+                        "different repair code only up to that. Use 1e-14 to compare code that must give the same x")
     c = sub.add_parser("compare")
     c.add_argument("a")
     c.add_argument("b")

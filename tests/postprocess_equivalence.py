@@ -228,39 +228,66 @@ def reference_repair(structure, ops, alpha, margin=1e-12):
 
 
 def cmd_repair(a):
+    import inspect
+
+    import ksos_tools.solvers.ADMM.operators as opmod
     from ksos_tools.solvers.ADMM import build_operators, chordal_decomposition
-    from ksos_tools.solvers.ADMM.operators import assemble_matrix, feasibility_repair, is_positive_definite
+    from ksos_tools.solvers.ADMM.operators import assemble_matrix, feasibility_repair, is_positive_definite, smallest_eigenvalue
+
+    params = inspect.signature(feasibility_repair).parameters
+    base_kwargs = {"rel_tol": a.repair_tol} if "rel_tol" in params else {}
+    has_hint = "eigmin" in params
+    print("repair tolerance:", base_kwargs or "(code without rel_tol)", "| eigmin hint:", has_hint)
+    n_chol = [0]
+    orig_pd = opmod.is_positive_definite
+
+    def counting_pd(S):
+        n_chol[0] += 1
+        return orig_pd(S)
 
     bad = 0
-    import inspect
-    a.repair_kwargs = {"rel_tol": 1e-6} if "rel_tol" in inspect.signature(feasibility_repair).parameters else {}
-    print("repair tolerance:", a.repair_kwargs or "(code without rel_tol)")
     cases = []
     for seed in a.seeds:
         problem = make_problem(seed)
         structure = chordal_decomposition(problem.Phi)
         cases.append((seed, problem, structure, build_operators(problem.Phi, structure, problem.lambd)))
     n = cases[0][1].n
-    for (seed, problem, structure, ops), iters in [(c, i) for c in cases for i in (30, 100, 300)]:  # early stops: M(alpha_raw) is not PSD, so the repair has work to do
+    uniform = np.full(n, 1.0 / n)
+    for (seed, problem, structure, ops), iters in [(c, i) for c in cases for i in (30, 100, 300)]:
         _, info = run_scenario(problem, dict(max_iter=iters, eps_abs=0.0, eps_rel=0.0, repair=False))
         alpha_raw = np.asarray(info["alpha_raw"], dtype=float)
-        t_ref, pd_ref = reference_repair(structure, ops, alpha_raw)
-        alpha_new, t_new = feasibility_repair(structure, ops, alpha_raw, **a.repair_kwargs)
-        uniform = np.full(n, 1.0 / n)
-        shift = 1e-12 * float(np.max(np.abs(ops.M_coords(uniform)[structure.is_diag])))
-        M_new = ops.M_coords(alpha_new) - shift * structure.is_diag
-        feasible = is_positive_definite(assemble_matrix(structure, M_new))
-        # the returned end must be feasible (hi), and not further from the exact boundary than the tolerance
-        gap = t_new - t_ref
-        ok = feasible and gap >= -1e-14 and abs(gap) <= a.tol
-        d_alpha = float(np.max(np.abs(alpha_new - ((1 - t_ref) * alpha_raw + t_ref * uniform))))
-        ok = ok and d_alpha <= a.tol
-        bad += not ok
-        print(f"  {'ok  ' if ok else 'FAIL'}  seed={seed} max_iter={iters:4d} repair needed={t_ref > 0}  t_ref={t_ref:.9e} "
-              f"t_new={t_new:.9e} gap={gap:+.2e} feasible_at_returned={feasible} max|d alpha|={d_alpha:.2e}")
+        t_ref, _ = reference_repair(structure, ops, alpha_raw)
         if t_ref == 0.0:
-            print("        (alpha_raw already feasible: this case does not exercise the bisection)")
-    # the returned point must also be feasible when the test is run on an alpha that needs t close to 1
+            print(f"  skip  seed={seed} max_iter={iters:4d}: alpha_raw already feasible, the bisection is not exercised")
+            continue
+        true_eig = smallest_eigenvalue(assemble_matrix(structure, ops.M_coords(alpha_raw)))
+        shift = 1e-12 * float(np.max(np.abs(ops.M_coords(uniform)[structure.is_diag])))
+        # variants of the hint: the true eigmin (bound used), none, nan, positive, a hint so negative that t_ub >= 1,
+        # and one far too optimistic (tiny t_ub, the Cholesky check of the bound must fail and fall back to [0, 1])
+        variants = {"true eigmin": true_eig, "no hint": None, "nan": float("nan"), "positive": 1.0,
+                    "t_ub>=1": -1e6, "optimistic": true_eig * 1e-6}
+        for name, hint in variants.items():
+            if not has_hint and name != "no hint":
+                continue
+            kwargs = dict(base_kwargs)
+            if has_hint and name != "no hint":
+                kwargs["eigmin"] = hint
+            opmod.is_positive_definite = counting_pd
+            n_chol[0] = 0
+            try:
+                alpha_new, t_new = feasibility_repair(structure, ops, alpha_raw, **kwargs)
+            finally:
+                opmod.is_positive_definite = orig_pd
+            chol = n_chol[0]
+            M_new = ops.M_coords(alpha_new) - shift * structure.is_diag
+            feasible = is_positive_definite(assemble_matrix(structure, M_new))
+            gap = t_new - t_ref
+            d_alpha = float(np.max(np.abs(alpha_new - ((1 - t_ref) * alpha_raw + t_ref * uniform))))
+            # the returned end must be feasible (hi), and within the tolerance of the exact boundary
+            ok = feasible and gap >= -1e-14 and abs(gap) <= a.tol and d_alpha <= a.tol
+            bad += not ok
+            print(f"  {'ok  ' if ok else 'FAIL'}  seed={seed} max_iter={iters:4d} {name:12s} t_ref={t_ref:.9e} t_new={t_new:.9e} "
+                  f"gap={gap:+.2e} feasible={feasible} max|d alpha|={d_alpha:.2e} cholesky calls={chol}")
     print(f"\n{'PASS' if bad == 0 else 'FAIL'}: {bad} failures, tol {a.tol:g}")
     return 0 if bad == 0 else 1
 
@@ -272,6 +299,8 @@ def main():
         p = sub.add_parser(name)
         p.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2])
         p.add_argument("--tol", type=float, default=1e-6)
+        if name == "repair":
+            p.add_argument("--repair-tol", type=float, default=1e-6, help="rel_tol of the bisection (the planner's repair_tol)")
         if name == "save":
             p.add_argument("--out", required=True)
         if name == "compare":
