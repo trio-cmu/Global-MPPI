@@ -1398,8 +1398,11 @@ def blend_eval(tr, t):
     return p, v, a
 
 
-def blend_check(tr, box, v_max=PEAK_V_MAX, a_max=PEAK_A_MAX, dt=0.005):
-    """(ok, peak speed, peak accel, box excess [m]) of a built blend trajectory (5 ms sampling like the driver)."""
+def blend_check(tr, box, v_max=None, a_max=None, dt=0.005):
+    """(ok, peak speed, peak accel, box excess [m]) of a built blend trajectory (5 ms sampling like the driver).
+    v_max / a_max default to the module limits PEAK_V_MAX / PEAK_A_MAX read at call time (--peak-v-max changes PEAK_V_MAX)."""
+    v_max = PEAK_V_MAX if v_max is None else v_max
+    a_max = PEAK_A_MAX if a_max is None else a_max
     p, v, a = blend_eval(tr, np.arange(0.0, tr["dur"] + dt, dt))
     sp, ac = float(np.hypot(v[:, 0], v[:, 1]).max()), float(np.hypot(a[:, 0], a[:, 1]).max())
     out = max(box[0] - p[:, 0].min(), p[:, 0].max() - box[1], box[2] - p[:, 1].min(), p[:, 1].max() - box[3], 0.0)
@@ -2254,6 +2257,7 @@ def plot(out):
 
 
 def main():
+    global PEAK_V_MAX
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     g = ap.add_mutually_exclusive_group()
     g.add_argument("--sim", action="store_true", help="MuJoCo instead of camera + arm")
@@ -2345,6 +2349,9 @@ def main():
     ap.add_argument("--xy-driver-bin", default=UPRIGHT_BIN)
     ap.add_argument("--yaw-deg", type=float, default=59.7)
     ap.add_argument("--max-lead-mm", type=float, default=15.0)
+    ap.add_argument("--peak-v-max", type=float, default=None, metavar="M_PER_S",
+                    help="peak pen speed [m/s] a plan may have; a faster one gets its duration lengthened (x1.1 per try, up to 30 tries) "
+                         "or is rejected. Default: %g (PEAK_V_MAX; the xy_driver's own limit is kMaxSpeed 0.25)" % PEAK_V_MAX)
     ap.add_argument("--out", default=None)
     ap.add_argument("--plot-only", metavar="DIR", default=None, help=argparse.SUPPRESS)
     a = ap.parse_args()
@@ -2385,6 +2392,11 @@ def main():
         a.pusher_start_base, a.start_label = [y["x_m"], y["y_m"]], "pusher_start_pushside_near"
     elif np.allclose(a.pusher_start_base, [0.40815, -0.0206], atol=1e-4):
         a.start_label = "standard pusher_start"
+    if a.peak_v_max is not None:
+        if not 0.0 < a.peak_v_max <= 0.25:
+            raise SystemExit(f"--peak-v-max must be in (0, 0.25] m/s (the xy_driver refuses above kMaxSpeed 0.25), got {a.peak_v_max}")
+        PEAK_V_MAX = a.peak_v_max
+        print(f"== peak speed limit of the plans: {PEAK_V_MAX:g} m/s (--peak-v-max)", flush=True)
     if a.max_cycles is None:
         a.max_cycles = 5 if a.dry_run else 1000
     out = a.out or os.path.join(REPO, "runs", "closed_loop_test", f"{'sim' if a.sim else 'real'}_{time.strftime('%Y%m%d_%H%M%S')}")
