@@ -252,7 +252,6 @@ class GlobalMPPI(SamplingBasedController):
             else self.mppi_noise
         )
         controls = params.mean + sigma * noise
-        jax.debug.print("sigma: {}", sigma)
 
         return controls, params.replace(rng=rng)
 
