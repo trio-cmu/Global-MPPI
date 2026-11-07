@@ -14,6 +14,9 @@ behaviour of the code under test:
   python tests/e2e_plan_equivalence.py compare A.npz B.npz        # exit code 1 on any difference > --tol
   python tests/e2e_plan_equivalence.py run --out C.npz && python tests/e2e_plan_equivalence.py compare A.npz C.npz
 
+Compare runs only with the same BLAS thread setting (OPENBLAS_NUM_THREADS exported or not): the thread count changes the rounding of
+every BLAS call and so, a few restarts later, the plan.
+
 Needs PYTHONPATH with Global-MPPI, Global-MPPI/ksos-tools, cuKernelSOS/python, XLA_PYTHON_CLIENT_PREALLOCATE=false on a
 shared GPU, and a GPU. The simulated closed loop feeds each plan into the next cycle, so a difference anywhere
 shows up in all later cycles.
@@ -35,6 +38,10 @@ ROOT = os.path.dirname(HERE)
 def run(a):
     sys.path.insert(0, os.path.join(ROOT, "examples"))
     sys.path.insert(0, ROOT)
+    # closed_loop_test first, as when it is the entry point: it sets OPENBLAS_NUM_THREADS=1 (setdefault) BEFORE numpy is imported.
+    # Importing ksos_tools / global_mppi before it would start numpy's and scipy's OpenBLAS with all cores, which differs from the real
+    # run in the last bits of every BLAS call, enough for the closed loop to diverge a few restarts later.
+    import closed_loop_test  # noqa: F401
     from ksos_tools.solvers import ADMM
     import global_mppi.algs.global_mppi as gm
 
@@ -77,7 +84,6 @@ def run(a):
     outdir = tempfile.mkdtemp(prefix="e2e_run_")
     sys.argv = ["closed_loop_test.py", "--sim", "--algo", "globalmppi", "--ksos-solver", "ADMM-cuda", "--ksos-sampling", "cacs",
                 "--max-cycles", str(a.cycles), "--max-time", "3600", "--seed", str(a.seed), "--out", outdir]
-    import closed_loop_test
     closed_loop_test.main()
 
 

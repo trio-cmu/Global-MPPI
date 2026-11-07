@@ -236,14 +236,16 @@ def cmd_repair(a):
 
     params = inspect.signature(feasibility_repair).parameters
     base_kwargs = {"rel_tol": a.repair_tol} if "rel_tol" in params else {}
-    has_hint = "eigmin" in params
-    print("repair tolerance:", base_kwargs or "(code without rel_tol)", "| eigmin hint:", has_hint)
-    n_chol = [0]
-    orig_pd = opmod.is_positive_definite
+    # the PD entry point the repair calls: the RCM / banded one if the code has it, else the original
+    pd_name = "is_positive_definite_coords" if hasattr(opmod, "is_positive_definite_coords") else "is_positive_definite"
+    has_banded = hasattr(opmod, "smallest_eigenvalue_coords")
+    print("repair tolerance:", base_kwargs or "(code without rel_tol)", "| PD entry point:", pd_name)
+    n_pd = [0]
+    orig_pd = getattr(opmod, pd_name)
 
-    def counting_pd(S):
-        n_chol[0] += 1
-        return orig_pd(S)
+    def counting_pd(*args):
+        n_pd[0] += 1
+        return orig_pd(*args)
 
     bad = 0
     cases = []
@@ -253,41 +255,49 @@ def cmd_repair(a):
         cases.append((seed, problem, structure, build_operators(problem.Phi, structure, problem.lambd)))
     n = cases[0][1].n
     uniform = np.full(n, 1.0 / n)
+    if hasattr(opmod, "banded_layout"):
+        for seed, _, structure, _ in cases:
+            lay = opmod.banded_layout(structure)
+            print(f"  seed {seed}: bandwidth of M's pattern natural order {structure.bandwidth()} -> RCM {lay.bw} (n={n})")
     for (seed, problem, structure, ops), iters in [(c, i) for c in cases for i in (30, 100, 300)]:
         _, info = run_scenario(problem, dict(max_iter=iters, eps_abs=0.0, eps_rel=0.0, repair=False))
         alpha_raw = np.asarray(info["alpha_raw"], dtype=float)
         t_ref, _ = reference_repair(structure, ops, alpha_raw)
+        # eigmin: banded in the RCM order vs the dense eigenvalue of the assembled matrix
+        if has_banded:
+            e_dense = smallest_eigenvalue(assemble_matrix(structure, ops.M_coords(alpha_raw)))
+            e_band = opmod.smallest_eigenvalue_coords(structure, ops.M_coords(alpha_raw))
+            ok_e = abs(e_dense - e_band) <= 1e-12
+            bad += not ok_e
+            print(f"  {'ok  ' if ok_e else 'FAIL'}  seed={seed} max_iter={iters:4d} eigmin dense {e_dense:+.6e} banded {e_band:+.6e} diff {abs(e_dense - e_band):.1e}")
         if t_ref == 0.0:
             print(f"  skip  seed={seed} max_iter={iters:4d}: alpha_raw already feasible, the bisection is not exercised")
             continue
-        true_eig = smallest_eigenvalue(assemble_matrix(structure, ops.M_coords(alpha_raw)))
         shift = 1e-12 * float(np.max(np.abs(ops.M_coords(uniform)[structure.is_diag])))
-        # variants of the hint: the true eigmin (bound used), none, nan, positive, a hint so negative that t_ub >= 1,
-        # and one far too optimistic (tiny t_ub, the Cholesky check of the bound must fail and fall back to [0, 1])
-        variants = {"true eigmin": true_eig, "no hint": None, "nan": float("nan"), "positive": 1.0,
-                    "t_ub>=1": -1e6, "optimistic": true_eig * 1e-6}
-        for name, hint in variants.items():
-            if not has_hint and name != "no hint":
+        # default: RCM + banded Cholesky. dense fallback: BANDED_FRACTION = 0 makes the band "too wide", so the original dense path runs
+        for name, frac in (("default", None), ("dense fallback", 0.0)):
+            if name != "default" and not hasattr(opmod, "banded_layout"):
                 continue
-            kwargs = dict(base_kwargs)
-            if has_hint and name != "no hint":
-                kwargs["eigmin"] = hint
-            opmod.is_positive_definite = counting_pd
-            n_chol[0] = 0
+            saved = opmod.BANDED_FRACTION
+            if frac is not None:
+                opmod.BANDED_FRACTION = frac
+            setattr(opmod, pd_name, counting_pd)
+            n_pd[0] = 0
             try:
-                alpha_new, t_new = feasibility_repair(structure, ops, alpha_raw, **kwargs)
+                alpha_new, t_new = feasibility_repair(structure, ops, alpha_raw, **base_kwargs)
             finally:
-                opmod.is_positive_definite = orig_pd
-            chol = n_chol[0]
+                setattr(opmod, pd_name, orig_pd)
+                opmod.BANDED_FRACTION = saved
+            tests = n_pd[0]
             M_new = ops.M_coords(alpha_new) - shift * structure.is_diag
-            feasible = is_positive_definite(assemble_matrix(structure, M_new))
+            feasible = is_positive_definite(assemble_matrix(structure, M_new))   # judged with the dense reference test
             gap = t_new - t_ref
             d_alpha = float(np.max(np.abs(alpha_new - ((1 - t_ref) * alpha_raw + t_ref * uniform))))
             # the returned end must be feasible (hi), and within the tolerance of the exact boundary
             ok = feasible and gap >= -1e-14 and abs(gap) <= a.tol and d_alpha <= a.tol
             bad += not ok
-            print(f"  {'ok  ' if ok else 'FAIL'}  seed={seed} max_iter={iters:4d} {name:12s} t_ref={t_ref:.9e} t_new={t_new:.9e} "
-                  f"gap={gap:+.2e} feasible={feasible} max|d alpha|={d_alpha:.2e} cholesky calls={chol}")
+            print(f"  {'ok  ' if ok else 'FAIL'}  seed={seed} max_iter={iters:4d} {name:14s} t_ref={t_ref:.9e} t_new={t_new:.9e} "
+                  f"gap={gap:+.2e} feasible={feasible} max|d alpha|={d_alpha:.2e} PD tests={tests}")
     print(f"\n{'PASS' if bad == 0 else 'FAIL'}: {bad} failures, tol {a.tol:g}")
     return 0 if bad == 0 else 1
 
