@@ -614,7 +614,10 @@ def run_interactive(  # noqa: PLR0912, PLR0915
             # simulate the system between spline replanning steps
             for i in range(sim_steps_per_replan):
                 mj_data.ctrl[:] = np.array(us[i])
-                mujoco.mj_step(mj_model, mj_data)
+                if hasattr(controller.task, "sim_step"):  # a task with its own dynamics
+                    controller.task.sim_step(mj_model, mj_data)
+                else:
+                    mujoco.mj_step(mj_model, mj_data)
                 viewer.sync()
 
                 # Capture frame if recording

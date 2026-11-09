@@ -54,6 +54,12 @@ parser.add_argument(
     "GPU ADMM, then MPPI with 1000 samples x 5 iterations at noise --mppi-noise (0.1)",
 )
 parser.add_argument(
+    "--gcs-model",
+    action="store_true",
+    help="plan and simulate in GCS's quasi-static pusher-slider model "
+    "(global_mppi/tasks/pusht_gcs.py) instead of MuJoCo",
+)
+parser.add_argument(
     "--seed",
     type=int,
     default=0,
@@ -186,6 +192,9 @@ subparsers.add_parser(
     "globalmppi", help="GlobalMPPI"
 )
 args = parser.parse_args()
+if args.gcs_model:
+    from global_mppi.tasks.pusht_gcs import PushTGCS
+    task = PushTGCS()
 
 # Authenticate with Weights & Biases. The first time, prompt for an API key
 # (grab yours from https://wandb.ai/authorize); it is cached in ~/.netrc so

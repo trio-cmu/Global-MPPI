@@ -1,0 +1,13 @@
+{
+ "relaxed_gcs_time": 125.50349818799805,
+ "binary_flows_time": 0.08314600200174027,
+ "feasible_time": 0.05615806579589844,
+ "formulate_and_solve_wall": 195.11412973700135,
+ "relaxed_gcs_cost": 45.02432747057725,
+ "feasible_cost": 55.78278440629654,
+ "feasible_success": true,
+ "integration_constant": 0.2867093671394839,
+ "mu_pusher": 1.0,
+ "mu_table": 1.0,
+ "mass": 0.056
+}

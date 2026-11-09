@@ -58,6 +58,10 @@ class Task(ABC):
             [mj_model.site(name).id for name in trace_sites]
         )
 
+    def step(self, model: mjx.Model, data: mjx.Data) -> mjx.Data:
+        """The dynamics x_{t+1} = f(x_t, u_t), u_t = data.ctrl. MuJoCo by default."""
+        return mjx.step(model, data)
+
     @abstractmethod
     def running_cost(self, state: mjx.Data, control: jax.Array) -> jax.Array:
         """The running cost ℓ(xₜ, uₜ).
