@@ -1,3 +1,4 @@
+import os
 import time
 from dataclasses import replace
 from typing import Any, Literal, Tuple
@@ -192,6 +193,8 @@ class GlobalMPPI(SamplingBasedController):
             # (returns the feasible end of the bracket); no eigmin diagnostic of the repaired alpha
             postprocess="converged", repair_tol=1e-6, diagnostics=False,
         )
+        if os.environ.get("KSOS_GPU_SOLVE") == "1":   # run_exp.sh: affine solve on the GPU (cuKernelSOS gpu-solve build)
+            self.admm_cuda_options["cuda_options"]["gpu_solve"] = True
         self.cacs_config = CacsConfig(**{**(ksos_cacs_options or {}), "n": ksos_num_samples})
         self._cacs_rng = np.random.default_rng(seed + 101)
         self._cacs_calls = 0

@@ -111,6 +111,7 @@ class PoseLost(Stop):
 
 # ------------------------------------------------------------------ planner (copied from examples/pusht.py)
 KSOS_LOG = {}        # plan index -> KSOS stats of that planning step (Planner.log_ksos); cycles.csv columns KSOS_HDR
+SOLVE_PATHS = {}     # solve_path of the cuKernelSOS ADMM solves -> count (gpu_solve: "gpu" or "cpu (reason)")
 ADMM_LOG = []        # per cuKernelSOS ADMM solve of the current planning step: (iterations, success, status == "time_limit", setup_s, solve_s)
 TIMING = {"cacs": 0.0, "admm": 0.0}   # seconds of the current planning step inside cacs_sample / (build_problem + ADMM.solve_ksos)
 
@@ -128,6 +129,9 @@ def _record_admm_solves():
         t0 = time.perf_counter()
         x, info = orig(*args, **kw)
         TIMING["admm"] += time.perf_counter() - t0
+        sp = (info.get("admm_stats") or {}).get("solve_path")
+        if sp is not None:
+            SOLVE_PATHS[sp] = SOLVE_PATHS.get(sp, 0) + 1
         ADMM_LOG.append((int(info.get("iterations", 0)), bool(info.get("success", False)), float(info.get("status") == "time_limit"),
                          float(info.get("setup_time", np.nan)), float(info.get("solve_time", np.nan))))
         return x, info
@@ -2231,6 +2235,10 @@ def run(a, out):
         np.savetxt(os.path.join(out, "trace.csv"), np.array(be.trace), delimiter=",", fmt="%.6f", comments="",
                    header="t_s,T_x,T_y,T_th,pen_bx,pen_by,cmd_bx,cmd_by (T: goal frame, pen/cmd: base frame)")
     info["t0_epoch"] = None if a.sim else getattr(be, "t0", None)
+    info["cukernelsos_python"] = os.environ.get("CUKERNELSOS_PYTHON")
+    info["gpu_solve"] = os.environ.get("KSOS_GPU_SOLVE") == "1"
+    info["solve_paths"] = dict(SOLVE_PATHS)
+    print(f"== cuKernelSOS: gpu_solve={info['gpu_solve']}, solve_path counts {info['solve_paths']}")
     json.dump(info, open(os.path.join(out, "args.json"), "w"), indent=1, default=str)
     if rows and be.trace:
         plot(out)
