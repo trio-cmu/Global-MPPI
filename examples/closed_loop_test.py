@@ -170,12 +170,12 @@ class Planner:
             from global_mppi.algs import DIAL
             print("Running DIAL")
             self.ctrl = DIAL(task, num_samples=2000, noise_level=a.dial_noise, beta_opt_iter=1.0, beta_horizon=1.0, temperature=0.01,
-                             plan_horizon=1.0, spline_type="cubic", num_knots=6)
+                             plan_horizon=1.0, spline_type="cubic", num_knots=6, iterations=a.iterations)
         elif a.algo == "mppi":      # examples/pusht.py MPPI settings
             from global_mppi.algs import MPPI
             print("Running MPPI")
             self.ctrl = MPPI(task, num_samples=2000, noise_level=1.0, temperature=0.1, spline_type="cubic", plan_horizon=1.0, num_knots=6,
-                             iterations=5)
+                             iterations=a.iterations)
         elif a.algo == "globalmppi":   # physical / noise settings from the config's algos.globalmppi, structure from the cuKernelSOS code
             from global_mppi.algs import GlobalMPPI
             g = dict(algo_cfg or {})
@@ -200,7 +200,7 @@ class Planner:
         else:
             print("Running predictive sampling")
             self.ctrl = PredictiveSampling(task, num_samples=a.num_samples, noise_level=a.noise_level, num_randomizations=1,
-                                           plan_horizon=a.plan_horizon, spline_type="cubic", num_knots=a.num_knots)
+                                           plan_horizon=a.plan_horizon, spline_type="cubic", num_knots=a.num_knots, iterations=a.iterations)
         m = task.mj_model
         m.opt.timestep, m.opt.iterations, m.opt.ls_iterations = 0.001, 100, 50
         self.model, self.dt = m, m.opt.timestep
@@ -2338,6 +2338,7 @@ def main():
     ap.add_argument("--num-samples", type=int, default=2000, help="--algo ps: samples (mppi / dial: 2000, fixed in Planner)")
     ap.add_argument("--noise-level", type=float, default=0.4)
     ap.add_argument("--dial-noise", type=float, default=1.0, help="--algo dial: noise_level of DIAL (absolute, like --noise-level for PS)")
+    ap.add_argument("--iterations", type=int, default=5, help="--algo ps / mppi / dial: optimisation iterations per plan (globalmppi: not used)")
     ap.add_argument("--plan-horizon", type=float, default=1.0)
     ap.add_argument("--num-knots", type=int, default=6)
     # sim camera noise
