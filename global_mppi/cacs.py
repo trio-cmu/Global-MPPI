@@ -10,11 +10,15 @@ cacs_budgeted_global_improved.py), for use inside a controller:
    ones the graph rules allow, ranks them by a cheap proxy (the cost of the
    nearest accepted sample plus 0.35 x its distance), picks the best `k` one by
    one (re-checking the rules after each pick) and rolls them out in one call.
-   The rules keep the kernel graph G (pairs closer than h) inside a chordal
-   certificate H with cliques smaller than `max_clique`:
+   The rules keep the aggregate sparsity pattern E of the KSOS SDP inside a
+   chordal certificate H whose cliques have at most `max_clique` vertices (see
+   Graph): E = union_j supp(phi_j) x supp(phi_j), phi_j = column j of the
+   Cholesky factor of the kernel matrix K, factored in reverse insertion order.
      - a local point needs a kernel neighbour;
-     - its two-hop neighbourhood T has < max_clique nodes;
-     - T is already a clique of H.
+     - the Cholesky fill it causes between existing samples, and the new pairs
+       of E between existing samples, must already be edges of H;
+     - the samples that become E-adjacent to it, T, number < max_clique and
+       are already a clique of H.
 3. `replace` replacement moves: drop a sample from the costliest 30%, roll out
    the best-ranked feasible proposal, keep it if it is cheaper. With
    `replace_batch` > 1 they run in batches: drop that many costly samples at
@@ -23,10 +27,14 @@ cacs_budgeted_global_improved.py), for use inside a controller:
    samples cheapest first while the rules allow, until the graph has its
    size back; a proposal therefore only displaces costlier samples.
 The samples come back in insertion order: its reverse is a perfect elimination
-order of H, so KSOS should factor them in that order.
+order of H, so KSOS should factor them in that order. stats["cliques"] are the
+maximal cliques of H (insertion indices); the chordal extension of E obtained by
+eliminating in that order lies inside H, so every PSD block of the decomposed
+SDP has at most `max_clique` rows.
 """
 
 import warnings
+from itertools import chain
 from collections import Counter
 from dataclasses import dataclass
 
@@ -49,12 +57,26 @@ class CacsConfig:
 
 
 class Graph:
-    """G: the kernel graph (pairs closer than h); H: its chordal certificate (a
-    supergraph of G^2 built from simplicial insertions)."""
+    """The graphs CACS keeps on the samples, indexed in insertion order. KSOS factors the
+    kernel matrix K = U^T U in reverse insertion order (the last sample is eliminated first)
+    and uses phi_j = U e_j, so its SDP's aggregate sparsity pattern is
+        E = union_j supp(phi_j) x supp(phi_j),  supp(phi_j) = {j} + {r > j : (r, j) in F}.
+      G: the kernel graph, pairs closer than r = h (1 + 1e-9). The kernel (compact support h)
+         is zero beyond h, so G contains K's pattern; the margin keeps it so under rounding.
+      F: the filled graph of G in that elimination order, i.e. U's pattern (Cholesky fill
+         included): for every j, its neighbours inserted before it form a clique.
+      H: the chordal certificate. Each sample joins as a simplicial vertex adjacent to a clique
+         T of H with |T| < max_clique, so H stays chordal, the reverse insertion order is a
+         perfect elimination order of H, and every clique of H has at most max_clique
+         vertices. The rule only admits a sample if the resulting E stays inside H.
+    So F is in E is in H: eliminating E in the same order fills only edges of H, and the
+    cliques KSOS decomposes over have at most max_clique vertices.
+    """
 
     def __init__(self, cfg: CacsConfig):
         self.cfg = cfg
-        self.X, self.cost, self.G, self.H = [], [], [], []
+        self.r = cfg.h * (1.0 + 1e-9)  # kernel-graph radius (see the class docstring)
+        self.X, self.cost, self.G, self.F, self.H = [], [], [], [], []
         self._buf = None  # the samples as one array (rows 0..len(X)-1), grown in place
 
     @property
@@ -66,28 +88,67 @@ class Graph:
         if not self.X:
             return set()
         d2 = np.sum((self.arr - y) ** 2, axis=1)
-        return set(np.flatnonzero(d2 < (self.cfg.h - 1e-10) ** 2).tolist())
+        return set(np.flatnonzero(d2 < self.r ** 2).tolist())
 
     def rule(self, S, allow_isolated):
-        """(S, T) if a point with kernel neighbours S may join, else None."""
+        """(S, T, fill) if a point with kernel neighbours S may join, else None.
+
+        The point v = len(X) is eliminated first, so its F-neighbours are S and they must
+        become a clique of F; the new F edges (`fill`, which includes v-S) follow from closing
+        F again: when x gains a neighbour y inserted before it, y must join every other
+        neighbour of x inserted before x. A column y gains x for every new F edge (x, y),
+        x > y, which adds the pairs gained x supp(y) to E. Accepted iff every new F edge and
+        every new E pair between existing samples is already in H, and the samples that
+        become E-adjacent to v, T, number < max_clique and form a clique of H.
+        """
         if not self.X:
-            return set(), set()
+            return set(), set(), []
         if not S and not allow_isolated:
             return None
-        T = set(S)
-        for j in S:
-            T.update(self.G[j])
+        v = len(self.X)
+        F, H = self.F, self.H
+        added = {}  # vertex -> its new F neighbours
+        fill = []
+        stack = [(v, j) for j in S]
+        while stack:
+            a, b = stack.pop()
+            if b in added.get(a, ()) or (a < v and b in F[a]):
+                continue
+            if a != v and b != v and b not in H[a]:
+                return None  # fill outside H: E would leave H
+            added.setdefault(a, set()).add(b)
+            added.setdefault(b, set()).add(a)
+            fill.append((a, b))
+            x, y = (a, b) if a > b else (b, a)  # x is eliminated before y
+            for z in list(chain(F[x] if x < v else (), added.get(x, ()))):
+                if z < x and z != y:
+                    stack.append((z, y))
+        gained = {}  # column y -> samples newly in supp(phi_y)
+        for a, b in fill:
+            x, y = (a, b) if a > b else (b, a)
+            gained.setdefault(y, set()).add(x)
+        T = set()
+        for y, new in gained.items():
+            members = {y} | {r for r in F[y] if r > y} | new
+            for a in new:
+                for b in members:
+                    if a == b:
+                        continue
+                    if a == v or b == v:
+                        T.add(b if a == v else a)
+                    elif b not in H[a]:
+                        return None  # a new pair of E between existing samples outside H
         if len(T) >= self.cfg.max_clique:
             return None
-        if any(not (T - {j}).issubset(self.H[j]) for j in T):
+        if any(not (T - {j}).issubset(H[j]) for j in T):
             return None
-        return S, T
+        return S, T, fill
 
     def batch_rule(self, Y, allow_isolated):
-        """[(index into Y, (S, T))] for the proposals the rules allow."""
+        """[(index into Y, (S, T, fill))] for the proposals the rules allow."""
         if not self.X:
-            return [(i, (set(), set())) for i in range(len(Y))]
-        within = _within(self.arr, np.atleast_2d(Y), self.cfg.h - 1e-10)  # as neighbours()
+            return [(i, (set(), set(), [])) for i in range(len(Y))]
+        within = _within(self.arr, np.atleast_2d(Y), self.r)  # as neighbours()
         out = []
         for i, row in enumerate(within):
             st = self.rule(set(np.flatnonzero(row).tolist()), allow_isolated)
@@ -95,8 +156,15 @@ class Graph:
                 out.append((i, st))
         return out
 
+    def max_cliques(self):
+        """The maximal cliques of H, {v} + T_v (T_v = H-neighbours inserted before v) unless
+        a later u has T_u containing {v} + T_v."""
+        C = [{v} | {u for u in self.H[v] if u < v} for v in range(len(self.X))]
+        return [sorted(C[v]) for v in range(len(self.X))
+                if not any(C[v] <= C[u] for u in self.H[v] if u > v)]
+
     def append(self, y, cost, st):
-        S, T = st
+        S, T, fill = st
         i = len(self.X)
         y = np.array(y, dtype=float)
         if self._buf is None or i >= len(self._buf):  # grow the array (doubling)
@@ -108,9 +176,13 @@ class Graph:
         self.X.append(y)
         self.cost.append(float(cost))
         self.G.append(set(S))
+        self.F.append(set())
         self.H.append(set(T))
         for j in S:
             self.G[j].add(i)
+        for a, b in fill:
+            self.F[a].add(b)
+            self.F[b].add(a)
         for j in T:
             self.H[j].add(i)
 
@@ -120,7 +192,10 @@ class Graph:
         return self.without_many({i})
 
     def without_many(self, drop):
-        """The graph with the samples in `drop` removed (an induced subgraph, as `without`)."""
+        """The graph with the samples in `drop` removed (an induced subgraph, as `without`).
+        F becomes F restricted to the rest: it still contains the true filled graph (fill only
+        shrinks when samples go) and keeps its clique property, so the rule stays valid
+        (conservative)."""
         g = Graph(self.cfg)
         keep = [k for k in range(len(self.X)) if k not in drop]
         new = {old: j for j, old in enumerate(keep)}
@@ -130,6 +205,7 @@ class Graph:
             g._buf = np.empty((max(len(self._buf), self.cfg.n + 64), self._buf.shape[1]))
             g._buf[: len(keep)] = self._buf[keep]
         g.G = [{new[j] for j in self.G[k] if j in new} for k in keep]
+        g.F = [{new[j] for j in self.F[k] if j in new} for k in keep]
         g.H = [{new[j] for j in self.H[k] if j in new} for k in keep]
         return g
 
@@ -341,6 +417,7 @@ def cacs_sample(roll, lo, hi, cfg: CacsConfig, seed: int, rng: np.random.Generat
             g = gm
             replaced += 1
     return np.asarray(g.X), np.asarray(g.cost), {
+        "cliques": g.max_cliques(),
         "extra_costs": c0[:n_extra],
         "rounds": rounds, "seeds": n_seeds, "replaced": replaced, "rollouts": rollouts + n_extra,
         "initial_best": float(c0.min()),

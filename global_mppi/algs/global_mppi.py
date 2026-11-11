@@ -12,10 +12,27 @@ from mujoco import mjx
 from ksos_tools.solvers import ksos, ADMM
 from ksos_tools.problems.features import build_problem
 from ksos_tools.problems.sampling import rcm_order
+from ksos_tools.solvers.ADMM.chordal import (
+    _adjacency,
+    _maximal_elimination_cliques,
+    _symbolic_elimination,
+    chordal_decomposition,
+    column_supports,
+)
 from jax import lax
 from scipy.stats import qmc
 from global_mppi.sampling import TwoLevelSampler
 from global_mppi.cacs import CacsConfig, cacs_sample
+
+def _elimination_cliques(Phi) -> list[np.ndarray]:
+    """Maximal cliques of the chordal extension of Phi's aggregate pattern E obtained by
+    eliminating the rows in index order 0, 1, ..., n - 1. For CACS samples in reverse
+    insertion order this is a perfect elimination order of the CACS certificate H, and E is
+    inside H, so the extension is too and its cliques have at most max_clique vertices."""
+    n = Phi.shape[0]
+    elim_order, higher, _ = _symbolic_elimination(_adjacency(column_supports(Phi), n), n, range(n))
+    return _maximal_elimination_cliques(elim_order, higher)
+
 
 @dataclass
 class GlobalMPPIParams(SamplingParams):
@@ -647,10 +664,14 @@ class GlobalMPPI(SamplingBasedController):
         t1 = time.perf_counter()
         order = np.arange(len(samples))[::-1]
         problem = build_problem(samples[order], cfg.h, lambda _: f[order], lambd=self.ksos_lambda)
+        # cliques: eliminate the aggregate pattern E in this order (a perfect elimination order of
+        # the CACS certificate H, which contains E), so every clique has <= max_clique vertices;
+        # the solver's own MCS / min-degree completion does not guarantee that
+        structure = chordal_decomposition(problem.Phi, cliques=_elimination_cliques(problem.Phi))
         try:
             x, info = ADMM.solve_ksos(
                 problem.Phi, problem.f, problem.lambd, samples=problem.samples,
-                **self.admm_cuda_options,
+                structure=structure, **self.admm_cuda_options,
             )
             ok = bool(info["success"]) and np.all(np.isfinite(x))
         except Exception as error:
@@ -672,7 +693,8 @@ class GlobalMPPI(SamplingBasedController):
         print(f"KSOS timing: cacs {t1 - t0:.4f} admm {t2 - t1:.4f} guard {t3 - t2:.4f}")
         print(
             f"ADMM-cuda: restart {it} CACS n={len(samples)} h={cfg.h:.3f} rollouts={stats['rollouts']} "
-            f"rounds={stats['rounds']} replaced={stats['replaced']} status={info['status']} "
+            f"rounds={stats['rounds']} replaced={stats['replaced']} "
+            f"max_clique={structure.stats['max_clique']}/{cfg.max_clique} status={info['status']} "
             f"iters={info['iterations']} best sample {f.min():.4f}"
             + (f" warm {float(stats['extra_costs'][0]):.4f}" if warm is not None else "")
             + (f" x {x_cost:.4f}" if x_cost is not None else "")
