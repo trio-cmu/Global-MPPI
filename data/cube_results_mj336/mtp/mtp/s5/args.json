@@ -1,0 +1,58 @@
+{
+  "algorithm": "mtp",
+  "seed": 5,
+  "command_line_args": {
+    "headless": true,
+    "seed_start": 5,
+    "seed_end": 6,
+    "max_cycles": 100,
+    "out_dir": "/home/junlong/cube_runs_mtp_cbo/mtp",
+    "gpu": false,
+    "legacy_newton": false,
+    "num_samples": null,
+    "iterations": 5,
+    "noise": null,
+    "temperature": null,
+    "mppi_noise": 0.1,
+    "warm_start": true,
+    "cacs_h": null,
+    "algorithm": "mtp"
+  },
+  "controller": {
+    "class": "MTP",
+    "num_samples": 2000,
+    "iterations": 5,
+    "plan_horizon": 0.25,
+    "spline_type": "zero",
+    "num_knots": 4,
+    "m_pts": 3,
+    "n_per_layer": 50,
+    "degree": 2,
+    "num_elites": 5,
+    "sigma_start": 0.5,
+    "sigma_min": 0.1,
+    "sigma_max": 1.0,
+    "temperature": 0.1,
+    "beta": 0.1,
+    "alpha": 0.5,
+    "mtp_interpolation": "akima"
+  },
+  "vmax": 1.88,
+  "cacs_h": null,
+  "control_frequency_hz": 25,
+  "max_cycles": 100,
+  "cukernelsos_python": "/home/junlong/kernelSOS_project/cuKernelSOS/python",
+  "ksos_gpu_solve_env": null,
+  "gpu_before_run": {
+    "util_percent": 99.0,
+    "mem_used_mib": 18275.0
+  },
+  "code": {
+    "global_mppi": "/home/junlong/kernelSOS_project/Global-MPPI/global_mppi/__init__.py",
+    "mujoco": "3.3.6",
+    "mujoco_mjx": "3.3.6",
+    "ksos_tools": "/home/junlong/kernelSOS_project/Global-MPPI/ksos-tools/ksos_tools/__init__.py",
+    "git_commit": "227f7ca",
+    "git_dirty": false
+  }
+}
