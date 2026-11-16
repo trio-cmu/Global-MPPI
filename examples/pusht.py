@@ -22,8 +22,8 @@ for _parent in Path(__file__).resolve().parents:
         os.environ.setdefault("CUKERNELSOS_PYTHON", str(_parent / "cuKernelSOS" / "python"))
         break
 
-from global_mppi.algs import PredictiveSampling, MPPI, DIAL, GlobalMPPI
-from global_mppi.simulation.deterministic import run_interactive
+from global_mppi.algs import PredictiveSampling, MPPI, DIAL, GlobalMPPI, MTP, CBO
+from global_mppi.simulation.deterministic import run_interactive, RUN_TIMESTAMP
 from global_mppi.tasks.pusht import PushT
 """
 Run an interactive simulation of the push-T task with predictive sampling.
@@ -174,6 +174,12 @@ parser.add_argument(
     "On by default; use --no-headless to open an interactive viewer.",
 )
 
+parser.add_argument(
+    "--max-cycles",
+    type=int,
+    default=100,
+    help="control cycles per run (default: 100; the run stops at the first multiple of 10 reached)",
+)
 subparsers = parser.add_subparsers(
     dest="algorithm", help="Sampling algorithm (choose one)"
 )
@@ -185,6 +191,8 @@ subparsers.add_parser(
 subparsers.add_parser(
     "globalmppi", help="GlobalMPPI"
 )
+subparsers.add_parser("mtp", help="Model Tensor Planning (hydrax, upstream default hyperparameters)")
+subparsers.add_parser("cbo", help="Consensus-Based Optimization (hydrax, upstream example values)")
 args = parser.parse_args()
 
 # Authenticate with Weights & Biases. The first time, prompt for an API key
@@ -253,6 +261,30 @@ elif args.algorithm == "dial":
         num_knots=6,
         iterations = 5,
     )
+elif args.algorithm in ("mtp", "cbo"):
+    # ported from hydrax (global_mppi/algs/mtp.py, cbo.py): 2000 samples x 5 iterations via --num-samples 2000
+    # (default 256 as ps / mppi / dial), horizon 1 s, 6 knots, cubic spline, all other hyperparameters at the hydrax
+    # values: MTP = the defaults of its constructor; CBO has no defaults for four arguments, so the values of the
+    # only hydrax example that uses it (examples/bugtrap.py at bd53d43)
+    UPSTREAM_DEFAULTS = {
+        "mtp": dict(
+            m_pts=3, n_per_layer=50, degree=2, num_elites=5, sigma_start=0.5, sigma_min=0.1,
+            sigma_max=1.0, temperature=0.1, beta=0.1, alpha=0.5, mtp_interpolation="akima",
+        ),
+        "cbo": dict(
+            initial_noise_level=1.0, temperature=0.01, consensus_weight=1.0, noise_weight=10.0, step_size=0.1,
+        ),
+    }
+    mtp_cbo_cfg = dict(
+        num_samples=args.num_samples or 256,
+        plan_horizon=1.0,
+        spline_type="cubic",
+        num_knots=6,
+        iterations=5,
+        **UPSTREAM_DEFAULTS[args.algorithm],
+    )
+    print(f"Running {args.algorithm.upper()} (hydrax hyperparameters): {mtp_cbo_cfg}")
+    ctrl = (MTP if args.algorithm == "mtp" else CBO)(task, **mtp_cbo_cfg)
 elif args.algorithm == "globalmppi" and args.ksos_solver == "ADMM-cuda":
     print(f"Running GlobalMPPI (KSOS solver: ADMM-cuda, two-level sampling, no LSE)")
     ctrl = GlobalMPPI(
@@ -295,6 +327,41 @@ elif args.algorithm == "globalmppi":
         wendland_sigma=args.wendland_sigma,
     )
 
+# solve_path of every cuKernelSOS ADMM solve ("gpu", or "cpu (reason)"), printed at the end of the run. The GPU affine
+# solve is switched on with the environment variable KSOS_GPU_SOLVE=1 (global_mppi/algs/global_mppi.py) and needs
+# CUKERNELSOS_PYTHON to point to the gpu-solve build of cuKernelSOS.
+SOLVE_PATHS = {}
+if args.algorithm == "globalmppi" and args.ksos_solver == "ADMM-cuda":
+    from ksos_tools.solvers import ADMM
+
+    _solve_ksos = ADMM.solve_ksos
+
+    def _solve_ksos_recorded(*a, **kw):
+        x, info = _solve_ksos(*a, **kw)
+        path = (info.get("admm_stats") or {}).get("solve_path")
+        if path is not None:
+            SOLVE_PATHS[path] = SOLVE_PATHS.get(path, 0) + 1
+        return x, info
+
+    ADMM.solve_ksos = _solve_ksos_recorded
+
+# GPU snapshot (utilization, memory, other processes) into this run's log folder, the one run_interactive uses
+import subprocess
+
+_run_dir = Path(__file__).resolve().parents[1] / "logs" / f"pushT_globalmppi_{ctrl.ctrl_name}" / RUN_TIMESTAMP
+_run_dir.mkdir(parents=True, exist_ok=True)
+try:
+    _snap = subprocess.run(["nvidia-smi"], capture_output=True, text=True, timeout=20).stdout
+    _snap += "\n" + subprocess.run(
+        ["nvidia-smi", "--query-compute-apps=pid,process_name,used_memory", "--format=csv"],
+        capture_output=True, text=True, timeout=20,
+    ).stdout
+except Exception as exc:  # noqa: BLE001
+    _snap = f"nvidia-smi failed: {exc}"
+with open(_run_dir / "gpu_snapshot.txt", "a") as _f:
+    _f.write(f"=== {RUN_TIMESTAMP} {args.algorithm} seed {args.seed} (start of the run) ===\n{_snap}\n")
+print(f"GPU snapshot: {_run_dir / 'gpu_snapshot.txt'}", flush=True)
+
 # Run the interactive simulation
 start_seed = args.seed
 for trial_idx in range(start_seed, start_seed + 1):
@@ -317,10 +384,12 @@ for trial_idx in range(start_seed, start_seed + 1):
         record_video=False,
         max_traces=5,
         current_seed=trial_idx,
-        max_cycles=100,
+        max_cycles=args.max_cycles,
         current_task="pushT_globalmppi",
         use_wandb=args.wandb,
         wandb_project=args.wandb_project,
         wandb_entity=args.wandb_entity,
         headless=args.headless,
     )
+if SOLVE_PATHS or (args.algorithm == "globalmppi" and args.ksos_solver == "ADMM-cuda"):
+    print(f"solve_paths: {dict(SOLVE_PATHS)}")

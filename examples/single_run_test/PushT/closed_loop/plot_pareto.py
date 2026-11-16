@@ -3,7 +3,9 @@ y = mean final cost (cost at cycle 100), both log scale, one marker per method (
 for the single seeds. The front joins the methods no other method beats on both time and cost; times within
 1% count as equal (PS / MPPI / DIAL all run at 0.36 s).
 
-    python plot_pareto.py [log_dir] [out.png]      (defaults: six_seeds_main, pusht_pareto.png)
+    python plot_pareto.py [log_dir] [out.png] [--gcs]      (defaults: six_seeds_main, pusht_pareto.png)
+
+GCS is not drawn unless --gcs is given (it is not run in the current benchmark; its hand-entered numbers stay below).
 """
 import re
 import sys
@@ -13,18 +15,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 here = Path(__file__).resolve().parent
-log_dir = here / (sys.argv[1] if len(sys.argv) > 1 else "six_seeds_main")
-out_path = here / (sys.argv[2] if len(sys.argv) > 2 else "pusht_pareto.png")
+WITH_GCS = "--gcs" in sys.argv
+argv = [a for a in sys.argv if a != "--gcs"]
+log_dir = here / (argv[1] if len(argv) > 1 else "six_seeds_main")
+out_path = here / (argv[2] if len(argv) > 2 else "pusht_pareto.png")
 
 # log prefix -> (label, color): ours = the accent (red); every method its own hue
 METHODS = {
     "ps2000": ("PS", "#7b52ab"),
     "mppi2000": ("MPPI", "#1b9e77"),
     "dial2000": ("DIAL", "#e69f00"),
+    "mtp2000": ("MTP", "#a23fbf"),   # optional: only drawn if mtp2000_seed*.log exist
+    "cbo2000": ("CBO", "#8c564b"),   # optional: only drawn if cbo2000_seed*.log exist
     "globalmppi_cacs5new": ("CACS (ours)", "#c8102e"),
 }
 GCS_TIMES = [119.84, 119.94, 119.91, 119.59, 119.57, 120.35]  # planning time per cycle (s), one per run
-EXTERNAL = {"gcs": ("GCS", "#2f6db5", [1e-5] * len(GCS_TIMES), GCS_TIMES)}  # per run: final cost, planning time (s)
+EXTERNAL = {"gcs": ("GCS", "#2f6db5", [1e-5] * len(GCS_TIMES), GCS_TIMES)} if WITH_GCS else {}  # per run: final cost, planning time (s)
 SURFACE, INK, INK_2, GRID, SHADE, FRONT = "#ffffff", "#111111", "#4a4a48", "#e4e4e0", "#e8ebf1", "#33333a"
 TEXT_COLOR = {"dial2000": "#b37a00"}  # labels take the method colour; amber darkened so the text stays readable on white
 plt.rcParams.update({"font.size": 13, "axes.labelsize": 14, "xtick.labelsize": 12.5, "ytick.labelsize": 12.5})
@@ -45,7 +51,12 @@ def load(prefix):
 
 points = []  # (key, label, color, mean time, mean cost, per-seed array or None)
 for prefix, (label, color) in METHODS.items():
-    runs = load(prefix)
+    try:
+        runs = load(prefix)
+    except FileNotFoundError:
+        if prefix in ("mtp2000", "cbo2000"):
+            continue   # optional methods
+        raise
     points.append((prefix, label, color, runs[:, 1].mean(), runs[:, 0].mean(), runs))
 for key, (label, color, costs, times) in EXTERNAL.items():
     runs = np.column_stack([costs, times])
@@ -68,7 +79,7 @@ ax.set_yscale("log")
 
 # dominated region: everything slower and costlier than some front point (staircase above/right of the front)
 xs, ys = [p[3] for p in front], [p[4] for p in front]
-x_hi, y_hi = 400, 5
+x_hi, y_hi = (400 if WITH_GCS else 4 * max(xs)), 5
 stair_x, stair_y = [], []
 for i, (x, y) in enumerate(zip(xs, ys)):
     stair_x += [x, xs[i + 1] if i + 1 < len(xs) else x_hi]
@@ -95,14 +106,18 @@ for key, label, color, t, cost, runs in points:
                 bbox=dict(boxstyle="round,pad=0.15", fc=SURFACE, ec="none", alpha=0.85), zorder=5)
 
 ax.set_xlim(0.2, x_hi)
-ax.set_ylim(1e-6, y_hi)
+ax.set_ylim(1e-6 if WITH_GCS else min(p[4] for p in points) / 10, y_hi)
 ax.set_xlabel("planning time per cycle (s)", color=INK)
 ax.set_ylabel("final cost at cycle 100", color=INK)
 by = {p[0]: p for p in points}
-ours, dial, gcs = by["globalmppi_cacs5new"], by["dial2000"], by["gcs"]
+ours, dial = by["globalmppi_cacs5new"], by["dial2000"]
 ax.set_title("Pareto plot for PushT", loc="left", fontsize=16, color=INK, weight="bold", pad=30)
-ax.text(0, 1.035, f"CACS is on the Pareto front: {dial[4] / ours[4]:.0f}× lower cost than DIAL, "
-        f"{gcs[3] / ours[3]:.0f}× faster than GCS", transform=ax.transAxes, fontsize=12.5, color=INK_2, va="bottom")
+if WITH_GCS:
+    subtitle = (f"CACS is on the Pareto front: {dial[4] / ours[4]:.0f}× lower cost than DIAL, "
+                f"{by['gcs'][3] / ours[3]:.0f}× faster than GCS")
+else:
+    subtitle = "Pareto front: " + " → ".join(p[1] for p in front)
+ax.text(0, 1.035, subtitle, transform=ax.transAxes, fontsize=12.5, color=INK_2, va="bottom")
 ax.grid(True, which="major", color=GRID, lw=0.9)
 ax.tick_params(colors=INK_2)
 for side in ("top", "right"):
@@ -116,7 +131,7 @@ ax.legend(handles=[
     plt.Line2D([], [], color=INK_2, marker="o", ls="", ms=6, alpha=0.4, label="single seeds"),
     plt.Rectangle((0, 0), 1, 1, fc=SHADE, ec="#c4c8d0", lw=0.8, label="dominated region"),
 ], loc="upper right", frameon=True, facecolor=SURFACE, edgecolor="#d4d4cf", framealpha=1, fancybox=False, fontsize=12, labelcolor=INK_2)
-fig.text(0.01, 0.005, "Mean over 6 runs per method; both axes log scale. Times within 1% count as equal.",
+fig.text(0.01, 0.005, f"Mean over {max(len(p[5]) for p in points)} runs per method; both axes log scale. Times within 1% count as equal.",
          fontsize=10.5, color=INK_2)
 plt.tight_layout(rect=(0, 0.03, 1, 1))
 plt.savefig(out_path, dpi=300, bbox_inches="tight")

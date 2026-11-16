@@ -40,11 +40,13 @@ LABELS["globalmppi_cacs5old"] = "CACS ×5 old cfg"
 LABELS["globalmppi_cacs5r120"] = "CACS ×5 r120"
 LABELS["ps2000"] = "PS (2000 × 5)"
 LABELS["mppi2000"] = "MPPI (2000 × 5)"
+LABELS["mtp2000"] = "MTP"   # logs mtp2000_seed<k>.log / cbo2000_seed<k>.log (pusht.py mtp / cbo with --num-samples 2000)
+LABELS["cbo2000"] = "CBO"
 LABELS["globalmppi_n500"] = "GlobalMPPI 500 + 500 (KSOS + MPPI σ 0.1)"
 LABELS["globalmppi_s0.05"] = "GlobalMPPI (KSOS + MPPI σ 0.05)"
 COLORS = {"globalmppi": "#6a4fd3", "dial": "#1baf7a", "dial2000": "#eb6834", "ksosonly": "#2a78d6", "globalmppi_s0.1": "#e87ba4",
           "globalmppi_s0.05": "#f2b134", "globalmppi_n500": "#8c6d31", "ps2000": "#52514e",
-          "mppi2000": "#1baf7a", "globalmppi_lse": "#6a4fd3", "globalmppi_c20": "#2a78d6", "globalmppi_c30": "#6a4fd3", "globalmppi_gnc": "#d43d51", "globalmppi_cacs": "#00a3c4", "globalmppi_cacs5": "#b5179e", "globalmppi_cacs_warm": "#b5179e", "globalmppi_cacs5_warm": "#7a3e00", "globalmppi_cacs5new": "#d43d51", "globalmppi_cacs5k128": "#e6a000", "globalmppi_cacs5old": "#5b8c00", "globalmppi_cacs5r120": "#6a4fd3"}
+          "mppi2000": "#1baf7a", "mtp2000": "#9467bd", "cbo2000": "#8c564b", "globalmppi_lse": "#6a4fd3", "globalmppi_c20": "#2a78d6", "globalmppi_c30": "#6a4fd3", "globalmppi_gnc": "#d43d51", "globalmppi_cacs": "#00a3c4", "globalmppi_cacs5": "#b5179e", "globalmppi_cacs_warm": "#b5179e", "globalmppi_cacs5_warm": "#7a3e00", "globalmppi_cacs5new": "#d43d51", "globalmppi_cacs5k128": "#e6a000", "globalmppi_cacs5old": "#5b8c00", "globalmppi_cacs5r120": "#6a4fd3"}
 SURFACE, INK, INK_2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e6e5e0"
 
 EXTRA_COLORS = ["#e87ba4", "#f2b134", "#8c6d31", "#52514e"]
@@ -73,7 +75,7 @@ for ax in (ax_c, ax_f, ax_t):
     for side in ("left", "bottom"):
         ax.spines[side].set_color("#c9c8c2")
 
-ORDER = ["ps2000", "mppi2000", "dial2000"]  # baselines first (PS, MPPI, DIAL), then the GlobalMPPI / CACS variants
+ORDER = ["ps2000", "mppi2000", "dial2000", "mtp2000", "cbo2000"]  # baselines first (PS, MPPI, DIAL, MTP, CBO), then the GlobalMPPI / CACS variants
 methods = [m for m in ORDER if m in runs] + [m for m in LABELS if m in runs and m not in ORDER] + list(EXTERNAL)  # GCS last
 for m, e in EXTERNAL.items():
     LABELS[m], COLORS[m] = e["label"], e["color"]
@@ -141,7 +143,7 @@ ax_t.set_title("Planning time per cycle" + (": mean ± std over seeds" if max(le
 baselines_only = not any(m.startswith(("globalmppi", "ksos")) for m in methods)
 n_seeds = max(len(r) for r in runs.values())
 fig.suptitle(f"PushT closed loop: PS / MPPI / DIAL over {n_seeds} seeds" if baselines_only else
-             "PushT closed loop: GlobalMPPI (KSOS ADMM-cuda + MPPI σ 0.1) vs PS / MPPI / DIAL" + (" / GCS" if EXTERNAL else ""), x=0.04, ha="left",
+             "PushT closed loop: GlobalMPPI (KSOS ADMM-cuda + MPPI σ 0.1) vs PS / MPPI / DIAL" + (" / MTP" if "mtp2000" in runs else "") + (" / CBO" if "cbo2000" in runs else "") + (" / GCS" if EXTERNAL else ""), x=0.04, ha="left",
              fontsize=12.5, color=INK, weight="bold")
 import textwrap  # noqa: E402
 if baselines_only:

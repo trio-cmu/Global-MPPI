@@ -21,6 +21,8 @@ METHODS = {  # log prefix -> (name, color), plotted in this order
     "ps2000": ("Predictive Sampling", "tab:orange"),
     "mppi2000": ("MPPI", "tab:green"),
     "dial2000": ("DIAL-MPC", "tab:red"),
+    "mtp2000": ("MTP", "tab:purple"),   # optional: only drawn if mtp2000_seed*.log exist
+    "cbo2000": ("CBO", "tab:brown"),    # optional: only drawn if cbo2000_seed*.log exist
 }
 
 
@@ -39,7 +41,12 @@ def load(prefix):
 
 fig, ax = plt.subplots(figsize=(6, 5))
 for prefix, (name, color) in METHODS.items():
-    costs = load(prefix)
+    try:
+        costs = load(prefix)
+    except FileNotFoundError:
+        if prefix in ("mtp2000", "cbo2000"):
+            continue   # optional methods
+        raise
     iters = np.arange(costs.shape[1])
     q25, med, q75 = np.quantile(costs, [0.25, 0.5, 0.75], axis=0)
     ax.plot(iters, med, label=name, color=color, linestyle="-", linewidth=2)
