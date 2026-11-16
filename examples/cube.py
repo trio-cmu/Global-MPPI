@@ -23,7 +23,7 @@ for _parent in Path(__file__).resolve().parents:
 import mujoco
 import numpy as np
 import global_mppi
-from global_mppi.algs import MPPI, PredictiveSampling, DIAL, GlobalMPPI
+from global_mppi.algs import MPPI, PredictiveSampling, DIAL, GlobalMPPI, MTP, CBO
 from global_mppi.simulation.deterministic import run_interactive, RUN_TIMESTAMP
 from global_mppi.tasks.cube import CubeRotation
 
@@ -40,7 +40,7 @@ orientation with [ctrl + left click].
 """
 
 REPO = Path(__file__).resolve().parents[1]
-TAGS = {"ps": "ps", "mppi": "mppi", "dial": "dial", "globalmppi": "gm"}
+TAGS = {"ps": "ps", "mppi": "mppi", "dial": "dial", "globalmppi": "gm", "mtp": "mtp", "cbo": "cbo"}
 
 # Define the task (cost and dynamics)
 task = CubeRotation()
@@ -136,6 +136,8 @@ subparsers = parser.add_subparsers(
 subparsers.add_parser("ps", help="Predictive Sampling")
 subparsers.add_parser("mppi", help="Model Predictive Path Integral Control")
 subparsers.add_parser("dial", help="DIAL")
+subparsers.add_parser("mtp", help="Model Tensor Planning (hydrax, upstream defaults)")
+subparsers.add_parser("cbo", help="Consensus-Based Optimization (hydrax, upstream example values)")
 subparsers.add_parser("globalmppi", help="GlobalMPPI")
 args = parser.parse_args()
 algo = args.algorithm or "ps"
@@ -153,7 +155,20 @@ if algo == "globalmppi" and not (args.gpu or args.legacy_newton):
 # sample counts and iterations follow the PushT setup and can be changed with
 # the options above.
 common = dict(plan_horizon=0.25, spline_type="zero", num_knots=4)
-default_noise = {"ps": 0.2, "mppi": 0.2, "dial": 1.0, "globalmppi": 0.1}[algo]
+# MTP and CBO (ported from hydrax, global_mppi/algs/mtp.py and cbo.py): 2000 samples x 5
+# iterations like the other baselines, all other hyperparameters at the hydrax values. For MTP these
+# are the defaults of its constructor. CBO has no defaults for four of its arguments; the values are
+# those of the only hydrax example that uses it (examples/bugtrap.py at bd53d43).
+UPSTREAM_DEFAULTS = {
+    "mtp": dict(
+        m_pts=3, n_per_layer=50, degree=2, num_elites=5, sigma_start=0.5, sigma_min=0.1,
+        sigma_max=1.0, temperature=0.1, beta=0.1, alpha=0.5, mtp_interpolation="akima",
+    ),
+    "cbo": dict(
+        initial_noise_level=1.0, temperature=0.01, consensus_weight=1.0, noise_weight=10.0, step_size=0.1,
+    ),
+}
+default_noise = {"ps": 0.2, "mppi": 0.2, "dial": 1.0, "globalmppi": 0.1}.get(algo)
 default_temperature = {"mppi": 0.001, "dial": 0.01, "globalmppi": 0.1}
 if args.num_samples is not None:
     num_samples = args.num_samples
@@ -161,18 +176,28 @@ elif algo == "globalmppi":
     num_samples = 1000 if args.gpu else 128
 else:
     num_samples = 2000
-cfg = dict(
-    num_samples=num_samples,
-    noise_level=default_noise if args.noise is None else args.noise,
-    iterations=args.iterations,
-    **common,
-)
-if algo != "ps":
-    cfg["temperature"] = (
-        default_temperature[algo] if args.temperature is None else args.temperature
+if algo in UPSTREAM_DEFAULTS:
+    cfg = dict(num_samples=num_samples, iterations=args.iterations, **common, **UPSTREAM_DEFAULTS[algo])
+    if args.temperature is not None:
+        cfg["temperature"] = args.temperature
+    if args.noise is not None:
+        if algo == "cbo":
+            cfg["initial_noise_level"] = args.noise
+        else:
+            parser.error("mtp has no noise_level (its sigma_start / sigma_min / sigma_max are fixed)")
+else:
+    cfg = dict(
+        num_samples=num_samples,
+        noise_level=default_noise if args.noise is None else args.noise,
+        iterations=args.iterations,
+        **common,
     )
-elif args.temperature is not None:
-    parser.error("ps has no temperature")
+    if algo != "ps":
+        cfg["temperature"] = (
+            default_temperature[algo] if args.temperature is None else args.temperature
+        )
+    elif args.temperature is not None:
+        parser.error("ps has no temperature")
 
 vmax = float(np.abs(task.mj_model.actuator_ctrlrange).max())
 cacs_h = None
@@ -186,6 +211,9 @@ elif algo == "dial":
     print("Running DIAL")
     cfg.update(beta_opt_iter=1.0, beta_horizon=1.0)
     ctrl = DIAL(task, **cfg)
+elif algo in ("mtp", "cbo"):
+    print(f"Running {algo.upper()} (hydrax hyperparameters): {cfg}")
+    ctrl = (MTP if algo == "mtp" else CBO)(task, **cfg)
 else:
     if args.gpu:
         print("Running GlobalMPPI (CACS + ADMM-cuda, gpu_solve)")

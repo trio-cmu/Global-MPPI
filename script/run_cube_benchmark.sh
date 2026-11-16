@@ -1,6 +1,6 @@
 #!/bin/bash
 # Cube (LEAP hand) benchmark: seeds x configs, headless, one cube.py run per (config, seed).
-#   configs: ps mppi dial gm (GlobalMPPI --gpu) gm_noise0.02 (gm with --mppi-noise 0.02)
+#   configs: ps mppi dial mtp cbo gm (GlobalMPPI --gpu) gm_noise0.02 (gm with --mppi-noise 0.02)
 #   output:  $OUT/<config>/<algo>/s<seed>/   (cube.py writes <out-dir>/<algo>/s<seed>; algo = ps|mppi|dial|gm)
 #   a run whose final.json exists is skipped; a failed run is retried, then logged and the batch goes on.
 #   log:     $OUT/batch.log, one log per run in $OUT/logs/
@@ -30,7 +30,7 @@ case " $CONFIGS " in *" gm"*)
 run_one() {   # config seed
   local cfg=$1 seed=$2 algo args
   case $cfg in
-    ps|mppi|dial)  algo=$cfg; args=$cfg;;
+    ps|mppi|dial|mtp|cbo)  algo=$cfg; args=$cfg;;
     gm)            algo=gm;   args="--gpu globalmppi";;
     gm_noise0.02)  algo=gm;   args="--gpu --mppi-noise 0.02 globalmppi";;
     *) say "unknown config $cfg"; return 1;;

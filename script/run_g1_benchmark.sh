@@ -1,6 +1,6 @@
 #!/bin/bash
 # G1 standup benchmark: seeds x algorithms, headless, one examples/g1.py run per (algorithm, seed).
-#   algorithms: ps mppi dial gm (GlobalMPPI --gpu)
+#   algorithms: ps mppi dial mtp cbo gm (GlobalMPPI --gpu)
 #   output:  $OUT/<algo>/s<seed>/   (examples/g1.py writes <out-dir>/<algo>/s<seed>; algo = ps|mppi|dial|gm)
 #   a run whose final.json exists is skipped; a failed run is retried, then logged and the batch goes on.
 #   log:     $OUT/batch.log, one log per run in $OUT/logs/
@@ -31,7 +31,7 @@ case " $ALGOS " in *" gm "*)
 run_one() {   # algo seed
   local algo=$1 seed=$2 arg
   case $algo in
-    ps|mppi|dial)  arg=$algo;;
+    ps|mppi|dial|mtp|cbo)  arg=$algo;;
     gm)            arg="--gpu globalmppi";;
     *) say "unknown algorithm $algo"; return 1;;
   esac
