@@ -97,6 +97,8 @@ It prints the median and quartiles at iteration 100.
 
 ## Reference result
 
+The 30 runs behind the numbers below (`cycles.csv`, `final.json`, `args.json`, `best_cost` histories, figures) are in `data/cube_results_mj336/` (see its `README.md`).
+
 Median over 6 seeds at iteration 100 (the `best_cost` of cycle 100), 25–75 % range in brackets. Final error after 100 cycles is mean ± std (ddof 1) over seeds. Run on a **shared RTX 5090**, mujoco 3.3.6, commit `58f9add`.
 
 | Method | Median cost, iteration 100 | Final position error (mm) | Final orientation error (deg) | Plan time per cycle (without cycle 0) |

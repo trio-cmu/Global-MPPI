@@ -1,0 +1,34 @@
+# Cube (LEAP hand) benchmark results, MuJoCo 3.3.6
+
+6 seeds (0-5) × {ps, mppi, dial, gm, gm_noise0.02}, 100 control cycles, headless, run unattended on a shared RTX 5090 (2026-11-12). How to reproduce: `docs/cube_benchmark_reproduce.md`, driver `script/run_cube_benchmark.sh`, cost plot `script/plot_cube_cost.py`.
+
+## Versions
+
+- MuJoCo / mujoco-mjx **3.3.6** (not 4.0.0, whose contact dynamics differ), Python 3.12, jax 0.5.3
+- Global-MPPI `58f9add` (branch `cube-gpu`), ksos-tools `86e6163` (`gpu-solve-exp`), cuKernelSOS `2768612` (`gpu-solve`, from `ssisyg/cuKernelSOS`)
+- every `args.json` records `git_commit` 58f9add, `git_dirty` false, mujoco 3.3.6
+
+## Settings (all read back from `args.json`)
+
+- horizon 0.25 s, 4 knots (zero spline), 25 Hz, 100 cycles
+- ps / mppi / dial: 2000 samples × 5 iterations; noise 0.2 (ps, mppi), 1.0 (dial); temperature 0.001 (mppi), 0.01 (dial); dial beta_opt_iter = beta_horizon = 1.0
+- gm: `--gpu` (CACS, 5 restarts × 1000 candidates, KSOS on ADMM-cuda with `gpu_solve`, warm start), final MPPI 1000 samples × 5 iterations, noise 0.1, temperature 0.1, CACS h = 1.316; every gm run has `solve_paths = {'gpu': 505}`
+- gm_noise0.02: the same as gm with `--mppi-noise 0.02`
+
+## Final error after 100 cycles (position mm / angle deg)
+
+| config | s0 | s1 | s2 | s3 | s4 | s5 | mean ± std |
+|---|---|---|---|---|---|---|---|
+| ps | 17.2 / 74.0 | 20.5 / 80.3 | 21.4 / 66.9 | 18.6 / 20.7 | 30.5 / 68.1 | 25.1 / 70.4 | 22.2 ± 4.9 / 63.4 ± 21.5 |
+| mppi | 22.7 / 55.4 | 23.1 / 18.0 | 11.9 / 3.2 | 18.5 / 48.6 | 28.5 / 78.7 | 15.8 / 23.4 | 20.1 ± 5.9 / 37.9 ± 27.9 |
+| dial | 24.3 / 31.0 | 8.8 / 13.9 | 19.6 / 20.4 | 8.2 / 14.4 | 25.3 / 9.3 | 21.7 / 19.8 | 18.0 ± 7.6 / 18.1 ± 7.5 |
+| gm | 9.4 / 5.6 | 20.7 / 3.9 | 14.7 / 15.0 | 7.5 / 3.7 | 6.6 / 2.3 | 9.1 / 6.7 | 11.3 ± 5.4 / 6.2 ± 4.6 |
+| gm_noise0.02 | 16.4 / 15.3 | 4.5 / 0.6 | 24.7 / 6.3 | 12.2 / 2.1 | 9.9 / 13.9 | 7.5 / 4.0 | 12.5 ± 7.2 / 7.0 ± 6.2 |
+
+Mean ± std over seeds (ddof 1). GPU runs are not bit-identical between reruns. Mean planning time per cycle (without cycle 0): about 1 s for ps / mppi / dial, 12.9 s for gm, 11.2 s for gm_noise0.02 (GPU shared with other jobs).
+
+## Layout
+
+`<config>/<algo>/s<seed>/` with `cycles.csv` (cycle, plan_s, best_cost, pos_err_mm, ang_err_deg, gpu_util, gpu_mem_mb; cycles 0-99), `final.json` (error after cycle 100, `solve_paths` for gm), `args.json`, and `cube_nomppi_<alg>_best_cost_history_seed<k>.npy` (best_cost, cycles 0-100). `batch.log` is the log of the batch (no failed runs, no retries). `figures/`: error curves (`cube_curves.png`), final error (`cube_final.png`), cost convergence (`cube_cost_*.png`) and `plot_cube_cost.py`.
+
+Not included: videos, per-run logs, qpos histories (`*robot_pos_history*.npy`), the 3 partial seed-0 runs from an earlier windowed attempt. `figures/plot_cube_cost.py` reads fixed locations under `~` (`~/cube_runs_mj336`, `data/logs`); `script/plot_cube_cost.py` takes the paths as arguments. The `args.json` files contain this machine's absolute paths.

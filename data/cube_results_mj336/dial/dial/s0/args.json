@@ -1,0 +1,51 @@
+{
+  "algorithm": "dial",
+  "seed": 0,
+  "command_line_args": {
+    "headless": true,
+    "seed_start": 0,
+    "seed_end": 1,
+    "max_cycles": 100,
+    "out_dir": "/home/junlong/cube_runs_mj336/dial",
+    "gpu": false,
+    "legacy_newton": false,
+    "num_samples": null,
+    "iterations": 5,
+    "noise": null,
+    "temperature": null,
+    "mppi_noise": 0.1,
+    "warm_start": true,
+    "cacs_h": null,
+    "algorithm": "dial"
+  },
+  "controller": {
+    "class": "DIAL",
+    "num_samples": 2000,
+    "noise_level": 1.0,
+    "iterations": 5,
+    "plan_horizon": 0.25,
+    "spline_type": "zero",
+    "num_knots": 4,
+    "temperature": 0.01,
+    "beta_opt_iter": 1.0,
+    "beta_horizon": 1.0
+  },
+  "vmax": 1.88,
+  "cacs_h": null,
+  "control_frequency_hz": 25,
+  "max_cycles": 100,
+  "cukernelsos_python": "/home/junlong/kernelSOS_project/cuKernelSOS/python",
+  "ksos_gpu_solve_env": null,
+  "gpu_before_run": {
+    "util_percent": 25.0,
+    "mem_used_mib": 4182.0
+  },
+  "code": {
+    "global_mppi": "/home/junlong/kernelSOS_project/Global-MPPI/global_mppi/__init__.py",
+    "mujoco": "3.3.6",
+    "mujoco_mjx": "3.3.6",
+    "ksos_tools": "/home/junlong/kernelSOS_project/Global-MPPI/ksos-tools/ksos_tools/__init__.py",
+    "git_commit": "58f9add",
+    "git_dirty": false
+  }
+}
