@@ -1,5 +1,5 @@
 #!/bin/bash
-# script/overnight_queue.sh -- unattended, strictly sequential queue of six-method batches (ps mppi dial mtp cbo gm x 6 seeds x 100 cycles).
+# script/overnight_queue.sh -- unattended, strictly sequential queue of six-method batches (ps mppi dial mtp cbo gm x 6 seeds x 100 cycles; g1_walk 400).
 #
 #   CUKS_GPU=/path/to/cuKernelSOS/python  script/overnight_queue.sh      start detached (nohup + setsid) and print where to look
 #   (the queue itself is `script/overnight_queue.sh --run`, started by the launcher; do not call it by hand)
@@ -166,7 +166,7 @@ task_pusht() {
 task_example() {   # <task name = example name> <branch>
   TASK=$1; local b=$2 W=$WT/$2 RES=$Q/$1/results
   mkdir -p "$Q/$TASK/gpu_snapshots" "$Q/$TASK/logs" "$RES"
-  say "=== $TASK batch: $METHODS, seeds $SEEDS, 100 cycles (settings as the cube runs; walker / double_cart_pole: horizon, knots, spline from the hydrax example; bugtrap: horizon 2.0, 11 knots, cubic)"
+  say "=== $TASK batch: $METHODS, seeds $SEEDS, $([ "$TASK" = g1_walk ] && echo ${MAX_CYCLES:-400} || echo ${MAX_CYCLES:-100}) cycles (settings as the cube runs; walker / double_cart_pole: horizon, knots, spline from the hydrax example; bugtrap: horizon 2.0, 11 knots, cubic)"
   make_worktree "$b" || { TASK_STATE[$TASK]=SKIPPED; say "SKIPPED (no usable worktree of $b)"; return 1; }
   if [ "$TASK" = g1_walk ] && [ ! -d "$W/global_mppi/models/g1" ]; then   # the G1 model is not vendored
     if [ -n "${G1_MODEL_DIR:-}" ]; then cp -r "$G1_MODEL_DIR" "$W/global_mppi/models/g1"; else (cd "$W" && bash script/fetch_g1_model.sh) >> "$Q/$TASK/batch.log" 2>&1; fi
