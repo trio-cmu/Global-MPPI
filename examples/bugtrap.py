@@ -39,10 +39,14 @@ Options go before the algorithm, e.g.
     python examples/bugtrap.py --headless --gpu --seed-start 0 --seed-end 1 globalmppi
 
 The planner settings are those of examples/cube.py (samples, iterations, noise, temperature, beta,
-CACS), except the horizon (1.0 s, 11 knots, as the hydrax example) and the CACS radius
-(0.7 * vmax, vmax = the largest |actuator ctrlrange| of the model = 1.0).
-A run "reaches" the goal if the final distance is below 0.02 m and is "trapped" if the final
-position is inside the cup (x in (-0.11, 0.09), |y| < 0.09).
+CACS), except the horizon (default 1.0 s, 11 knots, zero-order hold, as the hydrax example; the benchmark
+uses --horizon 2.0 --num-knots 11 --spline-type cubic) and the CACS radius (0.7 * vmax, vmax = the largest
+|actuator ctrlrange| of the model = 1.0).
+
+Results (as the other tasks): cycles.csv has one row per cycle with x, y (m) and distance (to the goal, m)
+of the state the cycle planned from; final.json has final_x, final_y, final_distance (state after the last
+cycle), left_cup (the final position is outside the cup: not x in (-0.11, 0.09) with |y| < 0.09), reached
+(final_distance < 0.02 m) and reached_5cm (< 0.05 m).
 """
 
 REPO = Path(__file__).resolve().parents[1]
@@ -280,12 +284,12 @@ class CycleCsv:
     """One CSV row per control cycle, flushed as soon as it is written.
 
     Columns: cycle, plan_s (planning time, s), best_cost (the planner's predicted cost of its plan),
-    x, y (position of the point mass, m), dist_goal (m), inside_cup (0/1), gpu_mem_mb (GPU memory of
+    x, y (position of the point mass, m), distance (to the goal, m), inside_cup (0/1), gpu_mem_mb (GPU memory of
     this process), solve_paths (globalmppi: cumulative count of ADMM solves per path). Position
     and distance are of the state the cycle planned from.
     """
 
-    HEADER = ["cycle", "plan_s", "best_cost", "x", "y", "dist_goal", "inside_cup", "gpu_mem_mb", "solve_paths"]
+    HEADER = ["cycle", "plan_s", "best_cost", "x", "y", "distance", "inside_cup", "gpu_mem_mb", "solve_paths"]
 
     def __init__(self, path):
         self.rows = 0
@@ -349,7 +353,7 @@ for trial_idx in range(args.seed_start, args.seed_end):
                 "planning_dt": task.dt,
                 "start": [-0.15, 0.0],
                 "goal": [0.25, 0.0],
-                "success": {"goal_radius_m": GOAL_RADIUS, "cup_x": CUP_X, "cup_abs_y": CUP_Y},
+                "success": {"goal_radius_m": GOAL_RADIUS, "goal_radius_loose_m": 0.05, "cup_x": CUP_X, "cup_abs_y": CUP_Y},
                 "cukernelsos_python": os.environ.get("CUKERNELSOS_PYTHON"),
                 "gpu_before_run": {"util_percent": gpu_util, "mem_used_mib": gpu_mem},
                 "code": provenance,
@@ -387,9 +391,10 @@ for trial_idx in range(args.seed_start, args.seed_end):
     final = {
         "final_x": x,
         "final_y": y,
-        "dist_to_goal": dist,
+        "final_distance": dist,
+        "left_cup": not inside,
         "reached": bool(dist < GOAL_RADIUS),
-        "trapped": inside,
+        "reached_5cm": bool(dist < 0.05),
         "sim_time": float(mj_data.time),
         "cycles": cycle_csv.rows,
         "mean_plan_s_excl_cycle0": float(np.mean(plans[1:])) if len(plans) > 1 else None,
@@ -398,7 +403,7 @@ for trial_idx in range(args.seed_start, args.seed_end):
         final["solve_paths"] = dict(SOLVE_PATHS)
     with open(run_dir / "final.json", "w") as f:
         json.dump(final, f, indent=2)
-    print(f"== final distance to goal {dist:.3f} m, reached {final['reached']}, trapped {inside} ({cycle_csv.rows} cycles)")
+    print(f"== final distance to goal {dist:.3f} m, reached {final['reached']}, left the cup {final['left_cup']} ({cycle_csv.rows} cycles)")
     if args.gpu:
         print(f"solve_paths: {dict(SOLVE_PATHS)}")
     cycle_csv.close()
