@@ -1,10 +1,10 @@
-"""Final six-method figures + tables for PushT / walker / double_cart_pole (read-only on the run data).
+"""Final six-method figures + tables for PushT / walker / double_cart_pole / bugtrap (read-only on the run data).
 
     python final_figs.py RUN_DIR [TASKS] [OUT_DIR]
 
 RUN_DIR  a queue folder (script/overnight_queue.sh: pusht/six_seeds_main/*.log, <task>/results/<algo>/s<seed>/...) or packaged data:
-         data/pusht_results (script/pusht_extract_csv.py) or data/walker_results (script/package_task_results.py)
-TASKS    comma list of pusht,walker,double_cart_pole (default: those found in RUN_DIR)
+         data/pusht_results (script/pusht_extract_csv.py) or data/walker_results, data/bugtrap_results (script/package_task_results.py)
+TASKS    comma list of pusht,walker,double_cart_pole,bugtrap (default: those found in RUN_DIR)
 OUT_DIR  default RUN_DIR/final_figs.  Writes <task>_final.png and <task>_summary.txt (python 3.6 compatible).
 """
 import csv, glob, json, re, statistics as st, sys
@@ -170,7 +170,64 @@ def dcp():
     (OUT / "double_cart_pole_summary.txt").write_text("\n".join(L) + "\n")
 
 
-ALL = {"pusht": pusht, "walker": walker, "double_cart_pole": dcp}
+def bugtrap():
+    """xy paths over the cup (to scale, 6 seeds per method) and distance to the goal vs cycle (median, IQR)."""
+    from matplotlib.gridspec import GridSpec
+    from matplotlib.patches import Circle, Rectangle
+    base = R / "bugtrap" / "results" if (R / "bugtrap" / "results").is_dir() else R
+    D = {}
+    for a in ALGOS:
+        rr, fin, ids = [], [], []
+        for s in SEEDS:
+            d = base / a / f"s{s}"
+            if not (d / "cycles.csv").exists() or not (d / "final.json").exists():
+                continue   # a partial batch is plotted with what exists
+            rows = list(csv.DictReader(open(d / "cycles.csv"))); f = json.load(open(d / "final.json"))
+            assert len(rows) > 0, (a, s)
+            rr.append(rows); fin.append(f); ids.append(s)
+        if rr:
+            xy = np.array([[(float(r["x"]), float(r["y"])) for r in rows] + [(f["final_x"], f["final_y"])] for rows, f in zip(rr, fin)])   # (n, 101, 2)
+            dist = np.array([[float(r["distance"]) for r in rows] + [f["final_distance"]] for rows, f in zip(rr, fin)])                       # (n, 101)
+            plan = np.array([[float(r["plan_s"]) for r in rows[1:]] for rows in rr])
+            D[a] = dict(xy=xy, dist=dist, plan=plan, fin=fin, ids=ids)
+    walls = [((-.31, 0), (.02, .3)), ((.31, 0), (.02, .3)), ((0, -.31), (.3, .02)), ((0, .31), (.3, .02))]   # outer arena (centre, half size), models/particle_navigation
+    inner = [((.1, 0), (.01, .11)), ((0, -.1), (.11, .01)), ((0, .1), (.11, .01))]                           # the U (cup): back wall at x = 0.1, open to the left
+    fig = plt.figure(figsize=(17, 7.2)); gs = GridSpec(2, 4, width_ratios=[1, 1, 1, 1.35], figure=fig)
+    for k, a in enumerate(ALGOS):
+        ax = fig.add_subplot(gs[k // 3, k % 3])
+        for c, h in walls: ax.add_patch(Rectangle((c[0] - h[0], c[1] - h[1]), 2 * h[0], 2 * h[1], color="0.75", zorder=1))
+        for c, h in inner: ax.add_patch(Rectangle((c[0] - h[0], c[1] - h[1]), 2 * h[0], 2 * h[1], color="0.35", zorder=2))
+        ax.add_patch(Circle((0.25, 0), 0.05, fill=False, ls="--", lw=.8, color="k", zorder=2)); ax.add_patch(Circle((0.25, 0), 0.02, fill=False, lw=.8, color="k", zorder=2))
+        ax.plot([-0.15], [0], "k^", ms=6, zorder=5); ax.plot([0.25], [0], "k*", ms=9, zorder=5)
+        if a in D:
+            for p_, f in zip(D[a]["xy"], D[a]["fin"]):
+                ax.plot(p_[:, 0], p_[:, 1], color=COL[a], lw=1.4, alpha=.8, zorder=4); ax.plot(p_[-1, 0], p_[-1, 1], "o", color=COL[a], ms=4, zorder=6)
+            ax.set_title("%s  (%d seeds, left the cup %d)" % (NAME[a], len(D[a]["ids"]), sum(f["left_cup"] for f in D[a]["fin"])), fontsize=10)
+        else:
+            ax.set_title("%s (no data)" % NAME[a], fontsize=10)
+        ax.set_xlim(-0.2, 0.33); ax.set_ylim(-0.33, 0.33); ax.set_aspect("equal"); ax.grid(True, alpha=.3, lw=.6)
+        ax.set_xlabel("x [m]" if k >= 3 else ""); ax.set_ylabel("y [m]" if k % 3 == 0 else "")
+    ax = fig.add_subplot(gs[:, 3])
+    for a in D: band(ax, a, D[a]["dist"])
+    ax.axhline(0.02, color="0.4", ls="--", lw=1); ax.axhline(0.05, color="0.4", ls=":", lw=1); ax.text(2, 0.022, "2 cm", fontsize=8, color="0.3"); ax.text(2, 0.052, "5 cm", fontsize=8, color="0.3")
+    style(ax, "Distance to the goal", "distance [m]"); leg(ax, "upper right")
+    fig.suptitle("bugtrap: the point mass starts at the open end of the cup (triangle), the goal (star; circles 2 / 5 cm) is behind its closed end. Paths to scale, dots = final positions", fontsize=10)
+    plt.tight_layout(); fig.savefig(OUT / "bugtrap_final.png", dpi=200, bbox_inches="tight"); plt.close(fig)
+    L, p = writer("bugtrap")
+    p("=== bugtrap, seeds per method: %s. left_cup = the final position is outside the cup; reached = final distance below 2 cm / 5 cm; distance in m ===" % ", ".join("%s %d" % (NAME[a], len(D[a]["ids"])) for a in D))
+    hd = ("method", "final distance median", "mean ± std", "left the cup", "reached 2 cm", "reached 5 cm", "plan_s median")
+    p("%-16s" % hd[0] + "".join("%-24s" % h for h in hd[1:]))
+    for a in D:
+        f = D[a]["dist"][:, -1]; n = len(f); fin = D[a]["fin"]
+        p("%-16s" % NAME[a] + "".join("%-24s" % c for c in (fmt(np.median(f)), "%s ± %s" % (fmt(np.mean(f)), fmt(np.std(f, ddof=1) if n > 1 else 0.0)), "%d/%d" % (sum(x["left_cup"] for x in fin), n),
+                                                              "%d/%d" % (int((f < 0.02).sum()), n), "%d/%d" % (int((f < 0.05).sum()), n), "%.2f s" % np.median(D[a]["plan"]))))
+    p("\nper-seed final distance:")
+    for a in D: p("  %-16s %s" % (NAME[a], "  ".join("s%d %.3f%s" % (s, f["final_distance"], "" if f["left_cup"] else "*") for s, f in zip(D[a]["ids"], D[a]["fin"]))))
+    p("(* = final position inside the cup)")
+    (OUT / "bugtrap_summary.txt").write_text("\n".join(L) + "\n")
+
+
+ALL = {"pusht": pusht, "walker": walker, "double_cart_pole": dcp, "bugtrap": bugtrap}
 want = sys.argv[2].split(",") if len(sys.argv) > 2 and sys.argv[2] else [t for t in ALL if (R / t).is_dir() or (t == "pusht" and (R / "ps" / "s0" / "cycles.csv").exists())]
 for t in want:
     try:
