@@ -1,4 +1,4 @@
-=== PushT closed loop, 6 seeds, cost = planner best_cost, cycle 0..100 ===
+=== PushT closed loop, cost = planner best_cost, cycle 0..100; seeds per method: PS 6, MPPI 6, DIAL 6, MTP 6, CBO 6, GlobalMPPI (gm) 6 ===
 method           median@100    mean@100     std@100      IQR@100                    plan_s median      plan_s mean 
 PS               0.000788      0.59         1.44         0.000588 - 0.00248         0.57 s             0.67 s      
 MPPI             0.405         0.39         0.0353       0.36 - 0.417               0.56 s             0.67 s      
