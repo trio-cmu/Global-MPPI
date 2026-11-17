@@ -28,7 +28,7 @@ REPO=$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)
 export QUEUE_TS=${QUEUE_TS:-$(date +%Y%m%d_%H%M%S)}
 Q=${RUNS_DIR:-$REPO/logs/overnight_runs}/$QUEUE_TS
 STATUS=$Q/STATUS.txt
-WT=${WT:-$REPO/../overnight_wt}
+WT=${WT:-$REPO/../overnight_wt}; mkdir -p "$WT" && WT=$(cd "$WT" && pwd -P)   # canonical path (the import check compares strings)
 PY=${PY:-python}                                 # runs the planners
 SYSPY=${SYSPY:-$PY}                              # draws the figures (matplotlib)
 TOOLS=$REPO/script
@@ -103,6 +103,8 @@ make_worktree() {   # branch -> $WT/<branch>, or return 1
   local b=$1
   mkdir -p "$WT"
   if [ ! -d "$WT/$b" ]; then git -C "$REPO" worktree add --detach "$WT/$b" "$b" >> "$Q/$TASK/batch.log" 2>&1 || return 1; fi
+  # an existing worktree may be older than the branch: bring it to the branch head (only when it is clean)
+  if [ -z "$(git -C "$WT/$b" status --porcelain 2>/dev/null)" ]; then git -C "$WT/$b" checkout -q --detach "$b" >> "$Q/$TASK/batch.log" 2>&1; fi
   # the code must come from the worktree, not from the main checkout
   local f; f=$(cd "$WT/$b" && PYTHONPATH="$WT/$b" "$PY" -c "import global_mppi; print(global_mppi.__file__)" 2>/dev/null | tail -1)
   case $f in "$WT/$b"/*) say "code: $f (branch $b, $(git -C "$WT/$b" rev-parse --short HEAD))"; return 0;; *) say "import resolves to '$f', not to the worktree"; return 1;; esac
