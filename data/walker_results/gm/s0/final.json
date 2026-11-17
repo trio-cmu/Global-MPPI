@@ -1,0 +1,11 @@
+{
+  "final_torso_h": 1.2283799339973387,
+  "final_x": 2.274882270560732,
+  "final_torso_angle_deg": 7.089159604974597,
+  "sim_time": 1.9999999999999793,
+  "cycles": 100,
+  "mean_plan_s_excl_cycle0": 12.919589090828945,
+  "solve_paths": {
+    "gpu": 505
+  }
+}
