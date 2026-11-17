@@ -204,7 +204,7 @@ def bugtrap():
             d = base / a / f"s{s}"
             if not (d / "cycles.csv").exists() or not (d / "final.json").exists():
                 continue   # a partial batch is plotted with what exists
-            rows = list(csv.DictReader(open(d / "cycles.csv"))); f = json.load(open(d / "final.json"))
+            rows = [r for r in csv.DictReader(open(d / "cycles.csv")) if r["x"] != ""]; f = json.load(open(d / "final.json"))   # the packaged row 100 has no state
             assert len(rows) > 0, (a, s)
             rr.append(rows); fin.append(f); ids.append(s)
         if rr:
