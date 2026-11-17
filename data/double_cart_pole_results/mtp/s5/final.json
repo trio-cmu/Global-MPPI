@@ -1,0 +1,10 @@
+{
+  "final_cart_x": 0.5213457390351542,
+  "final_pole1_rad": 2.5923587743892034,
+  "final_pole2_rad": -0.0508464850492507,
+  "final_tip_z": 3.6782149485629296,
+  "upright": false,
+  "sim_time": 2.0000000000000013,
+  "cycles": 100,
+  "mean_plan_s_excl_cycle0": 0.23194635998119006
+}

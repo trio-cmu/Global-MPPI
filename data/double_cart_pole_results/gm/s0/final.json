@@ -1,0 +1,13 @@
+{
+  "final_cart_x": -0.7822906240215528,
+  "final_pole1_rad": -2.4693389768299623,
+  "final_pole2_rad": -0.024400976931621982,
+  "final_tip_z": 3.5798016539344983,
+  "upright": false,
+  "sim_time": 2.0000000000000013,
+  "cycles": 100,
+  "mean_plan_s_excl_cycle0": 47.85442506424104,
+  "solve_paths": {
+    "gpu": 505
+  }
+}

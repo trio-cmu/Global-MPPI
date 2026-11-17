@@ -1,0 +1,16 @@
+=== double_cart_pole, seeds per method: PS 6, MPPI 6, DIAL 6, MTP 6, CBO 6, GlobalMPPI (gm) 6. cell = median / mean ± std (ddof 1); upright = final |tip z - 4| < 0.2 (as in final.json); last-25: cost = median over cycles 76..100, tip z = mean over cycles 75..99 (per seed) ===
+method          cost@100                      cost last-25 median           tip z@end                     tip z last-25 mean            upright                       plan_s median                 
+PS              0.65 / 0.669 ± 0.0783         1.28 / 1.37 ± 0.231           3.7 / 3.69 ± 0.0383           3.35 / 3.32 ± 0.0977          0/6                           0.24 s                        
+MPPI            2.29 / 2.35 ± 1.29            2.56 / 2.66 ± 0.713           3.59 / 3.58 ± 0.0908          3.3 / 3.29 ± 0.0482           0/6                           0.23 s                        
+DIAL            7.76 / 6.93 ± 2.99            6.75 / 6.41 ± 2.51            3.72 / 3.69 ± 0.143           3.37 / 3.35 ± 0.0708          1/6                           0.24 s                        
+MTP             1.07 / 1.05 ± 0.274           1.12 / 1.12 ± 0.0563          3.62 / 3.62 ± 0.0233          3.29 / 3.3 ± 0.0126           0/6                           0.24 s                        
+CBO             25 / 24.8 ± 14.3              30.1 / 34.4 ± 21.6            3.49 / 3.22 ± 0.59            3.5 / 3.43 ± 0.21             1/6                           0.24 s                        
+GlobalMPPI (gm) 1.13 / 1.15 ± 0.351           1.68 / 1.77 ± 0.344           3.58 / 3.57 ± 0.0456          3.29 / 3.28 ± 0.0236          0/6                           49.33 s                       
+
+per-seed final tip z (upright?):
+  PS               s0 3.75  s1 3.71  s2 3.69  s3 3.73  s4 3.74  s5 3.65
+  MPPI             s0 3.58  s1 3.67  s2 3.70  s3 3.49  s4 3.51  s5 3.64
+  DIAL             s0 3.71  s1 3.90*  s2 3.52  s3 3.77  s4 3.76  s5 3.57
+  MTP              s0 3.66  s1 3.63  s2 3.63  s3 3.61  s4 3.63  s5 3.68
+  CBO              s0 3.54  s1 3.50  s2 3.46  s3 3.86*  s4 2.11  s5 2.56
+  GlobalMPPI (gm)  s0 3.58  s1 3.52  s2 3.61  s3 3.57  s4 3.61  s5 3.64
