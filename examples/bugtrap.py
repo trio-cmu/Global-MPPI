@@ -111,6 +111,9 @@ parser.add_argument(
     default=None,
     help="globalmppi: CACS kernel radius h (default: 0.7 * vmax, vmax = largest |actuator ctrlrange|)",
 )
+parser.add_argument("--horizon", type=float, default=1.0, help="planning horizon in s, all algorithms (default: 1.0)")
+parser.add_argument("--num-knots", type=int, default=11, help="spline knots over the horizon, all algorithms (default: 11)")
+parser.add_argument("--spline-type", choices=["zero", "linear", "cubic"], default="zero", help="spline type, all algorithms (default: zero)")
 subparsers = parser.add_subparsers(dest="algorithm", help="Sampling algorithm (choose one)")
 subparsers.add_parser("ps", help="Predictive Sampling")
 subparsers.add_parser("mppi", help="Model Predictive Path Integral Control")
@@ -126,7 +129,7 @@ if algo == "globalmppi" and not args.gpu:
     parser.error("globalmppi needs --gpu")
 # Controller settings: the cube.py values, horizon 1.0 s (100 planning steps of 0.01 s) and 11 knots as the
 # hydrax bugtrap example.
-common = dict(plan_horizon=1.0, spline_type="zero", num_knots=11)
+common = dict(plan_horizon=args.horizon, spline_type=args.spline_type, num_knots=args.num_knots)   # defaults: the hydrax example
 # MTP and CBO (ported from hydrax, global_mppi/algs/mtp.py and cbo.py): 2000 samples x 5
 # iterations like the other baselines, all other hyperparameters at the hydrax values. For MTP these
 # are the defaults of its constructor. CBO has no defaults for four of its arguments; the values are
