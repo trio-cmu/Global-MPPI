@@ -23,8 +23,11 @@ os.environ.setdefault("XLA_PYTHON_CLIENT_PREALLOCATE", "false")
 
 from copy import deepcopy
 
+import jax
+import jax.numpy as jnp
 import mujoco
 import numpy as np
+from mujoco import mjx
 import global_mppi
 from global_mppi.algs import MPPI, PredictiveSampling, DIAL, GlobalMPPI, MTP, CBO
 from global_mppi.simulation.deterministic import run_interactive, RUN_TIMESTAMP
@@ -48,12 +51,15 @@ the horizon (0.8 s, 4 knots, zero-order hold, as the hydrax example) and the CAC
 largest |actuator ctrlrange| of the model = 3.09). As the hydrax example, the simulated robot has timestep 0.01,
 10 solver iterations (50 line-search iterations) and soft contacts, starts at reference frame 0 and the first
 knots are the first reference joint positions; the planner uses the model's 0.02 s step.
+
+Run length: 400 cycles (8 s). The reference stands still for about 3.6 s, its first step ends at 4.22 s and the steps then
+last about 0.75 s each, so 100 cycles would only cover the standing phase (see docs/g1_walk.md).
 """
 
 REPO = Path(__file__).resolve().parents[1]
 TAGS = {"ps": "ps", "mppi": "mppi", "dial": "dial", "globalmppi": "gm", "mtp": "mtp", "cbo": "cbo"}
 CONTROL_FREQUENCY_HZ = 50
-FALL_HEIGHT = 0.5   # m: a run 'fell' if the final base height is below this (the standing pelvis is at about 0.79 m)
+FALL_HEIGHT = 0.5   # m: a run 'fell' if the base height was below this at any cycle (the standing pelvis is at about 0.8 m)
 
 # Parse command-line arguments
 parser = argparse.ArgumentParser(
@@ -67,7 +73,7 @@ parser.add_argument(
 )
 parser.add_argument("--seed-start", type=int, default=0, help="first seed, inclusive (default: 0)")
 parser.add_argument("--seed-end", type=int, default=6, help="last seed, exclusive (default: 6)")
-parser.add_argument("--max-cycles", type=int, default=100, help="control cycles per run (default: 100)")
+parser.add_argument("--max-cycles", type=int, default=400, help="control cycles per run (default: 400 = 8 s at 50 Hz, about 5 steps of the reference)")
 parser.add_argument(
     "--reference-filename",
     default="Lafan1/mocap/UnitreeG1/walk1_subject1.npz",
@@ -286,15 +292,24 @@ class CycleCsv:
     Columns: cycle, plan_s (planning time, s), best_cost (the planner's predicted cost of its plan), x, y, z
     (position of the base, m), tilt_deg (angle between the base z axis and the vertical, degrees; 0 = upright),
     ref_base_err (distance of the base to the reference base position at this time, m), ref_joint_err (2-norm of
-    the joint-angle error to the reference at this time, rad), gpu_mem_mb (GPU memory of this process),
+    the joint-angle error to the reference at this time, rad), track_cost (the task's tracking cost of the real state,
+    i.e. its running cost at zero control, between 0 and 1; 0 = on the reference), gpu_mem_mb (GPU memory of this process),
     solve_paths (globalmppi: cumulative count of ADMM solves per path). The state is the one the cycle planned from.
     """
 
-    HEADER = ["cycle", "plan_s", "best_cost", "x", "y", "z", "tilt_deg", "ref_base_err", "ref_joint_err", "gpu_mem_mb", "solve_paths"]
+    HEADER = ["cycle", "plan_s", "best_cost", "x", "y", "z", "tilt_deg", "ref_base_err", "ref_joint_err", "track_cost", "gpu_mem_mb", "solve_paths"]
 
     def __init__(self, path):
         self.ref = np.asarray(task.reference_qpos)
         self.fps = float(task.reference_fps)
+        self.min_z = float("inf")
+
+        @jax.jit
+        def track(qpos, qvel, time):
+            d = mjx.make_data(task.model).replace(qpos=qpos, qvel=qvel, time=time)
+            return task.running_cost(mjx.forward(task.model, d), jnp.zeros(task.model.nu))
+
+        self._track = track
         self.rows = 0
         self.plan_times = []
         self.file = open(path, "w", newline="")
@@ -303,19 +318,21 @@ class CycleCsv:
         self.file.flush()
 
     def state(self, mj_data):
-        """(x, y, z, tilt deg, base error to the reference m, joint error rad) of mj_data."""
+        """(x, y, z, tilt deg, base error to the reference m, joint error rad, tracking cost) of mj_data."""
         q = np.asarray(mj_data.qpos)
         qref = self.ref[int(np.clip(int(mj_data.time * self.fps), 0, len(self.ref) - 1))]
         qw, qx, qy, qz = q[3:7] / np.linalg.norm(q[3:7])
         tilt = float(np.degrees(np.arccos(np.clip(1.0 - 2.0 * (qx * qx + qy * qy), -1.0, 1.0))))
-        return float(q[0]), float(q[1]), float(q[2]), tilt, float(np.linalg.norm(q[:3] - qref[:3])), float(np.linalg.norm(q[7:] - qref[7:]))
+        cost = float(self._track(jnp.asarray(q), jnp.asarray(mj_data.qvel), jnp.asarray(mj_data.time)))
+        return float(q[0]), float(q[1]), float(q[2]), tilt, float(np.linalg.norm(q[:3] - qref[:3])), float(np.linalg.norm(q[7:] - qref[7:])), cost
 
     def __call__(self, cycle, plan_time, best_cost, mj_model, mj_data):
-        x, y, z, tilt, eb, ej = self.state(mj_data)
+        x, y, z, tilt, eb, ej, tc = self.state(mj_data)
+        self.min_z = min(self.min_z, z)
         self.plan_times.append(plan_time)
         cost = float(np.asarray(best_cost).ravel()[0])
         self.writer.writerow(
-            [cycle, f"{plan_time:.3f}", f"{cost:.4f}", f"{x:.4f}", f"{y:.4f}", f"{z:.4f}", f"{tilt:.2f}", f"{eb:.4f}", f"{ej:.4f}",
+            [cycle, f"{plan_time:.3f}", f"{cost:.4f}", f"{x:.4f}", f"{y:.4f}", f"{z:.4f}", f"{tilt:.2f}", f"{eb:.4f}", f"{ej:.4f}", f"{tc:.5f}",
              process_gpu_mem(), json.dumps(SOLVE_PATHS) if args.gpu else ""]
         )
         self.file.flush()
@@ -372,6 +389,7 @@ for trial_idx in range(args.seed_start, args.seed_end):
                     "frames": int(task.reference_qpos.shape[0]),
                 },
                 "initial_state": "reference frame 0; initial knots = first reference joint positions",
+                "fall_height_m": FALL_HEIGHT,
                 "cukernelsos_python": os.environ.get("CUKERNELSOS_PYTHON"),
                 "gpu_before_run": {"util_percent": gpu_util, "mem_used_mib": gpu_mem},
                 "code": provenance,
@@ -406,9 +424,11 @@ for trial_idx in range(args.seed_start, args.seed_end):
         cycle_logger=cycle_csv,
     )
     # State when the run ends (the last cycle of cycles.csv is the state it planned from)
-    x, y, z, tilt, eb, ej = cycle_csv.state(mj_data)
+    x, y, z, tilt, eb, ej, tc = cycle_csv.state(mj_data)
     plans = cycle_csv.plan_times
     base_errs = [float(r[7]) for r in csv.reader(open(run_dir / "cycles.csv")) if r[0] != "cycle"]
+    track_costs = [float(r[9]) for r in csv.reader(open(run_dir / "cycles.csv")) if r[0] != "cycle"]
+    min_z = min(cycle_csv.min_z, z)
     final = {
         "final_x": x,
         "final_y": y,
@@ -416,8 +436,11 @@ for trial_idx in range(args.seed_start, args.seed_end):
         "final_tilt_deg": tilt,
         "final_ref_base_err": eb,
         "final_ref_joint_err": ej,
+        "final_track_cost": tc,
         "mean_ref_base_err": float(np.mean(base_errs)),
-        "fell": bool(z < FALL_HEIGHT),
+        "mean_track_cost": float(np.mean(track_costs)),
+        "min_base_z": min_z,
+        "fell": bool(min_z < FALL_HEIGHT),
         "sim_time": float(mj_data.time),
         "cycles": cycle_csv.rows,
         "mean_plan_s_excl_cycle0": float(np.mean(plans[1:])) if len(plans) > 1 else None,
@@ -426,7 +449,7 @@ for trial_idx in range(args.seed_start, args.seed_end):
         final["solve_paths"] = dict(SOLVE_PATHS)
     with open(run_dir / "final.json", "w") as f:
         json.dump(final, f, indent=2)
-    print(f"== final base height {z:.3f} m, tilt {tilt:.1f} deg, base error to the reference {eb:.3f} m, fell {final['fell']} ({cycle_csv.rows} cycles)")
+    print(f"== final base height {z:.3f} m, tilt {tilt:.1f} deg, base error to the reference {eb:.3f} m, min base height {min_z:.3f} m, fell {final['fell']} ({cycle_csv.rows} cycles)")
     if args.gpu:
         print(f"solve_paths: {dict(SOLVE_PATHS)}")
     cycle_csv.close()

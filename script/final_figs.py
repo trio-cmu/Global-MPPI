@@ -21,6 +21,7 @@ ALGOS = ["ps", "mppi", "dial", "mtp", "cbo", "gm"]
 NAME = {"gm": "GlobalMPPI (gm)", "ps": "PS", "mppi": "MPPI", "dial": "DIAL", "mtp": "MTP", "cbo": "CBO"}
 COL = {"gm": "tab:blue", "ps": "tab:orange", "mppi": "tab:green", "dial": "tab:red", "mtp": "tab:purple", "cbo": "tab:brown"}
 SEEDS = range(6)
+FALL_HEIGHT = 0.5   # m (g1_walk): a run fell if the base height was below this in any cycle
 PFX = {"ps": "ps2000", "mppi": "mppi2000", "dial": "dial2000", "mtp": "mtp2000", "cbo": "cbo2000", "gm": "globalmppi_cacs5new"}
 
 
@@ -101,7 +102,7 @@ def pusht():
 def load(task):
     """<RUN>/<task>/results/<algo>/s<seed>/ (queue folder) or <RUN>/<algo>/s<seed>/ (packaged data, script/package_task_results.py).
     Cost history: the *best_cost_history*.npy if present, else the best_cost column of cycles.csv (101 rows: cycle 100 has only
-    best_cost). States and plan times: the first 100 rows of cycles.csv."""
+    best_cost). States and plan times: the rows of cycles.csv that have a plan time (not the packaged row 100)."""
     base = R / task / "results" if (R / task / "results").is_dir() else R
     D = {}
     for a in ALGOS:
@@ -113,9 +114,9 @@ def load(task):
             rr = list(csv.DictReader(open(d / "cycles.csv")))
             f = glob.glob(str(d / "*best_cost_history*.npy"))
             h.append(np.squeeze(np.load(f[0])) if f else np.array([float(r["best_cost"]) for r in rr]))
-            rows.append(rr[:100]); fin.append(json.load(open(d / "final.json"))); ids.append(s)
+            rows.append([r for r in rr if r["plan_s"] != ""]); fin.append(json.load(open(d / "final.json"))); ids.append(s)
         if h:
-            assert all(len(x) == 101 for x in h) and all(len(r) == 100 for r in rows), a
+            assert all(len(x) == len(r) + 1 for x, r in zip(h, rows)) and len({len(r) for r in rows}) == 1, a   # cost history: one more entry than rows
             D[a] = (np.stack(h), rows, fin, ids)
     return D
 
@@ -170,25 +171,37 @@ def dcp():
     (OUT / "double_cart_pole_summary.txt").write_text("\n".join(L) + "\n")
 
 
+FIRST_STEP = (3.62, 4.22)   # s: the first step of the walk1_subject1 reference (swing of the right foot; the reference stands still before)
+
+
 def g1_walk():
-    D = load("g1_walk"); fig, axs = plt.subplots(2, 2, figsize=(13, 10.5)); axs = axs.ravel()
+    D = load("g1_walk"); n = len(next(iter(D.values()))[1][0]); c0, c1 = int(FIRST_STEP[0] * 50), int(FIRST_STEP[1] * 50)   # cycles at 50 Hz
+    fig, axs = plt.subplots(2, 2, figsize=(13.5, 10.5)); axs = axs.ravel()
     for a in D: band(axs[0], a, np.maximum(D[a][0], 1e-12))
-    style(axs[0], "G1 walk: planner cost", "Cost", True); leg(axs[0], "upper right")
-    for ax, k, t, yl in ((axs[1], "ref_base_err", "G1 walk: base distance to the reference", "base error [m]"), (axs[2], "z", "G1 walk: base height", "base height z [m]"), (axs[3], "tilt_deg", "G1 walk: base tilt", "tilt [deg]")):
-        for a in D: band(ax, a, col(D[a][1], k), np.arange(100))
+    style(axs[0], "G1 walk: planner cost (predicted)", "Cost", True); leg(axs[0], "upper right")
+    for ax, k, t, yl in ((axs[1], "track_cost", "G1 walk: tracking cost of the real state", "tracking cost (running cost at zero control)"),
+                         (axs[2], "ref_base_err", "G1 walk: base distance to the reference", "base error [m]"), (axs[3], "z", "G1 walk: base height", "base height z [m]")):
+        for a in D: band(ax, a, col(D[a][1], k), np.arange(n))
         style(ax, t, yl)
-    axs[2].axhline(0.5, color="0.4", ls="--", lw=1); axs[2].text(2, 0.52, "fell < 0.5 m", fontsize=8, color="0.3")
+    axs[3].axhline(FALL_HEIGHT, color="0.4", ls="--", lw=1); axs[3].text(2, FALL_HEIGHT + 0.015, "fell: base below %.1f m" % FALL_HEIGHT, fontsize=8, color="0.3")
+    for ax in axs:
+        ax.set_xlim(0, n); ax.set_xlabel("Cycle (50 Hz: 50 cycles = 1 s)")
+        ax.axvspan(c0, c1, color="0.5", alpha=.18, lw=0); ax.axvline(c1, color="0.35", ls=":", lw=1.2)
+    axs[0].text(c1 + 3, axs[0].get_ylim()[0] * 1.15, "first step of the reference\n(%.2f to %.2f s)" % FIRST_STEP, fontsize=8, color="0.25", va="bottom")
     plt.tight_layout(); fig.savefig(OUT / "g1_walk_final.png", dpi=200, bbox_inches="tight"); plt.close(fig)
     L, p = writer("g1_walk")
-    p("=== g1_walk, seeds per method: %s. cell = median / mean ± std (ddof 1) over seeds; last-25: cost = median over cycles 76..100 (per seed), states = mean over cycles 75..99 (per seed); fell = final base height < 0.5 m ===" % ", ".join("%s %d" % (NAME[a], len(D[a][2])) for a in D))
-    hd = ("method", "cost@100", "cost last-25 median", "base error mean over run [m]", "base error last-25 [m]", "base height last-25 [m]", "tilt last-25 [deg]", "fell", "plan_s median")
+    after = n > c1
+    p("=== g1_walk, %d cycles (%.0f s), seeds per method: %s. cell = median / mean ± std (ddof 1) over seeds. tracking cost = the task's running cost (0 to 1) of the real state, "
+      "averaged over the cycles; base error = distance of the base to the reference base position [m]; 'after the first step' = cycles >= %d (%.2f s); fell = the base height was below %.1f m in any cycle ===" %
+      (n, n / 50.0, ", ".join("%s %d" % (NAME[a], len(D[a][2])) for a in D), c1, FIRST_STEP[1], FALL_HEIGHT))
+    hd = ("method", "tracking cost, run", "tracking cost, after 1st step", "base error, run [m]", "base error, after 1st step", "base error, last 25 [m]", "min base height [m]", "fell", "plan_s median")
     p("%-16s" % hd[0] + "".join("%-30s" % h for h in hd[1:]))
     for a in D:
-        h, rows, fin, ids = D[a]; c25 = np.array([np.median(x[76:101]) for x in h]); pl = col(rows, "plan_s")[:, 1:]
-        p("%-16s" % NAME[a] + "".join("%-30s" % c for c in (ms(h[:, 100]), ms(c25), ms(col(rows, "ref_base_err").mean(1)), ms(col(rows, "ref_base_err")[:, -25:].mean(1)), ms(col(rows, "z")[:, -25:].mean(1)),
-                                                              ms(col(rows, "tilt_deg")[:, -25:].mean(1)), "%d/%d" % (sum(f["fell"] for f in fin), len(fin)), "%.2f s" % np.median(pl))))
-    p("\nper-seed final base error [m] / height [m] / tilt [deg]  (* = fell):")
-    for a in D: p("  %-16s %s" % (NAME[a], "  ".join("s%d %.2f/%.2f/%.0f%s" % (s, f["final_ref_base_err"], f["final_z"], f["final_tilt_deg"], "*" if f["fell"] else "") for s, f in zip(D[a][3], D[a][2]))))
+        h, rows, fin, ids = D[a]; tc = col(rows, "track_cost"); be = col(rows, "ref_base_err"); pl = col(rows, "plan_s")[:, 1:]
+        p("%-16s" % NAME[a] + "".join("%-30s" % c for c in (ms(tc.mean(1)), ms(tc[:, c1:].mean(1)) if after else "n/a", ms(be.mean(1)), ms(be[:, c1:].mean(1)) if after else "n/a", ms(be[:, -25:].mean(1)),
+                                                              ms(np.array([f["min_base_z"] for f in fin])), "%d/%d" % (sum(f["fell"] for f in fin), len(fin)), "%.2f s" % np.median(pl))))
+    p("\nper-seed final base error [m] / minimum base height [m]  (* = fell):")
+    for a in D: p("  %-16s %s" % (NAME[a], "  ".join("s%d %.2f/%.2f%s" % (s_, f["final_ref_base_err"], f["min_base_z"], "*" if f["fell"] else "") for s_, f in zip(D[a][3], D[a][2]))))
     (OUT / "g1_walk_summary.txt").write_text("\n".join(L) + "\n")
 
 
