@@ -1,10 +1,10 @@
-"""Final six-method figures + tables for PushT / walker / double_cart_pole (read-only on the run data).
+"""Final six-method figures + tables for PushT / walker / double_cart_pole / g1_walk (read-only on the run data).
 
     python final_figs.py RUN_DIR [TASKS] [OUT_DIR]
 
 RUN_DIR  a queue folder (script/overnight_queue.sh: pusht/six_seeds_main/*.log, <task>/results/<algo>/s<seed>/...) or packaged data:
-         data/pusht_results (script/pusht_extract_csv.py) or data/walker_results (script/package_task_results.py)
-TASKS    comma list of pusht,walker,double_cart_pole (default: those found in RUN_DIR)
+         data/pusht_results (script/pusht_extract_csv.py) or data/walker_results, data/g1_walk_results (script/package_task_results.py)
+TASKS    comma list of pusht,walker,double_cart_pole,g1_walk (default: those found in RUN_DIR)
 OUT_DIR  default RUN_DIR/final_figs.  Writes <task>_final.png and <task>_summary.txt (python 3.6 compatible).
 """
 import csv, glob, json, re, statistics as st, sys
@@ -170,7 +170,29 @@ def dcp():
     (OUT / "double_cart_pole_summary.txt").write_text("\n".join(L) + "\n")
 
 
-ALL = {"pusht": pusht, "walker": walker, "double_cart_pole": dcp}
+def g1_walk():
+    D = load("g1_walk"); fig, axs = plt.subplots(2, 2, figsize=(13, 10.5)); axs = axs.ravel()
+    for a in D: band(axs[0], a, np.maximum(D[a][0], 1e-12))
+    style(axs[0], "G1 walk: planner cost", "Cost", True); leg(axs[0], "upper right")
+    for ax, k, t, yl in ((axs[1], "ref_base_err", "G1 walk: base distance to the reference", "base error [m]"), (axs[2], "z", "G1 walk: base height", "base height z [m]"), (axs[3], "tilt_deg", "G1 walk: base tilt", "tilt [deg]")):
+        for a in D: band(ax, a, col(D[a][1], k), np.arange(100))
+        style(ax, t, yl)
+    axs[2].axhline(0.5, color="0.4", ls="--", lw=1); axs[2].text(2, 0.52, "fell < 0.5 m", fontsize=8, color="0.3")
+    plt.tight_layout(); fig.savefig(OUT / "g1_walk_final.png", dpi=200, bbox_inches="tight"); plt.close(fig)
+    L, p = writer("g1_walk")
+    p("=== g1_walk, seeds per method: %s. cell = median / mean ± std (ddof 1) over seeds; last-25: cost = median over cycles 76..100 (per seed), states = mean over cycles 75..99 (per seed); fell = final base height < 0.5 m ===" % ", ".join("%s %d" % (NAME[a], len(D[a][2])) for a in D))
+    hd = ("method", "cost@100", "cost last-25 median", "base error mean over run [m]", "base error last-25 [m]", "base height last-25 [m]", "tilt last-25 [deg]", "fell", "plan_s median")
+    p("%-16s" % hd[0] + "".join("%-30s" % h for h in hd[1:]))
+    for a in D:
+        h, rows, fin, ids = D[a]; c25 = np.array([np.median(x[76:101]) for x in h]); pl = col(rows, "plan_s")[:, 1:]
+        p("%-16s" % NAME[a] + "".join("%-30s" % c for c in (ms(h[:, 100]), ms(c25), ms(col(rows, "ref_base_err").mean(1)), ms(col(rows, "ref_base_err")[:, -25:].mean(1)), ms(col(rows, "z")[:, -25:].mean(1)),
+                                                              ms(col(rows, "tilt_deg")[:, -25:].mean(1)), "%d/%d" % (sum(f["fell"] for f in fin), len(fin)), "%.2f s" % np.median(pl))))
+    p("\nper-seed final base error [m] / height [m] / tilt [deg]  (* = fell):")
+    for a in D: p("  %-16s %s" % (NAME[a], "  ".join("s%d %.2f/%.2f/%.0f%s" % (s, f["final_ref_base_err"], f["final_z"], f["final_tilt_deg"], "*" if f["fell"] else "") for s, f in zip(D[a][3], D[a][2]))))
+    (OUT / "g1_walk_summary.txt").write_text("\n".join(L) + "\n")
+
+
+ALL = {"pusht": pusht, "walker": walker, "double_cart_pole": dcp, "g1_walk": g1_walk}
 want = sys.argv[2].split(",") if len(sys.argv) > 2 and sys.argv[2] else [t for t in ALL if (R / t).is_dir() or (t == "pusht" and (R / "ps" / "s0" / "cycles.csv").exists())]
 for t in want:
     try:

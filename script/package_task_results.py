@@ -1,4 +1,4 @@
-"""Package the runs of an example task (walker, double_cart_pole) for the repo: cycles.csv and final.json of every run,
+"""Package the runs of an example task (walker, double_cart_pole, g1_walk) for the repo: cycles.csv and final.json of every run,
 without videos, npy files or args.json (python 3.6 compatible).
 
     python package_task_results.py RESULTS_DIR OUT_DIR
