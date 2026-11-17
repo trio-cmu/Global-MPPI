@@ -105,69 +105,75 @@ def load(task):
     base = R / task / "results" if (R / task / "results").is_dir() else R
     D = {}
     for a in ALGOS:
-        h, rows, fin = [], [], []
+        h, rows, fin, ids = [], [], [], []
         for s in SEEDS:
             d = base / a / f"s{s}"
+            if not (d / "cycles.csv").exists() or not (d / "final.json").exists():
+                continue   # a partial batch (SEEDS / METHODS set in overnight_queue.sh) is plotted with what exists
             rr = list(csv.DictReader(open(d / "cycles.csv")))
             f = glob.glob(str(d / "*best_cost_history*.npy"))
             h.append(np.squeeze(np.load(f[0])) if f else np.array([float(r["best_cost"]) for r in rr]))
-            rows.append(rr[:100]); fin.append(json.load(open(d / "final.json")))
-        assert all(len(x) == 101 for x in h) and all(len(r) == 100 for r in rows), a
-        D[a] = (np.stack(h), rows, fin)
+            rows.append(rr[:100]); fin.append(json.load(open(d / "final.json"))); ids.append(s)
+        if h:
+            assert all(len(x) == 101 for x in h) and all(len(r) == 100 for r in rows), a
+            D[a] = (np.stack(h), rows, fin, ids)
     return D
 
 
 def col(rows, k): return np.array([[float(r[k]) for r in rr] for rr in rows])
 
 
-def ms(f): return "%s / %s ± %s" % (fmt(np.median(f)), fmt(np.mean(f)), fmt(np.std(f, ddof=1)))
+def ms(f): return "%s / %s ± %s" % (fmt(np.median(f)), fmt(np.mean(f)), fmt(np.std(f, ddof=1) if len(f) > 1 else 0.0))
 
 
 def walker():
     D = load("walker"); fig, axs = plt.subplots(1, 3, figsize=(18, 5.6)); ax = axs[0]
-    for a in ALGOS: band(ax, a, np.maximum(D[a][0], 1e-12))
+    for a in D: band(ax, a, np.maximum(D[a][0], 1e-12))
     style(ax, "Walker: planner cost", "Cost", True); leg(ax, "upper right")
     for ax, k, t, yl in ((axs[1], "torso_h", "Walker: torso height", "torso height [m]"), (axs[2], "x", "Walker: forward x", "forward x [m]")):
-        for a in ALGOS: band(ax, a, col(D[a][1], k), np.arange(100))
+        for a in D: band(ax, a, col(D[a][1], k), np.arange(100))
         style(ax, t, yl)
     axs[1].axhline(0.6, color="0.4", ls="--", lw=1); axs[1].text(2, 0.62, "fell < 0.6 m", fontsize=8, color="0.3"); leg(axs[2], "upper left")
     plt.tight_layout(); fig.savefig(OUT / "walker_final.png", dpi=200, bbox_inches="tight"); plt.close(fig)
     L, p = writer("walker")
-    p("=== walker, 6 seeds. cell = median / mean ± std (ddof 1) over seeds; last-25: cost = median over cycles 76..100 (per seed), states = mean over cycles 75..99 (per seed); fell = final torso h < 0.6 m ===")
+    p("=== walker, seeds per method: %s. cell = median / mean ± std (ddof 1) over seeds; last-25: cost = median over cycles 76..100 (per seed), states = mean over cycles 75..99 (per seed); fell = final torso h < 0.6 m ===" % ", ".join("%s %d" % (NAME[a], len(D[a][2])) for a in D))
     hd = ("method", "cost@100", "cost last-25 median", "torso h last-25 [m]", "x at last cycle [m]", "x last-25 mean [m]", "fell", "plan_s median")
     p("%-16s" % hd[0] + "".join("%-30s" % h for h in hd[1:]))
-    for a in ALGOS:
-        h, rows, fin = D[a]; c25 = np.array([np.median(x[76:101]) for x in h]); th = col(rows, "torso_h")[:, -25:].mean(1); x = col(rows, "x")
+    for a in D:
+        h, rows, fin, ids = D[a]; c25 = np.array([np.median(x[76:101]) for x in h]); th = col(rows, "torso_h")[:, -25:].mean(1); x = col(rows, "x")
         fell = sum(f["final_torso_h"] < 0.6 for f in fin); pl = col(rows, "plan_s")[:, 1:]
-        p("%-16s" % NAME[a] + "".join("%-30s" % c for c in (ms(h[:, 100]), ms(c25), ms(th), ms(x[:, -1]), ms(x[:, -25:].mean(1)), "%d/6" % fell, "%.2f s" % np.median(pl))))
+        p("%-16s" % NAME[a] + "".join("%-30s" % c for c in (ms(h[:, 100]), ms(c25), ms(th), ms(x[:, -1]), ms(x[:, -25:].mean(1)), "%d/%d" % (fell, len(fin)), "%.2f s" % np.median(pl))))
     p("\nper-seed final x / torso h:")
-    for a in ALGOS: p("  %-16s %s" % (NAME[a], "  ".join("s%d %.2f/%.2f" % (s, f["final_x"], f["final_torso_h"]) for s, f in enumerate(D[a][2]))))
+    for a in D: p("  %-16s %s" % (NAME[a], "  ".join("s%d %.2f/%.2f" % (s, f["final_x"], f["final_torso_h"]) for s, f in zip(D[a][3], D[a][2]))))
     (OUT / "walker_summary.txt").write_text("\n".join(L) + "\n")
 
 
 def dcp():
     D = load("double_cart_pole"); fig, axs = plt.subplots(1, 2, figsize=(12.5, 5.6)); ax = axs[0]
-    for a in ALGOS: band(ax, a, np.maximum(D[a][0], 1e-12))
+    for a in D: band(ax, a, np.maximum(D[a][0], 1e-12))
     style(ax, "Double cart-pole: planner cost", "Cost", True); leg(ax, "lower left")
     ax = axs[1]
-    for a in ALGOS: band(ax, a, col(D[a][1], "tip_z"), np.arange(100))
+    for a in D: band(ax, a, col(D[a][1], "tip_z"), np.arange(100))
     ax.axhline(4.0, color="k", ls="--", lw=1); ax.text(2, 4.03, "target 4", fontsize=8)
     style(ax, "Double cart-pole: tip z", "tip z [m]"); leg(ax, "lower right")
     plt.tight_layout(); fig.savefig(OUT / "double_cart_pole_final.png", dpi=200, bbox_inches="tight"); plt.close(fig)
     L, p = writer("dcp")
-    p("=== double_cart_pole, 6 seeds. cell = median / mean ± std (ddof 1); upright = final |tip z - 4| < 0.2 (as in final.json); last-25: cost = median over cycles 76..100, tip z = mean over cycles 75..99 (per seed) ===")
+    p("=== double_cart_pole, seeds per method: %s. cell = median / mean ± std (ddof 1); upright = final |tip z - 4| < 0.2 (as in final.json); last-25: cost = median over cycles 76..100, tip z = mean over cycles 75..99 (per seed) ===" % ", ".join("%s %d" % (NAME[a], len(D[a][2])) for a in D))
     hd = ("method", "cost@100", "cost last-25 median", "tip z@end", "tip z last-25 mean", "upright", "plan_s median")
     p("%-16s" % hd[0] + "".join("%-30s" % h for h in hd[1:]))
-    for a in ALGOS:
-        h, rows, fin = D[a]; c25 = np.array([np.median(x[76:101]) for x in h]); tz = col(rows, "tip_z"); pl = col(rows, "plan_s")[:, 1:]
+    for a in D:
+        h, rows, fin, ids = D[a]; c25 = np.array([np.median(x[76:101]) for x in h]); tz = col(rows, "tip_z"); pl = col(rows, "plan_s")[:, 1:]
         up = sum(bool(f["upright"]) for f in fin)
-        p("%-16s" % NAME[a] + "".join("%-30s" % c for c in (ms(h[:, 100]), ms(c25), ms(tz[:, -1]), ms(tz[:, -25:].mean(1)), "%d/6" % up, "%.2f s" % np.median(pl))))
+        p("%-16s" % NAME[a] + "".join("%-30s" % c for c in (ms(h[:, 100]), ms(c25), ms(tz[:, -1]), ms(tz[:, -25:].mean(1)), "%d/%d" % (up, len(fin)), "%.2f s" % np.median(pl))))
     p("\nper-seed final tip z (upright?):")
-    for a in ALGOS: p("  %-16s %s" % (NAME[a], "  ".join("s%d %.2f%s" % (s, f["final_tip_z"], "*" if f["upright"] else "") for s, f in enumerate(D[a][2]))))
+    for a in D: p("  %-16s %s" % (NAME[a], "  ".join("s%d %.2f%s" % (s, f["final_tip_z"], "*" if f["upright"] else "") for s, f in zip(D[a][3], D[a][2]))))
     (OUT / "double_cart_pole_summary.txt").write_text("\n".join(L) + "\n")
 
 
 ALL = {"pusht": pusht, "walker": walker, "double_cart_pole": dcp}
 want = sys.argv[2].split(",") if len(sys.argv) > 2 and sys.argv[2] else [t for t in ALL if (R / t).is_dir() or (t == "pusht" and (R / "ps" / "s0" / "cycles.csv").exists())]
 for t in want:
-    ALL[t](); print()
+    try:
+        ALL[t](); print()
+    except FileNotFoundError as e:   # a task without (complete) data does not stop the others
+        print("%s: skipped, missing file: %s" % (t, e))

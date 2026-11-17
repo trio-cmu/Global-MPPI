@@ -1,4 +1,4 @@
-=== walker, 6 seeds. cell = median / mean ± std (ddof 1) over seeds; last-25: cost = median over cycles 76..100 (per seed), states = mean over cycles 75..99 (per seed); fell = final torso h < 0.6 m ===
+=== walker, seeds per method: PS 6, MPPI 6, DIAL 6, MTP 6, CBO 6, GlobalMPPI (gm) 6. cell = median / mean ± std (ddof 1) over seeds; last-25: cost = median over cycles 76..100 (per seed), states = mean over cycles 75..99 (per seed); fell = final torso h < 0.6 m ===
 method          cost@100                      cost last-25 median           torso h last-25 [m]           x at last cycle [m]           x last-25 mean [m]            fell                          plan_s median                 
 PS              2.92 / 3.93 ± 3.57            3.07 / 4.33 ± 3.42            0.667 / 0.714 ± 0.209         0.885 / 0.873 ± 0.563         0.873 / 0.817 ± 0.495         3/6                           0.37 s                        
 MPPI            0.157 / 0.256 ± 0.234         0.146 / 0.137 ± 0.0213        1.26 / 1.26 ± 0.0113          2.43 / 2.42 ± 0.229           2.13 / 2.1 ± 0.159            0/6                           0.37 s                        
