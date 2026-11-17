@@ -2,8 +2,8 @@
 
     python final_figs.py RUN_DIR [TASKS] [OUT_DIR]
 
-RUN_DIR  a queue folder (script/overnight_queue.sh: pusht/six_seeds_main/*.log, <task>/results/<algo>/s<seed>/...) or, for PushT,
-         the packaged data/pusht_results (<algo>/s<seed>/cycles.csv, written by script/pusht_extract_csv.py)
+RUN_DIR  a queue folder (script/overnight_queue.sh: pusht/six_seeds_main/*.log, <task>/results/<algo>/s<seed>/...) or packaged data:
+         data/pusht_results (script/pusht_extract_csv.py) or data/walker_results (script/package_task_results.py)
 TASKS    comma list of pusht,walker,double_cart_pole (default: those found in RUN_DIR)
 OUT_DIR  default RUN_DIR/final_figs.  Writes <task>_final.png and <task>_summary.txt (python 3.6 compatible).
 """
@@ -51,10 +51,13 @@ def fmt(v):
 
 # ---------------- PushT ----------------
 def pusht():
-    src = R / "pusht" / "six_seeds_main"; cost, plan = {}, {}
+    src = R / "pusht" / "six_seeds_main"; cost, plan, found = {}, {}, {}
     for a in ALGOS:
-        cs, ps_ = [], []
+        cs, ps_, ids = [], [], []
         for s in SEEDS:
+            # a partial batch (SEEDS / METHODS set in overnight_queue.sh) is plotted with what exists
+            if not ((src / f"{PFX[a]}_seed{s}.log").exists() if src.is_dir() else (R / a / f"s{s}" / "cycles.csv").exists()):
+                continue
             if src.is_dir():   # queue folder: parse the run logs
                 t = (src / f"{PFX[a]}_seed{s}.log").read_text(errors="ignore")
                 c = {int(float(k)): float(v) for k, v in re.findall(r"Cycle ([\d.]+): Best cost: \[?([-\d.e+]+)", t)}
@@ -65,43 +68,50 @@ def pusht():
                 pl = {int(r["cycle"]): float(r["plan_s"]) for r in rows if r["plan_s"] != ""}
             assert sorted(c) == list(range(101)), (a, s, len(c))
             assert sorted(pl) == list(range(100)), (a, s, len(pl))
-            cs.append([c[i] for i in range(101)]); ps_.append([pl[i] for i in range(100)])
-        cost[a], plan[a] = np.array(cs), np.array(ps_)
+            cs.append([c[i] for i in range(101)]); ps_.append([pl[i] for i in range(100)]); ids.append(s)
+        if cs:
+            cost[a], plan[a], found[a] = np.array(cs), np.array(ps_), ids
     fig, axs = plt.subplots(1, 3, figsize=(18, 5.6))
     ax = axs[0]
-    for a in ALGOS: band(ax, a, np.maximum(cost[a], 1e-12))
+    for a in cost: band(ax, a, np.maximum(cost[a], 1e-12))
     style(ax, "PushT: planner cost", "Cost", True); leg(ax, "lower left")
     ax = axs[1]
-    for i, a in enumerate(ALGOS):
+    for i, a in enumerate(cost):
         f = cost[a][:, 100]; q25, med, q75 = np.quantile(f, [.25, .5, .75])
         ax.scatter(np.full(len(f), i) + np.linspace(-.15, .15, len(f)), f, s=12, color=COL[a], alpha=.35, zorder=2)
         ax.errorbar(i, med, yerr=[[med - q25], [q75 - med]], fmt="o", color=COL[a], ms=8, lw=2.5, capsize=7, capthick=2.5, zorder=4)
-    ax.set_xticks(range(6)); ax.set_xticklabels([NAME[a] for a in ALGOS], rotation=20); ax.set_yscale("log"); ax.set_ylabel("Cost at cycle 100")
-    ax.set_title("Cost at cycle 100\n(marker = median over 6 seeds, bars = IQR, faint dots = seeds)"); ax.grid(True, alpha=.3, lw=.8, axis="y")
+    ax.set_xticks(range(len(cost))); ax.set_xticklabels([NAME[a] for a in cost], rotation=20); ax.set_yscale("log"); ax.set_ylabel("Cost at cycle 100")
+    ax.set_title("Cost at cycle 100\n(marker = median over the seeds, bars = IQR, faint dots = seeds)"); ax.grid(True, alpha=.3, lw=.8, axis="y")
     ax = axs[2]
-    for a in ALGOS: band(ax, a, plan[a][:, 1:], np.arange(1, 100))
+    for a in cost: band(ax, a, plan[a][:, 1:], np.arange(1, 100))
     style(ax, "Plan time per cycle (cycle 0 = JIT, omitted)", "plan time [s]", True); leg(ax, "center right")
     plt.tight_layout(); fig.savefig(OUT / "pusht_final.png", dpi=200, bbox_inches="tight"); plt.close(fig)
     L, p = writer("pusht")
-    p("=== PushT closed loop, 6 seeds, cost = planner best_cost, cycle 0..100 ===")
+    p("=== PushT closed loop, cost = planner best_cost, cycle 0..100; seeds per method: %s ===" % ", ".join("%s %d" % (NAME[a], len(cost[a])) for a in cost))
     p("%-16s %-13s %-12s %-12s %-26s %-18s %-12s" % ("method", "median@100", "mean@100", "std@100", "IQR@100", "plan_s median", "plan_s mean"))
-    for a in ALGOS:
+    for a in cost:
         f = cost[a][:, 100]; q = np.quantile(f, [.25, .75]); pl = plan[a][:, 1:]
-        p("%-16s %-13s %-12s %-12s %-26s %-18s %-12s" % (NAME[a], fmt(np.median(f)), fmt(f.mean()), fmt(f.std(ddof=1)), "%s - %s" % (fmt(q[0]), fmt(q[1])), "%.2f s" % np.median(pl), "%.2f s" % pl.mean()))
+        p("%-16s %-13s %-12s %-12s %-26s %-18s %-12s" % (NAME[a], fmt(np.median(f)), fmt(f.mean()), fmt(f.std(ddof=1) if len(f) > 1 else 0.0), "%s - %s" % (fmt(q[0]), fmt(q[1])), "%.2f s" % np.median(pl), "%.2f s" % pl.mean()))
     p("\nper-seed cost at cycle 100:")
-    for a in ALGOS: p("  %-16s %s" % (NAME[a], "  ".join("s%d %s" % (s, fmt(cost[a][s, 100])) for s in SEEDS)))
+    for a in cost: p("  %-16s %s" % (NAME[a], "  ".join("s%d %s" % (s, fmt(c)) for s, c in zip(found[a], cost[a][:, 100]))))
     (OUT / "pusht_summary.txt").write_text("\n".join(L) + "\n")
 
 
 # ---------------- walker / double_cart_pole ----------------
 def load(task):
+    """<RUN>/<task>/results/<algo>/s<seed>/ (queue folder) or <RUN>/<algo>/s<seed>/ (packaged data, script/package_task_results.py).
+    Cost history: the *best_cost_history*.npy if present, else the best_cost column of cycles.csv (101 rows: cycle 100 has only
+    best_cost). States and plan times: the first 100 rows of cycles.csv."""
+    base = R / task / "results" if (R / task / "results").is_dir() else R
     D = {}
     for a in ALGOS:
         h, rows, fin = [], [], []
         for s in SEEDS:
-            d = R / task / "results" / a / f"s{s}"
-            h.append(np.squeeze(np.load(glob.glob(str(d / "*best_cost_history*.npy"))[0])))
-            rows.append(list(csv.DictReader(open(d / "cycles.csv")))); fin.append(json.load(open(d / "final.json")))
+            d = base / a / f"s{s}"
+            rr = list(csv.DictReader(open(d / "cycles.csv")))
+            f = glob.glob(str(d / "*best_cost_history*.npy"))
+            h.append(np.squeeze(np.load(f[0])) if f else np.array([float(r["best_cost"]) for r in rr]))
+            rows.append(rr[:100]); fin.append(json.load(open(d / "final.json")))
         assert all(len(x) == 101 for x in h) and all(len(r) == 100 for r in rows), a
         D[a] = (np.stack(h), rows, fin)
     return D
