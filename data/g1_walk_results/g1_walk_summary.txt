@@ -1,0 +1,14 @@
+=== g1_walk, 400 cycles (8 s), seeds per method: PS 1, MPPI 2, DIAL 2, MTP 2, CBO 1. cell = median / mean ± std (ddof 1) over seeds. tracking cost = the task's running cost (0 to 1) of the real state, averaged over the cycles; base error = distance of the base to the reference base position [m]; 'after the first step' = cycles >= 211 (4.22 s); fell = the base height was below 0.5 m in any cycle ===
+method          tracking cost, run            tracking cost, after 1st step base error, run [m]           base error, after 1st step    base error, last 25 [m]       min base height [m]           fell                          plan_s median                 
+PS              0.108 / 0.108 ± 0             0.162 / 0.162 ± 0             0.0177 / 0.0177 ± 0           0.0253 / 0.0253 ± 0           0.0175 / 0.0175 ± 0           0.78 / 0.78 ± 0               0/1                           3.79 s                        
+MPPI            0.414 / 0.414 ± 0.192         0.58 / 0.58 ± 0.386           0.146 / 0.146 ± 0.163         0.278 / 0.278 ± 0.35          0.526 / 0.526 ± 0.688         0.442 / 0.442 ± 0.466         1/2                           7.19 s                        
+DIAL            0.433 / 0.433 ± 0.168         0.617 / 0.617 ± 0.363         0.17 / 0.17 ± 0.189           0.327 / 0.327 ± 0.409         0.618 / 0.618 ± 0.839         0.419 / 0.419 ± 0.468         1/2                           3.88 s                        
+MTP             0.133 / 0.133 ± 0.0176        0.21 / 0.21 ± 0.0339          0.0179 / 0.0179 ± 0.00341     0.0269 / 0.0269 ± 0.00837     0.0259 / 0.0259 ± 0.0107      0.783 / 0.783 ± 0.00141       0/2                           3.79 s                        
+CBO             0.659 / 0.659 ± 0             0.927 / 0.927 ± 0             0.436 / 0.436 ± 0             0.874 / 0.874 ± 0             1.59 / 1.59 ± 0               0.0875 / 0.0875 ± 0           1/1                           6.51 s                        
+
+per-seed final base error [m] / minimum base height [m]  (* = fell):
+  PS               s1 0.02/0.78
+  MPPI             s0 1.14/0.11*  s1 0.08/0.77
+  DIAL             s0 0.03/0.75  s1 1.35/0.09*
+  MTP              s0 0.02/0.78  s1 0.02/0.78
+  CBO              s0 1.73/0.09*
