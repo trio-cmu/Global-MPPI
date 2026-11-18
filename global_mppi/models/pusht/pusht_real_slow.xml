@@ -1,0 +1,76 @@
+<mujoco model="pusht">
+  <!-- Push-T with the REAL setup of the Franka experiments (12 x 12 cm T-block, 5 mm push rod).
+       Single source of truth for geometry, start, goal and pusher parameters; the trio_sim / open-loop
+       scripts (~/trio_sim/src/pusht_align) and tests/test_pusht_consistency.py check themselves against it.
+       The original paper model (small T, 1 cm sphere pusher, kv=0.1) is the git tag pusht-paper-v0.
+
+       Frame: the SIM TASK FRAME == the GOAL FRAME. The goal body is pinned at (0, 0) with theta = 0, so every
+       pose below is a goal-frame pose (p_sim = R(-theta_goal) (p_base - p_goal)).
+       Block body frame = bounding-box centre of the real model (the origin of T_SHAPE_POSE). sim x = model X,
+       sim y = model Z (stem tail -> crossbar), so theta = 0 means the crossbar on the stem's +y side. -->
+  <option timestep="0.01" iterations="1" ls_iterations="4"/>
+
+  <default>
+    <!-- Pusher actuator: stiff velocity servo limited to +-0.05 m/s (slow copy of pusht.xml). The real arm tracks position stiffly and
+         is speed-limited (xy_driver); the stock kv=0.1 could not push the block. -->
+    <velocity ctrllimited="true" ctrlrange="-0.05 0.05" kv="200"/>
+    <default class="goal">
+      <geom conaffinity="0" contype="0" rgba="0 1 0 0.2"/>
+    </default>
+    <!-- TODO(friction): placeholder copied from the original pusht.xml, not identified for the real
+         T / table / pen. solref/solimp likewise. -->
+    <geom friction="1.0" solimp="0.0 0.95 0.005" solref="0.02 1"/>
+  </default>
+
+  <worldbody>
+    <!-- GOAL pose: pinned at the sim origin, theta = 0 (pusht_goal.yaml defines the goal frame itself).
+         Same z as the block so the position sensor has no constant z error. NOTE: MuJoCo frame sensors on a
+         *body* use its inertial (centre-of-mass) frame, so the cost compares block COM to goal COM in the
+         goal's principal-axes frame: keep the goal masses EQUAL to the block's. -->
+    <body name="goal" mocap="true" pos="0 0 0.0195" quat="1 0 0 0">
+      <geom class="goal" name="goal_stem" type="box" size=".02 .04 .02" pos="0 -0.02 0" mass="0.128"/>
+      <geom class="goal" name="goal_crossbar" type="box" size=".06 .02 .02" pos="0 0.04 0" mass="0.192"/>
+    </body>
+
+    <!-- T: thickness 0.04 m (half 0.02). Stem 4 x 8 cm centred y=-0.02; crossbar 12 x 4 cm centred y=+0.04.
+         z 0.0195 = 0.5 mm floor overlap so the floor gives contact friction.
+         TODO(mass): placeholder masses (density 1000 kg/m^3 x volume); weigh the printed block. -->
+    <body name="block" pos="0 0 0.0195">
+      <joint name="T_x" type="slide" pos="0 0 0" axis="1 0 0"/>
+      <joint name="T_y" type="slide" pos="0 0 0" axis="0 1 0"/>
+      <joint name="T_z" axis="0 0 1"/>
+      <geom name="stem" type="box" size=".02 .04 .02" pos="0 -0.02 0" mass="0.128"/>
+      <geom name="crossbar" type="box" size=".06 .02 .02" pos="0 0.04 0" mass="0.192"/>
+    </body>
+
+    <!-- PUSHER: vertical rod, radius 5 mm (the real pen), modelled as a capsule of the same radius (MJX has no
+         cylinder-box collision; side contact is identical, only the end caps are rounded). Centre height 0.02 m.
+         Mass 10 kg on purpose: MuJoCo contact stiffness scales with the effective mass, and the real arm
+         behaves like an (almost) infinitely heavy pusher; kv/m*dt = 0.2 keeps the servo stable.
+         The body sits at (0, 0.1); root_x / root_y are OFFSETS from this position. -->
+    <body name="pusher" pos="0 0.1 0.02">
+      <joint name="root_x" type="slide" pos="0 0 0" axis="1 0 0"/>
+      <joint name="root_y" type="slide" pos="0 0 0" axis="0 1 0"/>
+      <geom name="pusher" type="capsule" size="0.005 0.005" mass="10" rgba="1 0 0 1" contype="3" conaffinity="3"/>
+      <site name="pusher" pos="0 0 0" rgba="0 0 0 0"/>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <velocity name="x_motor" joint="root_x"/>
+    <velocity name="y_motor" joint="root_y"/>
+  </actuator>
+
+  <sensor>
+    <framepos name="position" objtype="body" objname="block" reftype="body" refname="goal"/>
+    <framequat name="orientation" objtype="body" objname="block" reftype="body" refname="goal"/>
+  </sensor>
+
+  <keyframe>
+    <!-- start_2 (goal frame; pusht_starts.yaml start_2 + pusher_start.yaml):
+         qpos = [T_x, T_y, T_theta, root_x, root_y]
+         T       = (-0.22529, -0.05268) m, theta = 0.79172 rad (45.362 deg)
+         pusher  = (-0.13329, -0.00978) m in the goal frame -> root = world - body pos (0, 0.1) = (-0.13329, -0.10978) -->
+    <key name="start_2" qpos="-0.22529 -0.05268 0.79172 -0.13329 -0.10978"/>
+  </keyframe>
+</mujoco>

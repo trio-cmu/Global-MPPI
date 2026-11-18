@@ -1,0 +1,39 @@
+Failed to import warp: No module named 'warp'
+Failed to import mujoco.mjx.third_party.mujoco_warp as mujoco_warp: No module named 'warp'
+Running GlobalMPPI (KSOS solver: ADMM-cuda, two-level sampling, no LSE)
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/algs/global_mppi.py:212: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  ).random(self.ksos_num_samples),
+
+=== Seed 0 ===
+Planning with 100 steps over a 1.0 second horizon with 6 knots.
+Planning at 50.0 Hz, simulating at 1000.0 Hz
+Jitting the controller...
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+sigma: 0.10000000149011612
+Fatal Python error: Segmentation fault
+
+Current thread 0x000077043bc52740 (most recent call first):
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/compiler.py", line 369 in backend_compile_and_load
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/profiler.py", line 364 in wrapper
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/compiler.py", line 762 in _compile_and_write_cache
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/compiler.py", line 494 in compile_or_get_cached
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/pxla.py", line 2840 in _cached_compilation
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/pxla.py", line 3059 in from_hlo
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/interpreters/pxla.py", line 2513 in compile
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/pjit.py", line 1782 in _pjit_call_impl_python
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/pjit.py", line 149 in _python_pjit_helper
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/pjit.py", line 270 in cache_miss
+  File "/home/zhongqi/miniconda3/envs/ksos/lib/python3.12/site-packages/jax/_src/traceback_util.py", line 180 in reraise_with_filtered_traceback
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/simulation/deterministic.py", line 206 in run_interactive
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/examples/pusht.py", line 311 in <module>
+
+Extension modules: numpy.core._multiarray_umath, numpy.core._multiarray_tests, numpy.linalg._umath_linalg, numpy.fft._pocketfft_internal, numpy.random._common, numpy.random.bit_generator, numpy.random._bounded_integers, numpy.random._mt19937, numpy.random.mtrand, numpy.random._philox, numpy.random._pcg64, numpy.random._sfc64, numpy.random._generator, scipy._lib._ccallback_c, scipy.sparse._sparsetools, _csparsetools, _cyutility, scipy._cyutility, scipy.sparse._csparsetools, jaxlib.cpu_feature_guard, msgpack._cmsgpack, yaml._yaml, scipy.spatial._ckdtree, scipy._lib.messagestream, scipy.linalg._fblas, scipy.linalg._flapack, scipy.linalg.cython_lapack, scipy.linalg._cythonized_array_utils, scipy.linalg._solve_toeplitz, scipy.linalg._decomp_lu_cython, scipy.linalg._matfuncs_schur_sqrtm, scipy.linalg._matfuncs_expm, scipy.linalg._linalg_pythran, scipy.linalg.cython_blas, scipy.linalg._decomp_update, scipy.spatial._qhull, scipy.spatial._voronoi, scipy.special._ufuncs_cxx, scipy.special._ellip_harm_2, scipy.special._special_ufuncs, scipy.special._gufuncs, scipy.special._ufuncs, scipy.special._specfun, scipy.special._comb, scipy.spatial._hausdorff, scipy.spatial._distance_wrap, scipy.spatial.transform._rotation, scipy.spatial.transform._rigid_transform, xxhash._xxhash, PIL._imaging, scipy.sparse.linalg._dsolve._superlu, scipy.sparse.linalg._eigen.arpack._arpack, scipy.sparse.linalg._propack._spropack, scipy.sparse.linalg._propack._dpropack, scipy.sparse.linalg._propack._cpropack, scipy.sparse.linalg._propack._zpropack, scipy.optimize._group_columns, scipy.optimize._trlib._trlib, scipy.optimize._lbfgsb, _moduleTNC, scipy.optimize._moduleTNC, scipy.optimize._slsqplib, scipy.optimize._minpack, scipy.optimize._lsq.givens_elimination, scipy.optimize._zeros, scipy._lib._uarray._uarray, scipy.linalg._decomp_interpolative, scipy.optimize._bglu_dense, scipy.optimize._lsap, scipy.optimize._direct, scipy.sparse.csgraph._tools, scipy.sparse.csgraph._shortest_path, scipy.sparse.csgraph._traversal, scipy.sparse.csgraph._min_spanning_tree, scipy.sparse.csgraph._flow, scipy.sparse.csgraph._matching, scipy.sparse.csgraph._reordering, scipy.ndimage._nd_image, scipy.ndimage._rank_filter_1d, _ni_label, scipy.ndimage._ni_label, _cvxcore, scipy.signal._sigtools, scipy.signal._max_len_seq_inner, scipy.signal._upfirdn_apply, scipy.signal._spline, scipy.interpolate._fitpack, scipy.interpolate._dfitpack, scipy.interpolate._dierckx, scipy.interpolate._ppoly, scipy.interpolate._interpnd, scipy.interpolate._rbfinterp_pythran, scipy.interpolate._rgi_cython, scipy.signal._sosfilt, scipy.integrate._odepack, scipy.integrate._quadpack, scipy.integrate._vode, scipy.integrate._dop, scipy.integrate._lsoda, scipy.special.cython_special, scipy.stats._stats, scipy.stats._biasedurn, scipy.stats._stats_pythran, scipy.stats._levy_stable.levyst, scipy.stats._ansari_swilk_statistics, scipy.stats._sobol, scipy.stats._qmc_cy, scipy.stats._rcont.rcont, scipy.stats._qmvnt_cy, scipy.signal._peak_finding_utils, _scs_direct, osqp._osqp, eigenpy.eigenpy_pywrap (total: 113)
+EXIT CODE 139

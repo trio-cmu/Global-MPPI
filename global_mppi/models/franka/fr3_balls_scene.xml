@@ -1,0 +1,55 @@
+<mujoco model="fr3_balls_scene">
+  <!-- FR3 reach-around-obstacles task: the arm starts on its left (+y) side and must reach a
+       goal on its right (-y) side; a cluster of static balls sits in front of the base so the
+       straight joint-space interpolation between start and goal collides. -->
+  <include file="franka_fr3/fr3_gripper.xml"/>
+
+  <compiler angle="radian" meshdir="franka_fr3/assets"/>
+  <option timestep="0.01" integrator="implicitfast"/>
+
+  <statistic center="0.35 0 0.6" extent="1.0"/>
+
+  <visual>
+    <quality shadowsize="8192"/>
+    <global azimuth="150" elevation="-25" offwidth="1280" offheight="960"/>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3"
+      markrgb="0.8 0.8 0.8" width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
+    <material name="obstacle" rgba="0.85 0.25 0.2 1"/>
+  </asset>
+
+  <worldbody>
+    <light pos="1.5 0.5 2.5" dir="-0.5 -0.2 -1" directional="true" diffuse="0.5 0.5 0.5"/>
+    <geom name="floor" type="plane" size="0 0 0.05" material="groundplane"/>
+    <!-- Table, top surface flush with the arm base at z=0.4. -->
+    <geom name="table" type="box" size="0.5 0.9 0.2" pos="0.3 0 0.2" rgba="0.76 0.65 0.47 1"/>
+
+    <!-- Static spherical obstacles, spread along the arc the arm sweeps between start and goal
+         (horizontal radius 0.38-0.68 m from the base, z 0.5-1.05 m). ball_4 sits
+         just far enough from the goal pose that the goal stays collision-free under
+         FrankaReach's link-sphere over-approximation (~4 cm conservative). -->
+    <geom name="ball_0" type="sphere" size="0.08" pos="0.620 0.000 0.62" material="obstacle"/>
+    <geom name="ball_1" type="sphere" size="0.07" pos="0.405 0.196 0.88" material="obstacle"/>
+    <geom name="ball_2" type="sphere" size="0.07" pos="0.612 -0.296 0.50" material="obstacle"/>
+    <geom name="ball_3" type="sphere" size="0.06" pos="0.460 0.473 0.50" material="obstacle"/>
+    <geom name="ball_4" type="sphere" size="0.06" pos="0.321 -0.330 0.94" material="obstacle"/>
+    <geom name="ball_5" type="sphere" size="0.05" pos="0.378 -0.038 1.05" material="obstacle"/>
+
+    <!-- End-effector (pusher_site) positions at the start/goal keyframes; visual only. -->
+    <site name="ee_start" type="sphere" size="0.035" rgba="0.2 0.4 1 0.9" pos="0.303 0.780 0.562"/>
+    <site name="ee_goal" type="sphere" size="0.035" rgba="0.1 0.9 0.2 0.9" pos="0.303 -0.780 0.562"/>
+  </worldbody>
+
+  <keyframe>
+    <key name="start" qpos="1.2 0.9 0 -1.3 0 2.7 0.785 0.04 0.04"
+         ctrl="1.2 0.9 0 -1.3 0 2.7 0.785 255"/>
+    <key name="goal" qpos="-1.2 0.9 0 -1.3 0 2.7 0.785 0.04 0.04"
+         ctrl="-1.2 0.9 0 -1.3 0 2.7 0.785 255"/>
+  </keyframe>
+</mujoco>

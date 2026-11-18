@@ -16,3 +16,15 @@ MUJOCO_LOG.TXT
 logs/
 wandb/
 test/log/
+
+# paper folder (kept out of the code repo)
+RSS2026_Zhongqi_SparseKernel/
+
+# tool caches
+.claude/
+.pytest_cache/
+runs/
+global_mppi/models/pusht/scene_box_*.xml
+
+# G1 model, downloaded by script/fetch_g1_model.sh (BSD-3, Unitree; not vendored)
+global_mppi/models/g1/

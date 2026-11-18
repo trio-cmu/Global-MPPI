@@ -1,0 +1,292 @@
+[
+ {
+  "method": "PS",
+  "seed": 0,
+  "cost": 16.60035514831543,
+  "best_sample": 16.617647171020508,
+  "time": 0.2537630650003848,
+  "rollouts": 1285
+ },
+ {
+  "method": "PS",
+  "seed": 1,
+  "cost": 12.670967102050781,
+  "best_sample": 12.673036575317383,
+  "time": 0.25469642899770406,
+  "rollouts": 1285
+ },
+ {
+  "method": "PS",
+  "seed": 2,
+  "cost": 13.184832572937012,
+  "best_sample": 13.184524536132812,
+  "time": 0.2537753659998998,
+  "rollouts": 1285
+ },
+ {
+  "method": "PS",
+  "seed": 3,
+  "cost": 14.435516357421875,
+  "best_sample": 14.419706344604492,
+  "time": 0.2536273209989304,
+  "rollouts": 1285
+ },
+ {
+  "method": "PS",
+  "seed": 4,
+  "cost": 39.66910171508789,
+  "best_sample": 39.67132568359375,
+  "time": 0.2536121560005995,
+  "rollouts": 1285
+ },
+ {
+  "method": "MPPI",
+  "seed": 0,
+  "cost": 8.237361907958984,
+  "best_sample": 8.227299690246582,
+  "time": 0.25373382799807587,
+  "rollouts": 1285
+ },
+ {
+  "method": "MPPI",
+  "seed": 1,
+  "cost": 8.592390060424805,
+  "best_sample": 8.551572799682617,
+  "time": 0.25332374600111507,
+  "rollouts": 1285
+ },
+ {
+  "method": "MPPI",
+  "seed": 2,
+  "cost": 9.875846862792969,
+  "best_sample": 9.878235816955566,
+  "time": 0.2527542399984668,
+  "rollouts": 1285
+ },
+ {
+  "method": "MPPI",
+  "seed": 3,
+  "cost": 11.671693801879883,
+  "best_sample": 11.671770095825195,
+  "time": 0.2532142720010597,
+  "rollouts": 1285
+ },
+ {
+  "method": "MPPI",
+  "seed": 4,
+  "cost": 8.154189109802246,
+  "best_sample": 8.095341682434082,
+  "time": 0.25401594800132443,
+  "rollouts": 1285
+ },
+ {
+  "method": "DIAL",
+  "seed": 0,
+  "cost": 7.793506622314453,
+  "best_sample": 7.793513298034668,
+  "time": 0.2541010120003193,
+  "rollouts": 1285
+ },
+ {
+  "method": "DIAL",
+  "seed": 1,
+  "cost": 8.045281410217285,
+  "best_sample": 8.04533576965332,
+  "time": 0.25312991499959026,
+  "rollouts": 1285
+ },
+ {
+  "method": "DIAL",
+  "seed": 2,
+  "cost": 7.751541614532471,
+  "best_sample": 7.794122695922852,
+  "time": 0.25444274300025427,
+  "rollouts": 1285
+ },
+ {
+  "method": "DIAL",
+  "seed": 3,
+  "cost": 7.526873588562012,
+  "best_sample": 7.527224063873291,
+  "time": 0.25338435799858416,
+  "rollouts": 1285
+ },
+ {
+  "method": "DIAL",
+  "seed": 4,
+  "cost": 7.418860912322998,
+  "best_sample": 7.415897369384766,
+  "time": 0.25325152200093726,
+  "rollouts": 1285
+ },
+ {
+  "method": "KSOS",
+  "cost": 14.147001266479492,
+  "time": 0.12606164299722877,
+  "seed": 0,
+  "best_sample": 14.973245620727539,
+  "rollouts": 1001,
+  "status": "converged",
+  "iterations": 120,
+  "time_parts": {
+   "sampling": 0.0002666569998837076,
+   "rollout": 0.039645520999329165,
+   "rcm+kernel": 0.004671745999075938,
+   "admm": 0.08147771899893996,
+   "guard rollout": 0.02129501599847572
+  }
+ },
+ {
+  "method": "KSOS, guarded",
+  "cost": 14.147001266479492,
+  "time": 0.1473566589957045,
+  "seed": 0,
+  "best_sample": 14.973245620727539,
+  "rollouts": 1001,
+  "status": "converged",
+  "iterations": 120,
+  "time_parts": {
+   "sampling": 0.0002666569998837076,
+   "rollout": 0.039645520999329165,
+   "rcm+kernel": 0.004671745999075938,
+   "admm": 0.08147771899893996,
+   "guard rollout": 0.02129501599847572
+  }
+ },
+ {
+  "method": "KSOS",
+  "cost": 22.7562255859375,
+  "time": 0.11148925100133056,
+  "seed": 1,
+  "best_sample": 22.902759552001953,
+  "rollouts": 1001,
+  "status": "converged",
+  "iterations": 70,
+  "time_parts": {
+   "sampling": 0.00018800099860527553,
+   "rollout": 0.03975008600173169,
+   "rcm+kernel": 0.004501638999499846,
+   "admm": 0.06704952500149375,
+   "guard rollout": 0.020763800999702653
+  }
+ },
+ {
+  "method": "KSOS, guarded",
+  "cost": 22.7562255859375,
+  "time": 0.1322530520010332,
+  "seed": 1,
+  "best_sample": 22.902759552001953,
+  "rollouts": 1001,
+  "status": "converged",
+  "iterations": 70,
+  "time_parts": {
+   "sampling": 0.00018800099860527553,
+   "rollout": 0.03975008600173169,
+   "rcm+kernel": 0.004501638999499846,
+   "admm": 0.06704952500149375,
+   "guard rollout": 0.020763800999702653
+  }
+ },
+ {
+  "method": "KSOS",
+  "cost": 13.247480392456055,
+  "time": 0.10464847800176358,
+  "seed": 2,
+  "best_sample": 13.032418251037598,
+  "rollouts": 1001,
+  "status": "converged",
+  "iterations": 40,
+  "time_parts": {
+   "sampling": 0.0002891100011765957,
+   "rollout": 0.03942605900010676,
+   "rcm+kernel": 0.004381042999739293,
+   "admm": 0.06055226600074093,
+   "guard rollout": 0.020381841000926215
+  }
+ },
+ {
+  "method": "KSOS, guarded",
+  "cost": 13.032418251037598,
+  "time": 0.1250303190026898,
+  "seed": 2,
+  "best_sample": 13.032418251037598,
+  "rollouts": 1001,
+  "status": "converged",
+  "iterations": 40,
+  "time_parts": {
+   "sampling": 0.0002891100011765957,
+   "rollout": 0.03942605900010676,
+   "rcm+kernel": 0.004381042999739293,
+   "admm": 0.06055226600074093,
+   "guard rollout": 0.020381841000926215
+  }
+ },
+ {
+  "method": "KSOS",
+  "cost": 10.982805252075195,
+  "time": 0.10759161099849734,
+  "seed": 3,
+  "best_sample": 10.847831726074219,
+  "rollouts": 1001,
+  "status": "converged",
+  "iterations": 50,
+  "time_parts": {
+   "sampling": 0.00023875199985923246,
+   "rollout": 0.039175773003080394,
+   "rcm+kernel": 0.00437080199844786,
+   "admm": 0.06380628399710986,
+   "guard rollout": 0.0205882059999567
+  }
+ },
+ {
+  "method": "KSOS, guarded",
+  "cost": 10.847831726074219,
+  "time": 0.12817981699845404,
+  "seed": 3,
+  "best_sample": 10.847831726074219,
+  "rollouts": 1001,
+  "status": "converged",
+  "iterations": 50,
+  "time_parts": {
+   "sampling": 0.00023875199985923246,
+   "rollout": 0.039175773003080394,
+   "rcm+kernel": 0.00437080199844786,
+   "admm": 0.06380628399710986,
+   "guard rollout": 0.0205882059999567
+  }
+ },
+ {
+  "method": "KSOS",
+  "cost": 11.809600830078125,
+  "time": 0.10682592300145188,
+  "seed": 4,
+  "best_sample": 11.975046157836914,
+  "rollouts": 1001,
+  "status": "converged",
+  "iterations": 50,
+  "time_parts": {
+   "sampling": 0.0002231600010418333,
+   "rollout": 0.039702575999399414,
+   "rcm+kernel": 0.0044935040023119655,
+   "admm": 0.06240668299869867,
+   "guard rollout": 0.020834048998949584
+  }
+ },
+ {
+  "method": "KSOS, guarded",
+  "cost": 11.809600830078125,
+  "time": 0.12765997200040147,
+  "seed": 4,
+  "best_sample": 11.975046157836914,
+  "rollouts": 1001,
+  "status": "converged",
+  "iterations": 50,
+  "time_parts": {
+   "sampling": 0.0002231600010418333,
+   "rollout": 0.039702575999399414,
+   "rcm+kernel": 0.0044935040023119655,
+   "admm": 0.06240668299869867,
+   "guard rollout": 0.020834048998949584
+  }
+ }
+]
