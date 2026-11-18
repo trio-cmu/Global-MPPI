@@ -651,6 +651,13 @@ class GlobalMPPI(SamplingBasedController):
         )
         self._cacs_calls += 1
         t1 = time.perf_counter()
+        # CACS clips its local proposals to the control box, so in a low-dimensional box (e.g. 4 dimensions)
+        # the same corner point can appear several times, and KSOS needs distinct samples: keep the first
+        # occurrence of each point, in insertion order (nothing changes when there are no duplicates).
+        _, first = np.unique(samples, axis=0, return_index=True)
+        if len(first) < len(samples):
+            keep = np.sort(first)
+            samples, f = samples[keep], f[keep]
         order = np.arange(len(samples))[::-1]
         problem = build_problem(samples[order], cfg.h, lambda _: f[order], lambd=self.ksos_lambda)
         try:
