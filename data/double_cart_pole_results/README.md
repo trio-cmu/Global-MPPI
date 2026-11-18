@@ -22,18 +22,18 @@ No videos, no npy files. Methods: `ps mppi dial mtp cbo gm` (gm = GlobalMPPI).
 | CBO | 25 / 24.8 ± 14.3 | 3.49 | 1/6 | 0.24 s |
 | GlobalMPPI | 1.13 / 1.15 ± 0.351 | 3.58 | 0/6 | 49.3 s |
 
-## The CACS duplicate fix exists only on this branch
+## The CACS duplicate fix
 
 GlobalMPPI's CACS sampling clips the local proposals to the control box. With a 1-D control (one cart force) and 4 knots the control
 vector has only 4 dimensions, and many proposals land on the same corners of the box, which gives duplicate samples. cuKernelSOS
 needs distinct samples and stops with `samples must be distinct`; the first double_cart_pole GlobalMPPI run crashed this way.
 Commit `75a1a5f` (`global_mppi/algs/global_mppi.py`, `_solve_cacs`) drops the duplicate rows before the KSOS problem is built. It does
-nothing when there are no duplicates, so it does not change the other tasks, but it is **not on the `walker`, `pusht-bench` or other
-branches**: on those, a task with a low-dimensional control box can hit the same crash. The GlobalMPPI runs here use it.
+nothing when there are no duplicates, so it does not change the other tasks. It is part of the `benchmarks` branch, so every task uses it; the
+runs of the other tasks were made without it. The GlobalMPPI runs here use it.
 
 ## Settings
 
-`examples/double_cart_pole.py` on branch `double-cart-pole`. Task from hydrax `bd53d43` (`global_mppi/tasks/double_cart_pole.py`, model
+`examples/double_cart_pole.py` on the `benchmarks` branch. Task from hydrax `bd53d43` (`global_mppi/tasks/double_cart_pole.py`, model
 `global_mppi/models/double_cart_pole`): swing the tip to z = 4 m over the cart, with velocity and control penalties; the simulation
 uses the task's model as it is (timestep 0.01 s, no contacts). Control at 50 Hz, horizon 1.0 s, 4 knots, cubic spline, 5 iterations,
 100 cycles per run (2.0 s), seeds 0-5, control dimension 1 x 4 knots = 4. The noise and temperature values are those of
@@ -59,8 +59,8 @@ CPU fallback). The baselines never call cuKernelSOS. `KSOS_GPU_SOLVE=1` is neede
 
 ## Rerun
 
-Environment: the Global-MPPI env with MuJoCo / mujoco-mjx **3.3.6** (not 4.0), this branch (`double-cart-pole`) checked out. `script/` is
-the queue and plotting tools. The runs of this folder were made with the version of branch `walker` / `pusht-bench` at the time; `script/` here was later synced to a newer version that also supports the bugtrap and g1_walk tasks (nothing changes for double_cart_pole: the redrawn figure and table of this folder are identical).
+Environment: the Global-MPPI env with MuJoCo / mujoco-mjx **3.3.6** (not 4.0), the `benchmarks` branch checked out. `script/` is
+the queue and plotting tools. The runs of this folder were made with an earlier version of `script/`; `script/` here was later synced to a newer version that also supports the bugtrap and g1_walk tasks (nothing changes for double_cart_pole: the redrawn figure and table of this folder are identical).
 
 ```bash
 # everything: 6 methods x 6 seeds, retries, logs, figure, tables (gm takes about 1 h per seed: 6-7 h for the batch on our shared GPU)
@@ -68,7 +68,7 @@ TASKS=double_cart_pole CUKS_GPU=/path/to/cuKernelSOS_gpu/python PY=$(which pytho
 # output: logs/overnight_runs/<timestamp>/{STATUS.txt, double_cart_pole/batch.log, double_cart_pole/results/, final_figs/}
 ```
 
-The queue runs the code of this branch through a git worktree in `../overnight_wt/double-cart-pole` (set `WT` to move it).
+The queue runs the code of the checkout it lives in (the `benchmarks` branch); there is no branch or worktree switching.
 
 One run by hand (seed S, from the repo root):
 
@@ -91,7 +91,7 @@ python script/final_figs.py data/double_cart_pole_results double_cart_pole data/
 
 ## Notes
 
-- Timeouts of `script/overnight_queue.sh`: 3600 s per attempt for ps, mppi, dial, mtp and cbo, 14400 s for gm (`BASE_TIMEOUT` and `GM_TIMEOUT`, set at the top of the script; they are plain assignments, not environment variables, so change them in the script). A timed-out run is not retried. gm may need more than 14400 s on a busy GPU.
+- Timeouts of `script/overnight_queue.sh`: 3600 s per attempt for ps, mppi, dial, mtp and cbo, 14400 s for gm (`BASE_TIMEOUT` and `GM_TIMEOUT`: the defaults, overridable as environment variables, e.g. `GM_TIMEOUT=28800 script/overnight_queue.sh`; before every attempt the queue also waits for free GPU memory, see the header of the script). A timed-out run is not retried. gm may need more than 14400 s on a busy GPU.
 - This folder holds `cycles.csv` and `final.json` per run, no `args.json`: the settings in the table above were checked against the code defaults (`examples/double_cart_pole.py`, `global_mppi/algs/`), not against recorded files.
 - The GPU was shared with other users' jobs during these runs, so the plan times (GlobalMPPI 47 to 55 s per cycle on average, 26 to 56 s
   per cycle in earlier checks) are inflated and vary; compare costs, not times. An `nvidia-smi` snapshot was stored before every run

@@ -94,7 +94,7 @@ once later with 8 GB free and finished normally (attempt 1, 89 minutes); the dat
 
 ## Rerun
 
-Environment: the Global-MPPI env with MuJoCo / mujoco-mjx **3.3.6** (not 4.0), this branch (`bugtrap`) checked out.
+Environment: the Global-MPPI env with MuJoCo / mujoco-mjx **3.3.6** (not 4.0), the `benchmarks` branch checked out.
 
 ```bash
 # everything: 6 methods x 6 seeds, retries, logs, figure, tables
@@ -120,8 +120,7 @@ python script/package_task_results.py <queue folder>/bugtrap/results data/bugtra
 python script/final_figs.py data/bugtrap_results bugtrap data/bugtrap_results              # figure and table from this folder
 ```
 
-**Timeouts of the queue** (`script/overnight_queue.sh`): 3600 s per attempt for ps, mppi, dial, mtp and cbo, 14400 s for gm (`BASE_TIMEOUT` and `GM_TIMEOUT`,
-plain assignments at the top of the script, **not environment variables**: edit the script). A timed-out run is not retried; a crash is retried up to twice.
+**Timeouts of the queue** (`script/overnight_queue.sh`): 3600 s per attempt for ps, mppi, dial, mtp and cbo, 14400 s for gm (`BASE_TIMEOUT` and `GM_TIMEOUT`: the defaults, overridable as environment variables, e.g. `GM_TIMEOUT=28800 script/overnight_queue.sh`; before every attempt the queue also waits for free GPU memory, see the header of the script). A timed-out run is not retried; a crash is retried up to twice.
 
 ## Notes
 

@@ -42,7 +42,7 @@ all on the GPU, no CPU fallback). The baselines never call cuKernelSOS.
 
 ## Rerun
 
-Environment: the Global-MPPI env with MuJoCo / mujoco-mjx **3.3.6** (not 4.0), this branch (`pusht-bench`) checked out.
+Environment: the Global-MPPI env with MuJoCo / mujoco-mjx **3.3.6** (not 4.0), the `benchmarks` branch checked out.
 
 ```bash
 # everything: 6 methods x 6 seeds, retries, logs, figure, tables (3.5 h on our shared GPU)
@@ -72,7 +72,7 @@ python script/final_figs.py data/pusht_results pusht data/pusht_results      # f
 
 ## Notes
 
-- Timeouts of `script/overnight_queue.sh`: 3600 s per attempt for ps, mppi, dial, mtp and cbo, 14400 s for gm (`BASE_TIMEOUT` and `GM_TIMEOUT`, set at the top of the script; they are plain assignments, not environment variables, so change them in the script). A timed-out run is not retried. gm may need more than 14400 s on a busy GPU.
+- Timeouts of `script/overnight_queue.sh`: 3600 s per attempt for ps, mppi, dial, mtp and cbo, 14400 s for gm (`BASE_TIMEOUT` and `GM_TIMEOUT`: the defaults, overridable as environment variables, e.g. `GM_TIMEOUT=28800 script/overnight_queue.sh`; before every attempt the queue also waits for free GPU memory, see the header of the script). A timed-out run is not retried. gm may need more than 14400 s on a busy GPU.
 - This folder holds `cycles.csv` per run only, no `args.json`: the settings in the table above were checked against the defaults in the code (`examples/pusht.py`, `global_mppi/algs/`), not against recorded files.
 - The GPU was shared with other users' jobs during these runs. Plan times are therefore inflated (GlobalMPPI about 14.7 s per cycle
   against about 7.3 s in the senior's reproduction document); compare the costs, not the times. The queue stored an `nvidia-smi`

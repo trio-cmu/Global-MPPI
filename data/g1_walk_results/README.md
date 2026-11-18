@@ -110,8 +110,7 @@ python examples/g1_walk.py --headless --seed-start S --seed-end $((S+1)) --max-c
 TASKS=g1_walk CUKS_GPU=/path/to/cuKernelSOS_gpu/python PY=$(which python) script/overnight_queue.sh
 ```
 
-**Timeouts of the queue** (`script/overnight_queue.sh`): 3600 s per attempt for ps, mppi, dial, mtp and cbo, 14400 s for gm (`BASE_TIMEOUT` and
-`GM_TIMEOUT`, plain assignments at the top of the script, **not environment variables**: edit the script). A timed-out run is not retried.
+**Timeouts of the queue** (`script/overnight_queue.sh`): 3600 s per attempt for ps, mppi, dial, mtp and cbo, 14400 s for gm (`BASE_TIMEOUT` and `GM_TIMEOUT`: the defaults, overridable as environment variables, e.g. `GM_TIMEOUT=28800 script/overnight_queue.sh`; before every attempt the queue also waits for free GPU memory, see the header of the script). A timed-out run is not retried.
 For this task both are too tight on a shared GPU: a baseline run needed up to 59 minutes, and a gm run takes about 4 h (14400 s), so raise
 `GM_TIMEOUT` (and `BASE_TIMEOUT`) before running the batch on a busy GPU.
 

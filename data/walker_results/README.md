@@ -22,7 +22,7 @@ final torso height, x and angle, mean plan time, `solve_paths`. No videos, no np
 
 ## Settings
 
-`examples/walker.py` on branch `walker`, unchanged. Task from hydrax `bd53d43` (`global_mppi/tasks/walker.py`, model
+`examples/walker.py` on the `benchmarks` branch, unchanged. Task from hydrax `bd53d43` (`global_mppi/tasks/walker.py`, model
 `global_mppi/models/walker`). Planning model timestep 0.01 s (60 steps over the horizon), control at 50 Hz, simulation timestep 0.005 s
 with 50 solver iterations. Horizon 0.6 s, 5 knots, zero-order-hold spline (`spline_type="zero"`), 5 iterations, 100 cycles per run
 (2.0 s of simulated time), seeds 0-5. The noise and temperature values are those of `examples/cube.py`; nothing was tuned.
@@ -47,8 +47,8 @@ fallback). The baselines never call cuKernelSOS. `KSOS_GPU_SOLVE=1` is needed fo
 
 ## Rerun
 
-Environment: the Global-MPPI env with MuJoCo / mujoco-mjx **3.3.6** (not 4.0), this branch (`walker`) checked out. `script/` is the
-queue and plotting tools. The runs of this folder were made with the version of branch `pusht-bench` at commits `36f33fe` and `1bb853e`; `script/` here was later synced to a newer version that also supports the bugtrap and g1_walk tasks (nothing changes for walker: the redrawn figure and table of this folder are identical).
+Environment: the Global-MPPI env with MuJoCo / mujoco-mjx **3.3.6** (not 4.0), the `benchmarks` branch checked out. `script/` is the
+queue and plotting tools. The runs of this folder were made with an earlier version of `script/` (commits `36f33fe` and `1bb853e`); `script/` here was later synced to a newer version that also supports the bugtrap and g1_walk tasks (nothing changes for walker: the redrawn figure and table of this folder are identical).
 
 ```bash
 # everything: 6 methods x 6 seeds, retries, logs, figure, tables
@@ -56,7 +56,7 @@ TASKS=walker CUKS_GPU=/path/to/cuKernelSOS_gpu/python PY=$(which python) script/
 # output: logs/overnight_runs/<timestamp>/{STATUS.txt, walker/batch.log, walker/results/, final_figs/walker_final.png}
 ```
 
-The queue runs the code of branch `walker` through a git worktree in `../overnight_wt/walker` (set `WT` to move it).
+The queue runs the code of the checkout it lives in (the `benchmarks` branch); there is no branch or worktree switching.
 
 One run by hand (seed S, from the repo root):
 
@@ -79,7 +79,7 @@ python script/final_figs.py data/walker_results walker data/walker_results      
 
 ## Notes
 
-- Timeouts of `script/overnight_queue.sh`: 3600 s per attempt for ps, mppi, dial, mtp and cbo, 14400 s for gm (`BASE_TIMEOUT` and `GM_TIMEOUT`, set at the top of the script; they are plain assignments, not environment variables, so change them in the script). A timed-out run is not retried. gm may need more than 14400 s on a busy GPU.
+- Timeouts of `script/overnight_queue.sh`: 3600 s per attempt for ps, mppi, dial, mtp and cbo, 14400 s for gm (`BASE_TIMEOUT` and `GM_TIMEOUT`: the defaults, overridable as environment variables, e.g. `GM_TIMEOUT=28800 script/overnight_queue.sh`; before every attempt the queue also waits for free GPU memory, see the header of the script). A timed-out run is not retried. gm may need more than 14400 s on a busy GPU.
 - This folder holds `cycles.csv` and `final.json` per run, no `args.json`: the settings in the table above were checked against the code defaults (`examples/walker.py`, `global_mppi/algs/`), not against recorded files.
 - The GPU was shared with other users' jobs during these runs, so the plan times (GlobalMPPI 15 s per cycle) are inflated and vary
   between runs; compare costs, not times. An `nvidia-smi` snapshot was stored before every run (not included here).
