@@ -17,9 +17,12 @@
 #   g1_walk needs the G1 model (script/fetch_g1_model.sh, copied into the worktree: set G1_MODEL_DIR=<dir> to reuse a fetched one)
 #   and downloads its reference motion from Hugging Face on first use (CC-BY-NC-ND 4.0; set HF_HOME for the cache)
 #   SEEDS, METHODS  (default: "0 1 2 3 4 5", "ps mppi dial mtp cbo gm")
+#   BASE_TIMEOUT, GM_TIMEOUT  seconds per attempt for ps/mppi/dial/mtp/cbo and for gm (defaults 3600 and 14400)
+#   MIN_FREE_BASE_MB, MIN_FREE_GM_MB  free GPU memory (MiB, from nvidia-smi) that must be available before an attempt starts
+#              (defaults 2048 for the baselines, 6144 for gm); the queue polls every WAIT_POLL_S seconds (default 30) and logs the wait
 # PushT runs the code of the checkout this script lives in (check out the branch pusht-bench first).
 #
-# Nothing is waited for: the queue starts at once and runs one process at a time (no two of our runs overlap).
+# The queue starts at once and runs one process at a time (no two runs of this queue overlap); before every attempt it waits for enough free GPU memory (see MIN_FREE_*_MB).
 # Code of walker / double_cart_pole / bugtrap / g1_walk comes from its own git branch through a worktree outside the repo ($WT/<branch>):
 #   PushT -> pusht-bench, walker -> walker, double_cart_pole -> double-cart-pole, bugtrap -> bugtrap, g1_walk -> g1-walk   (committed code only; PYTHONPATH selects it)
 # Per task: <Q>/<task>/batch.log, <Q>/<task>/gpu_snapshots/<method>_s<seed>.txt (nvidia-smi before every run), logs/, results/;
@@ -39,8 +42,11 @@ SEEDS=${SEEDS:-"0 1 2 3 4 5"}
 METHODS=${METHODS:-"ps mppi dial mtp cbo gm"}
 TASKS=${TASKS:-pusht}
 PUSHT_SEEDS_DIR=$REPO/examples/single_run_test/PushT/closed_loop/seeds   # (gitignored *.log, as the senior's doc)
-BASE_TIMEOUT=3600      # s, ps / mppi / dial / mtp / cbo
-GM_TIMEOUT=14400       # s, globalmppi
+BASE_TIMEOUT=${BASE_TIMEOUT:-3600}      # s per attempt, ps / mppi / dial / mtp / cbo
+GM_TIMEOUT=${GM_TIMEOUT:-14400}         # s per attempt, globalmppi
+MIN_FREE_BASE_MB=${MIN_FREE_BASE_MB:-2048}   # MiB of free GPU memory required before a baseline attempt
+MIN_FREE_GM_MB=${MIN_FREE_GM_MB:-6144}       # MiB of free GPU memory required before a gm attempt (cuSOLVER fails with less)
+WAIT_POLL_S=${WAIT_POLL_S:-30}               # s between two nvidia-smi polls while waiting
 RETRIES=2              # extra attempts after a crash (any crash except a timeout)
 GPU_CUKS=${CUKS_GPU:-}
 OLD_CUKS=${CUKS_OLD:-$GPU_CUKS}
@@ -77,12 +83,30 @@ gpu_snapshot() {   # file
   { echo "=== $(date '+%F %T') $CURRENT"; nvidia-smi; echo; nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv; } > "$1" 2>&1
 }
 
+free_gpu_mb() {   # free GPU memory in MiB (empty when nvidia-smi is not usable)
+  nvidia-smi --query-gpu=memory.total,memory.used --format=csv,noheader,nounits 2>/dev/null | head -n 1 | awk -F, '{printf "%d", $1 - $2}'
+}
+wait_for_gpu() {   # label: wait until enough GPU memory is free (gm: MIN_FREE_GM_MB, others: MIN_FREE_BASE_MB)
+  local need=$MIN_FREE_BASE_MB free t0 polls=0
+  case $1 in gm\ *) need=$MIN_FREE_GM_MB;; esac
+  free=$(free_gpu_mb); [ -n "$free" ] || return 0
+  [ "$free" -ge "$need" ] && return 0
+  t0=$(date +%s); say "WAIT $1: GPU memory free ${free} MiB < ${need} MiB needed (polling every ${WAIT_POLL_S} s)"
+  while [ "$free" -lt "$need" ]; do
+    CURRENT="$TASK $1: waiting for GPU memory (free ${free} MiB, need ${need} MiB)"; status
+    sleep "$WAIT_POLL_S"; polls=$((polls + 1)); free=$(free_gpu_mb); [ -n "$free" ] || break
+    [ $((polls % 20)) -eq 0 ] && say "  still waiting for $1: free ${free} MiB, need ${need} MiB ($(( ($(date +%s) - t0) / 60 )) min)"
+  done
+  say "  GPU memory ok for $1 after $(( $(date +%s) - t0 )) s (free ${free} MiB)"
+}
+
 # run_with_retries <kind> <label> <log> <run_dir> <timeout> <done-test-function> -- command...
 run_with_retries() {
   local kind=$1 label=$2 log=$3 rdir=$4 to=$5 donefn=$6; shift 7
   local attempt=0
   while [ $attempt -le $RETRIES ]; do
     attempt=$((attempt + 1))
+    wait_for_gpu "$label"
     CURRENT="$TASK $label (attempt $attempt)"; status
     gpu_snapshot "$Q/$TASK/gpu_snapshots/${label// /_}_a${attempt}.txt"
     say "START $label (attempt $attempt)"
@@ -91,6 +115,7 @@ run_with_retries() {
     if [ $rc -eq 0 ] && $donefn; then say "END   $label ok"; return 0; fi
     say "FAILED $label (attempt $attempt, exit code $rc); last log line: $(tail -n 1 "$log" | cut -c1-160)"
     cp "$log" "$log.attempt$attempt" 2>/dev/null
+    [ -n "$rdir" ] && [ -f "$rdir/cycles.csv" ] && cp "$rdir/cycles.csv" "$rdir/cycles.csv.attempt$attempt" 2>/dev/null   # keep the partial data of a failed attempt
     if [ $rc -eq 124 ]; then say "  timeout (not retried)"; break; fi
     if [ $attempt -le $RETRIES ]; then
       say "  crash (exit code $rc, not a timeout): retrying"
