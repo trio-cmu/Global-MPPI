@@ -1,0 +1,50 @@
+{
+ "W_per_m": 100.0,
+ "results": {
+  "PS": {
+   "T_path_m": 0.22777465707421324,
+   "pusher_path_m": 1.69549440115978,
+   "final_com_dist_mm": 4.374448300077169,
+   "final_corner_dist_mm": 4.374820090742433,
+   "score": 2.3607510673082364,
+   "pusher_path_until_block_stops_m": 1.3564419999118267,
+   "score_until_block_stops": 2.021698666060283
+  },
+  "MPPI": {
+   "T_path_m": 0.08888133841518878,
+   "pusher_path_m": 0.47109824219546675,
+   "final_com_dist_mm": 100.67208131646046,
+   "final_corner_dist_mm": 100.52640327329237,
+   "score": 10.612619907939893,
+   "pusher_path_until_block_stops_m": 0.20656631291199515,
+   "score_until_block_stops": 10.348087978656421
+  },
+  "DIAL": {
+   "T_path_m": 0.19324966640860902,
+   "pusher_path_m": 1.0374942874522002,
+   "final_com_dist_mm": 15.226693102988637,
+   "final_corner_dist_mm": 15.248274731304171,
+   "score": 2.755571426991226,
+   "pusher_path_until_block_stops_m": 0.5765202466521319,
+   "score_until_block_stops": 2.2945973861911577
+  },
+  "CACS (ours)": {
+   "T_path_m": 0.22293101226761752,
+   "pusher_path_m": 1.4037690747934415,
+   "final_com_dist_mm": 3.752644399181057,
+   "final_corner_dist_mm": 3.752148841011574,
+   "score": 2.0019149711622166,
+   "pusher_path_until_block_stops_m": 1.350243186887169,
+   "score_until_block_stops": 1.9483890832559438
+  },
+  "GCS (new cost)": {
+   "T_path_m": 0.28442433600232353,
+   "pusher_path_m": 0.6077281207953031,
+   "final_com_dist_mm": 0.0,
+   "final_corner_dist_mm": 0.0,
+   "score": 0.8921524567976267,
+   "pusher_path_until_block_stops_m": 0.4790122037771041,
+   "score_until_block_stops": 0.7634365397794276
+  }
+ }
+}

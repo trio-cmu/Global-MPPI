@@ -85,5 +85,4 @@ fig.text(0.04, 0.925, textwrap.fill(f"{note + '; ' if note else ''}seeds {seeds[
          fontsize=9, color=INK_2, va="top")
 fig.tight_layout(rect=(0, 0, 1, 0.87))
 fig.savefig(out, facecolor=fig.get_facecolor())
-fig.savefig(out.with_suffix(".pdf"), facecolor=fig.get_facecolor())
 print(out)

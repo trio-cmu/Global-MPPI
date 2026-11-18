@@ -1,0 +1,67 @@
+{
+ "PS": {
+  "duration_s": 2.0,
+  "block_com_path_m": 0.22777465707421324,
+  "block_corner_mean_path_m": 0.24691615034610226,
+  "block_rotation_rad": 2.039191920729354,
+  "pusher_path_m": 1.69549440115978,
+  "pusher_path_off_contact_m": 1.354473325643473,
+  "pusher_path_in_contact_m": 0.34102107551630695,
+  "t_block_stops_s": 1.68,
+  "pusher_path_until_block_stops_m": 1.3564419999118267,
+  "pusher_until_stop_off_contact_m": 1.0154209243955195,
+  "pusher_until_stop_in_contact_m": 0.34102107551630695
+ },
+ "MPPI": {
+  "duration_s": 2.0,
+  "block_com_path_m": 0.08888133841518878,
+  "block_corner_mean_path_m": 0.10660864324497424,
+  "block_rotation_rad": 1.6428190648555756,
+  "pusher_path_m": 0.47109824219546675,
+  "pusher_path_off_contact_m": 0.31536569419728605,
+  "pusher_path_in_contact_m": 0.15573254799818062,
+  "t_block_stops_s": 0.2,
+  "pusher_path_until_block_stops_m": 0.20656631291199515,
+  "pusher_until_stop_off_contact_m": 0.05083376491381453,
+  "pusher_until_stop_in_contact_m": 0.15573254799818062
+ },
+ "DIAL": {
+  "duration_s": 2.0,
+  "block_com_path_m": 0.19324966640860902,
+  "block_corner_mean_path_m": 0.21511623432405083,
+  "block_rotation_rad": 2.2138282127678393,
+  "pusher_path_m": 1.0374942874522002,
+  "pusher_path_off_contact_m": 0.7250646640016261,
+  "pusher_path_in_contact_m": 0.31242962345057407,
+  "t_block_stops_s": 0.7000000000000001,
+  "pusher_path_until_block_stops_m": 0.5765202466521319,
+  "pusher_until_stop_off_contact_m": 0.26409062320155785,
+  "pusher_until_stop_in_contact_m": 0.31242962345057407
+ },
+ "CACS (ours)": {
+  "duration_s": 2.0,
+  "block_com_path_m": 0.22293101226761752,
+  "block_corner_mean_path_m": 0.23877621078620814,
+  "block_rotation_rad": 2.299768476351164,
+  "pusher_path_m": 1.4037690747934415,
+  "pusher_path_off_contact_m": 0.9634679700212346,
+  "pusher_path_in_contact_m": 0.44030110477220685,
+  "t_block_stops_s": 1.92,
+  "pusher_path_until_block_stops_m": 1.350243186887169,
+  "pusher_until_stop_off_contact_m": 0.9194980177117527,
+  "pusher_until_stop_in_contact_m": 0.4307451691754164
+ },
+ "GCS (new cost)": {
+  "duration_s": 10.5,
+  "block_com_path_m": 0.28442433600232353,
+  "block_corner_mean_path_m": 0.29275666807064027,
+  "block_rotation_rad": 2.139477621596296,
+  "pusher_path_m": 0.6077281207953031,
+  "pusher_path_off_contact_m": 0.2028765154401907,
+  "pusher_path_in_contact_m": 0.40485160535511233,
+  "t_block_stops_s": 7.5,
+  "pusher_path_until_block_stops_m": 0.4790122037771041,
+  "pusher_until_stop_off_contact_m": 0.07760660297872762,
+  "pusher_until_stop_in_contact_m": 0.4014056007983764
+ }
+}

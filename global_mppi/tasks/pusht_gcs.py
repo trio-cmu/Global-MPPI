@@ -124,22 +124,25 @@ def wrap(a):
 class PushTGCS(PushT):
     """PushT with GCS's quasi-static dynamics (gcs_step) in place of MuJoCo; same state, goal and cost.
 
-    The planners keep an mjx.Data state; only qpos, ctrl and time are used. The cost is pusht.py's,
-    computed from qpos: 50 |block position|^2 + 15 (block angle)^2 (the goal is the origin).
+    The planners keep an mjx.Data state; qpos, qvel (set by step to the step's velocity), ctrl and time
+    are used. The cost is pusht.py's: its running cost (pose cost + pusher path off contact) with the
+    pose cost computed from qpos, 50 |COM - goal COM|^2 + 15 * 2 (1 - cos(block angle)).
     """
 
-    def __init__(self, close_to_block_weight: float = 0.0) -> None:
-        super().__init__(close_to_block_weight=close_to_block_weight)
+    def __init__(self, **cost_kwargs) -> None:
+        super().__init__(**cost_kwargs)  # PushT's cost weights
         self._sim_step = jax.jit(gcs_step)
 
     def step(self, model: mjx.Model, data: mjx.Data) -> mjx.Data:
         u = jnp.clip(data.ctrl, self.u_min, self.u_max)
-        return data.replace(qpos=gcs_step(data.qpos, u, self.dt), time=data.time + self.dt)
+        qpos = gcs_step(data.qpos, u, self.dt)  # qvel = the step's velocity, for the pusher path term
+        return data.replace(qpos=qpos, qvel=(qpos - data.qpos) / self.dt, time=data.time + self.dt)
 
-    def running_cost(self, state: mjx.Data, control: jax.Array) -> jax.Array:
-        pos = state.qpos[:2]
+    def pose_cost(self, state: mjx.Data) -> jax.Array:
+        theta = state.qpos[2]
+        com_err = state.qpos[:2] + _rot(theta) @ COM - COM  # COM to goal COM (goal pose = origin)
         pusher_err = state.qpos[:2] - (state.qpos[3:5] + PUSHER_HOME)
-        return (50 * jnp.sum(jnp.square(pos)) + 15 * jnp.square(wrap(state.qpos[2]))
+        return (50 * jnp.sum(jnp.square(com_err)) + 15 * 2.0 * (1.0 - jnp.cos(theta))
                 + self.close_to_block_weight * jnp.sum(jnp.square(pusher_err)))
 
     def get_trace_sites(self, state: mjx.Data) -> jax.Array:
@@ -148,7 +151,8 @@ class PushTGCS(PushT):
     def sim_step(self, mj_model: mujoco.MjModel, mj_data: mujoco.MjData) -> None:
         """The closed-loop 'real' system: one step of gcs_step at the simulation timestep."""
         u = np.clip(mj_data.ctrl, np.asarray(self.u_min), np.asarray(self.u_max))
-        mj_data.qpos[:] = np.asarray(self._sim_step(jnp.asarray(mj_data.qpos), jnp.asarray(u), mj_model.opt.timestep))
-        mj_data.qvel[:] = 0.0
+        qpos = np.asarray(self._sim_step(jnp.asarray(mj_data.qpos), jnp.asarray(u), mj_model.opt.timestep))
+        mj_data.qvel[:] = (qpos - mj_data.qpos) / mj_model.opt.timestep
+        mj_data.qpos[:] = qpos
         mj_data.time += mj_model.opt.timestep
         mujoco.mj_kinematics(mj_model, mj_data)

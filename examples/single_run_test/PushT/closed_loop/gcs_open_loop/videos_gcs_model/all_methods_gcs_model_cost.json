@@ -1,0 +1,187 @@
+{
+ "PS": {
+  "as_run": {
+   "duration": 2.0,
+   "running_pose": 2.754279165717308,
+   "running_pusher_path": 13.544733256434732,
+   "running": 16.299012091720947,
+   "terminal": 0.001039044582284987,
+   "total": 16.30005113630323,
+   "pusher_path_off_contact_m": 1.354473325643473,
+   "final_qpos": [
+    9.092904656426981e-05,
+    -0.004372742958366871,
+    -0.002329485723748803,
+    0.2316538542509079,
+    -0.3474174439907074
+   ]
+  },
+  "held_to_10_5s": {
+   "duration": 10.5,
+   "running_pose": 2.76311104466673,
+   "running_pusher_path": 13.54473325643473,
+   "running": 16.307928970328067,
+   "terminal": 0.001039044582284987,
+   "total": 16.308968014910352,
+   "pusher_path_off_contact_m": 1.3544733256434731,
+   "final_qpos": [
+    9.092904656426981e-05,
+    -0.004372742958366871,
+    -0.002329485723748803,
+    0.2316538542509079,
+    -0.3474174439907074
+   ]
+  },
+  "final_err_mm": 4.374448300077169,
+  "final_angle_deg": -0.13346970040678444,
+  "traj": "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/logs/pushT_globalmppi_ps/20261106_134331/pushT_globalmppi_ps_robot_pos_history_seed0.npy"
+ },
+ "MPPI": {
+  "as_run": {
+   "duration": 2.0,
+   "running_pose": 2.8707662844657884,
+   "running_pusher_path": 3.153656941972859,
+   "running": 6.02442319869995,
+   "terminal": 0.551024854183197,
+   "total": 6.575448052883147,
+   "pusher_path_off_contact_m": 0.31536569419728605,
+   "final_qpos": [
+    0.09902016818523407,
+    0.013842635788023472,
+    -0.05433955788612366,
+    0.12189216911792755,
+    0.1814798265695572
+   ]
+  },
+  "held_to_10_5s": {
+   "duration": 10.5,
+   "running_pose": 7.554477545022963,
+   "running_pusher_path": 3.1536569419728595,
+   "running": 10.708219574689867,
+   "terminal": 0.551024854183197,
+   "total": 11.259244428873064,
+   "pusher_path_off_contact_m": 0.315365694197286,
+   "final_qpos": [
+    0.09902016818523407,
+    0.013842635788023472,
+    -0.05433955788612366,
+    0.12189216911792755,
+    0.1814798265695572
+   ]
+  },
+  "final_err_mm": 100.67208131646046,
+  "final_angle_deg": -3.113427327481715,
+  "traj": "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/logs/pushT_globalmppi_mppi/20261105_204439/pushT_globalmppi_mppi_robot_pos_history_seed0.npy"
+ },
+ "DIAL": {
+  "as_run": {
+   "duration": 2.0,
+   "running_pose": 2.209342404939233,
+   "running_pusher_path": 7.25064664001626,
+   "running": 9.459988848064095,
+   "terminal": 0.013607841916382313,
+   "total": 9.473596689980477,
+   "pusher_path_off_contact_m": 0.7250646640016262,
+   "final_qpos": [
+    0.008575743064284325,
+    -0.012681523337960243,
+    0.011592667549848557,
+    0.38755151629447937,
+    -0.38135409355163574
+   ]
+  },
+  "held_to_10_5s": {
+   "duration": 10.5,
+   "running_pose": 2.3250090612284833,
+   "running_pusher_path": 7.25064664001626,
+   "running": 9.575740501042457,
+   "terminal": 0.013607841916382313,
+   "total": 9.58934834295884,
+   "pusher_path_off_contact_m": 0.7250646640016261,
+   "final_qpos": [
+    0.008575743064284325,
+    -0.012681523337960243,
+    0.011592667549848557,
+    0.38755151629447937,
+    -0.38135409355163574
+   ]
+  },
+  "final_err_mm": 15.226693102988637,
+  "final_angle_deg": 0.6642109239045871,
+  "traj": "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/logs/pushT_globalmppi_dial/20261106_135821/pushT_globalmppi_dial_robot_pos_history_seed0.npy"
+ },
+ "CACS (ours)": {
+  "as_run": {
+   "duration": 2.0,
+   "running_pose": 2.2590289129188754,
+   "running_pusher_path": 9.634679700212347,
+   "running": 11.893708499503557,
+   "terminal": 0.0007041170028969646,
+   "total": 11.894412616506454,
+   "pusher_path_off_contact_m": 0.9634679700212345,
+   "final_qpos": [
+    0.003693780628964305,
+    0.0006492463871836662,
+    -0.00017686199862509966,
+    0.0447201170027256,
+    -0.05201699584722519
+   ]
+  },
+  "held_to_10_5s": {
+   "duration": 10.5,
+   "running_pose": 2.2650139074434996,
+   "running_pusher_path": 9.634679700212345,
+   "running": 11.899778494180651,
+   "terminal": 0.0007041170028969646,
+   "total": 11.900482611183548,
+   "pusher_path_off_contact_m": 0.9634679700212346,
+   "final_qpos": [
+    0.003693780628964305,
+    0.0006492463871836662,
+    -0.00017686199862509966,
+    0.0447201170027256,
+    -0.05201699584722519
+   ]
+  },
+  "final_err_mm": 3.752644399181057,
+  "final_angle_deg": -0.010133446077466779,
+  "traj": "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/logs/pushT_globalmppi_globalmppi/20261105_204541/pushT_globalmppi_globalmppi_robot_pos_history_seed0.npy"
+ },
+ "GCS (new cost)": {
+  "as_run": {
+   "duration": 10.5,
+   "running_pose": 32.34451300199348,
+   "running_pusher_path": 2.028765154401907,
+   "running": 34.37327813352662,
+   "terminal": 0.0,
+   "total": 34.37327813352662,
+   "pusher_path_off_contact_m": 0.2028765154401907,
+   "final_qpos": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "held_to_10_5s": {
+   "duration": 10.5,
+   "running_pose": 32.34451300199348,
+   "running_pusher_path": 2.028765154401907,
+   "running": 34.37327813352662,
+   "terminal": 0.0,
+   "total": 34.37327813352662,
+   "pusher_path_off_contact_m": 0.2028765154401907,
+   "final_qpos": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "final_err_mm": 0.0,
+  "final_angle_deg": 0.0,
+  "traj": "gcs_open_loop/videos_gcs_model/gcs_current_cost_plan_qpos.npy"
+ }
+}

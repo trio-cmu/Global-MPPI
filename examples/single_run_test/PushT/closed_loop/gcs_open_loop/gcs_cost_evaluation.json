@@ -1,0 +1,66 @@
+{
+ "rect_trim0.0": {
+  "duration": 12.0,
+  "running_pose": 49.421322408273994,
+  "running_pusher_path": 2.792683973236768,
+  "running": 52.21402851328174,
+  "terminal": 0.0,
+  "total": 52.21402851328174,
+  "pusher_path_while_still_m": 0.27926839732367675,
+  "final_qpos": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "rect_trim0.75": {
+  "duration": 10.5,
+  "running_pose": 32.34451300199347,
+  "running_pusher_path": 2.7926839732367563,
+  "running": 35.13720445444404,
+  "terminal": 0.0,
+  "total": 35.13720445444404,
+  "pusher_path_while_still_m": 0.27926839732367564,
+  "final_qpos": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "exact_trim0.0": {
+  "duration": 4.5,
+  "running_pose": 46.274742247848764,
+  "running_pusher_path": 1.0358435030794413,
+  "running": 47.31060040924556,
+  "terminal": 0.0,
+  "total": 47.31060040924556,
+  "pusher_path_while_still_m": 0.10358435030794413,
+  "final_qpos": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "exact_trim0.75": {
+  "duration": 3.0,
+  "running_pose": 29.197932841568253,
+  "running_pusher_path": 1.0358435030794286,
+  "running": 30.23377635040786,
+  "terminal": 0.0,
+  "total": 30.23377635040786,
+  "pusher_path_while_still_m": 0.10358435030794286,
+  "final_qpos": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ }
+}
