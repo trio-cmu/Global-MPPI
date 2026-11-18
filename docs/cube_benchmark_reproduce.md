@@ -8,7 +8,7 @@ Results below were produced on the code of `58f9add` (clean tree, `git_dirty: fa
 
 | Repo | Remote | Branch | Commit | Role |
 | --- | --- | --- | --- | --- |
-| **Global-MPPI** | `https://github.com/trio-cmu/Global-MPPI` | `cube-gpu` | `58f9add` (+ the commit that adds this file) | planners, cube task, `examples/cube.py`, `script/` |
+| **Global-MPPI** | `https://github.com/trio-cmu/Global-MPPI` | `cube` | `58f9add` (+ the commit that adds this file) | planners, cube task, `examples/cube.py`, `script/` |
 | **ksos-tools** (submodule of Global-MPPI) | `https://github.com/Zhongqi2/ksos-tools` | `gpu-solve-exp` | `86e6163` | KSOS problem building, `ADMM.solve_ksos` (records `solve_path`) |
 | **cuKernelSOS** | `https://github.com/ssisyg/cuKernelSOS` | `gpu-solve` | `2768612` (on top of `4180908`) | GPU ADMM solver with the `gpu_solve` option |
 
@@ -16,7 +16,7 @@ Results below were produced on the code of `58f9add` (clean tree, `git_dirty: fa
 
 ```
 kernelSOS_project/
-├── Global-MPPI/            (cube-gpu; ksos-tools/ inside, gpu-solve-exp)
+├── Global-MPPI/            (cube; ksos-tools/ inside, gpu-solve-exp)
 └── cuKernelSOS_gpu/        (gpu-solve, built in place)
 export CUKERNELSOS_PYTHON=$PWD/cuKernelSOS_gpu/python
 ```
