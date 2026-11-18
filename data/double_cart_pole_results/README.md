@@ -55,12 +55,12 @@ MTP and CBO use the untuned hyperparameters of hydrax `bd53d43` (`global_mppi/al
 `ssisyg/cuKernelSOS`, branch `gpu-solve`, commit `2768612` (a WIP, not merged: GPU affine solve, off by default).
 `KSOS_GPU_SOLVE=1` switches `gpu_solve` on and `CUKERNELSOS_PYTHON=<cuKernelSOS checkout>/python` selects the build (the `--gpu` flag of
 `double_cart_pole.py` only turns on the GPU ADMM). All 6 gm runs have `solve_paths: {'gpu': 505}` (101 planning calls x 5 restarts, no
-CPU fallback). The baselines never call cuKernelSOS.
+CPU fallback). The baselines never call cuKernelSOS. `KSOS_GPU_SOLVE=1` is needed for this task; the cube and G1 standup benchmarks do not need it (`examples/cube.py --gpu` and `examples/g1.py --gpu` set `gpu_solve` themselves).
 
 ## Rerun
 
 Environment: the Global-MPPI env with MuJoCo / mujoco-mjx **3.3.6** (not 4.0), this branch (`double-cart-pole`) checked out. `script/` is
-the queue and plotting tools, identical to branch `walker` and `pusht-bench`.
+the queue and plotting tools. The runs of this folder were made with the version of branch `walker` / `pusht-bench` at the time; `script/` here was later synced to a newer version that also supports the bugtrap and g1_walk tasks (nothing changes for double_cart_pole: the redrawn figure and table of this folder are identical).
 
 ```bash
 # everything: 6 methods x 6 seeds, retries, logs, figure, tables (gm takes about 1 h per seed: 6-7 h for the batch on our shared GPU)
@@ -91,6 +91,8 @@ python script/final_figs.py data/double_cart_pole_results double_cart_pole data/
 
 ## Notes
 
+- Timeouts of `script/overnight_queue.sh`: 3600 s per attempt for ps, mppi, dial, mtp and cbo, 14400 s for gm (`BASE_TIMEOUT` and `GM_TIMEOUT`, set at the top of the script; they are plain assignments, not environment variables, so change them in the script). A timed-out run is not retried. gm may need more than 14400 s on a busy GPU.
+- This folder holds `cycles.csv` and `final.json` per run, no `args.json`: the settings in the table above were checked against the code defaults (`examples/double_cart_pole.py`, `global_mppi/algs/`), not against recorded files.
 - The GPU was shared with other users' jobs during these runs, so the plan times (GlobalMPPI 47 to 55 s per cycle on average, 26 to 56 s
   per cycle in earlier checks) are inflated and vary; compare costs, not times. An `nvidia-smi` snapshot was stored before every run
   (not included here).
