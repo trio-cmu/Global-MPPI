@@ -43,12 +43,12 @@ MTP and CBO use the untuned hyperparameters of hydrax `bd53d43` (`global_mppi/al
 `ssisyg/cuKernelSOS`, branch `gpu-solve`, commit `2768612` (a WIP, not merged: GPU affine solve, off by default).
 `KSOS_GPU_SOLVE=1` switches `gpu_solve` on and `CUKERNELSOS_PYTHON=<cuKernelSOS checkout>/python` selects the build (the `--gpu` flag of
 `walker.py` only turns on the GPU ADMM). All 6 gm runs have `solve_paths: {'gpu': 505}` (101 planning calls x 5 restarts, no CPU
-fallback). The baselines never call cuKernelSOS.
+fallback). The baselines never call cuKernelSOS. `KSOS_GPU_SOLVE=1` is needed for this task; the cube and G1 standup benchmarks do not need it (`examples/cube.py --gpu` and `examples/g1.py --gpu` set `gpu_solve` themselves).
 
 ## Rerun
 
 Environment: the Global-MPPI env with MuJoCo / mujoco-mjx **3.3.6** (not 4.0), this branch (`walker`) checked out. `script/` is the
-queue and plotting tools of branch `pusht-bench` (commit `36f33fe`, cherry-picked here, plus the `final_figs.py` of its `1bb853e`).
+queue and plotting tools. The runs of this folder were made with the version of branch `pusht-bench` at commits `36f33fe` and `1bb853e`; `script/` here was later synced to a newer version that also supports the bugtrap and g1_walk tasks (nothing changes for walker: the redrawn figure and table of this folder are identical).
 
 ```bash
 # everything: 6 methods x 6 seeds, retries, logs, figure, tables
@@ -79,6 +79,8 @@ python script/final_figs.py data/walker_results walker data/walker_results      
 
 ## Notes
 
+- Timeouts of `script/overnight_queue.sh`: 3600 s per attempt for ps, mppi, dial, mtp and cbo, 14400 s for gm (`BASE_TIMEOUT` and `GM_TIMEOUT`, set at the top of the script; they are plain assignments, not environment variables, so change them in the script). A timed-out run is not retried. gm may need more than 14400 s on a busy GPU.
+- This folder holds `cycles.csv` and `final.json` per run, no `args.json`: the settings in the table above were checked against the code defaults (`examples/walker.py`, `global_mppi/algs/`), not against recorded files.
 - The GPU was shared with other users' jobs during these runs, so the plan times (GlobalMPPI 15 s per cycle) are inflated and vary
   between runs; compare costs, not times. An `nvidia-smi` snapshot was stored before every run (not included here).
 - 6 seeds per method; IQR and std over 6 values are rough. `best_cost` is the planner's predicted cost over the horizon, not the

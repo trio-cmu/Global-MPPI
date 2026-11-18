@@ -1,5 +1,5 @@
 #!/bin/bash
-# script/overnight_queue.sh -- unattended, strictly sequential queue of six-method batches (ps mppi dial mtp cbo gm x 6 seeds x 100 cycles).
+# script/overnight_queue.sh -- unattended, strictly sequential queue of six-method batches (ps mppi dial mtp cbo gm x 6 seeds x 100 cycles; g1_walk 400).
 #
 #   CUKS_GPU=/path/to/cuKernelSOS/python  script/overnight_queue.sh      start detached (nohup + setsid) and print where to look
 #   (the queue itself is `script/overnight_queue.sh --run`, started by the launcher; do not call it by hand)
@@ -10,15 +10,18 @@
 #   PY         python that runs the planners (default: python in PATH; needs the Global-MPPI env, MuJoCo 3.3.6)
 #   SYSPY      python that draws the figures (default: PY; needs matplotlib)
 #   RUNS_DIR   where the queue writes (default: <repo>/logs/overnight_runs); one folder <RUNS_DIR>/<timestamp> per queue
-#   TASKS      tasks to run, any of "pusht walker double_cart_pole" (default: pusht; walker / double_cart_pole come from their own
-#              branches `walker` / `double-cart-pole`, which must exist locally, through git worktrees in $WT)
-#   WT         worktree folder for walker / double_cart_pole (default: <repo>/../overnight_wt)
+#   TASKS      tasks to run, any of "pusht walker double_cart_pole bugtrap g1_walk" (default: pusht; the others come from their own
+#              branches `walker` / `double-cart-pole` / `bugtrap` / `g1-walk`, which must exist locally, through git worktrees in $WT)
+#   WT         worktree folder for walker / double_cart_pole / bugtrap / g1_walk (default: <repo>/../overnight_wt)
+#   MAX_CYCLES control cycles per run of walker / double_cart_pole / bugtrap / g1_walk (default 100; g1_walk 400, see docs/g1_walk.md)
+#   g1_walk needs the G1 model (script/fetch_g1_model.sh, copied into the worktree: set G1_MODEL_DIR=<dir> to reuse a fetched one)
+#   and downloads its reference motion from Hugging Face on first use (CC-BY-NC-ND 4.0; set HF_HOME for the cache)
 #   SEEDS, METHODS  (default: "0 1 2 3 4 5", "ps mppi dial mtp cbo gm")
 # PushT runs the code of the checkout this script lives in (check out the branch pusht-bench first).
 #
 # Nothing is waited for: the queue starts at once and runs one process at a time (no two of our runs overlap).
-# Code of walker / double_cart_pole comes from its own git branch through a worktree outside the repo ($WT/<branch>):
-#   PushT -> pusht-bench, walker -> walker, double_cart_pole -> double-cart-pole   (committed code only; PYTHONPATH selects it)
+# Code of walker / double_cart_pole / bugtrap / g1_walk comes from its own git branch through a worktree outside the repo ($WT/<branch>):
+#   PushT -> pusht-bench, walker -> walker, double_cart_pole -> double-cart-pole, bugtrap -> bugtrap, g1_walk -> g1-walk   (committed code only; PYTHONPATH selects it)
 # Per task: <Q>/<task>/batch.log, <Q>/<task>/gpu_snapshots/<method>_s<seed>.txt (nvidia-smi before every run), logs/, results/;
 # overall: <Q>/STATUS.txt (rewritten after every run). A failed run is retried (max 2) after ANY crash (nonzero exit, or no finished
 # marker), except a timeout (exit code 124), which is not retried; after the retries it is logged "GAVE UP" and the queue goes on. A task that cannot start is "SKIPPED"; a failed or
@@ -159,15 +162,21 @@ task_pusht() {
   TASK_STATE[pusht]=DONE; say "=== PushT batch end (gave up:${TASK_FAILED[pusht]:- none}); tables in $Q/pusht/summary.txt, figures in $Q/pusht/figures/"
 }
 
-# ------------------------------------------------------------------ (b) walker, (c) double_cart_pole
+# ------------------------------------------------------------------ (b) walker, (c) double_cart_pole, (d) bugtrap, (e) g1_walk
 task_example() {   # <task name = example name> <branch>
   TASK=$1; local b=$2 W=$WT/$2 RES=$Q/$1/results
   mkdir -p "$Q/$TASK/gpu_snapshots" "$Q/$TASK/logs" "$RES"
-  say "=== $TASK batch: $METHODS, seeds $SEEDS, 100 cycles (settings as the cube runs; horizon, knots, spline from the hydrax example)"
+  say "=== $TASK batch: $METHODS, seeds $SEEDS, $([ "$TASK" = g1_walk ] && echo ${MAX_CYCLES:-400} || echo ${MAX_CYCLES:-100}) cycles (settings as the cube runs; walker / double_cart_pole: horizon, knots, spline from the hydrax example; bugtrap: horizon 2.0, 11 knots, cubic)"
   make_worktree "$b" || { TASK_STATE[$TASK]=SKIPPED; say "SKIPPED (no usable worktree of $b)"; return 1; }
+  if [ "$TASK" = g1_walk ] && [ ! -d "$W/global_mppi/models/g1" ]; then   # the G1 model is not vendored
+    if [ -n "${G1_MODEL_DIR:-}" ]; then cp -r "$G1_MODEL_DIR" "$W/global_mppi/models/g1"; else (cd "$W" && bash script/fetch_g1_model.sh) >> "$Q/$TASK/batch.log" 2>&1; fi
+  fi
   [ -f "$W/examples/$TASK.py" ] || { TASK_STATE[$TASK]=SKIPPED; say "SKIPPED (no examples/$TASK.py on $b)"; return 1; }
   TASK_STATE[$TASK]=RUNNING; status
   local s m arg algo final log
+  local EXTRA=""   # per-task benchmark setting
+  case $TASK in bugtrap) EXTRA="--horizon 2.0 --num-knots 11 --spline-type cubic";; esac
+  local CYC=${MAX_CYCLES:-100}; [ "$TASK" = g1_walk ] && CYC=${MAX_CYCLES:-400}   # g1_walk: 8 s, see docs/g1_walk.md
   for s in $SEEDS; do
     say "--- seed $s"
     for m in $METHODS; do
@@ -178,11 +187,11 @@ task_example() {   # <task name = example name> <branch>
       if [ $m = gm ]; then
         ( cd "$W" && run_with_retries example "$m s$s" "$log" "$RES/$m/s$s" $GM_TIMEOUT example_done -- \
             env PYTHONPATH="$W" KSOS_GPU_SOLVE=1 CUKERNELSOS_PYTHON=$GPU_CUKS XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
-            "$PY" examples/$TASK.py --headless --seed-start "$s" --seed-end $((s + 1)) --max-cycles 100 --out-dir "$RES" $arg )
+            "$PY" examples/$TASK.py --headless --seed-start "$s" --seed-end $((s + 1)) --max-cycles $CYC --out-dir "$RES" $EXTRA $arg )
       else
         ( cd "$W" && run_with_retries example "$m s$s" "$log" "$RES/$m/s$s" $BASE_TIMEOUT example_done -- \
             env PYTHONPATH="$W" CUKERNELSOS_PYTHON=$OLD_CUKS XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
-            "$PY" examples/$TASK.py --headless --seed-start "$s" --seed-end $((s + 1)) --max-cycles 100 --out-dir "$RES" $arg )
+            "$PY" examples/$TASK.py --headless --seed-start "$s" --seed-end $((s + 1)) --max-cycles $CYC --out-dir "$RES" $EXTRA $arg )
       fi
       if [ $? -eq 0 ]; then
         TASK_DONE[$TASK]=$((TASK_DONE[$TASK] + 1))
@@ -193,7 +202,7 @@ task_example() {   # <task name = example name> <branch>
       status
     done
   done
-  $SYSPY "$TOOLS/plot_task.py" "$TASK" "$RES" "$Q/$TASK/figures" >> "$Q/$TASK/batch.log" 2>&1
+  case $TASK in bugtrap|g1_walk) ;; *) $SYSPY "$TOOLS/plot_task.py" "$TASK" "$RES" "$Q/$TASK/figures" >> "$Q/$TASK/batch.log" 2>&1;; esac   # bugtrap, g1_walk: final_figs only
   TASK_STATE[$TASK]=DONE; say "=== $TASK batch end (gave up:${TASK_FAILED[$TASK]:- none}); figure and tables in $Q/$TASK/figures/"
 }
 
@@ -205,6 +214,8 @@ for t in $TASKS; do
     pusht) task_pusht || true;;
     walker) task_example walker walker || true;;
     double_cart_pole) task_example double_cart_pole double-cart-pole || true;;
+    bugtrap) task_example bugtrap bugtrap || true;;
+    g1_walk) task_example g1_walk g1-walk || true;;
     *) echo "unknown task $t" >> "$Q/queue/batch.log";;
   esac
 done
