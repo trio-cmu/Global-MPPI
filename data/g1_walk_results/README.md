@@ -1,9 +1,9 @@
-# G1 walk (hydrax `HumanoidMocap`): partial results, 8 finished runs, no GlobalMPPI run yet
+# G1 walk (hydrax `HumanoidMocap`): not completed, 8 of 36 runs finished, no GlobalMPPI run
 
 Unitree G1 tracking a retargeted motion capture of a walk (`walk1_subject1`), six planners: `ps mppi dial mtp cbo gm` (gm = GlobalMPPI).
-Task description, metrics and the run-length argument: `docs/g1_walk.md`. **This folder is incomplete and meant to be extended**
-(see the end): only 8 of the 36 planned runs (6 methods x 6 seeds) finished, **1 to 2 seeds per method, and none for gm**. There is
-therefore **no comparison with GlobalMPPI yet**, and the numbers below are not a ranking of the methods.
+Task description, metrics and the run-length argument: `docs/g1_walk.md`. **G1 walk is not completed on our side**: only 8 of the 36 planned runs (6 methods x 6 seeds) finished, **1 to 2 seeds per method, and none for gm**.
+The remaining 28 runs, including all gm runs, are left for a rerun on a free GPU. There is therefore **no comparison with GlobalMPPI**, and the numbers
+below are not a ranking of the methods. The folder is meant to be extended (see the end).
 
 ## Contents
 
@@ -70,26 +70,26 @@ compare the behaviour, not the times. The wall time of the finished runs was 26 
 
 | method | s0 | s1 | s2 | s3 | s4 | s5 |
 |---|---|---|---|---|---|---|
-| ps | unfinished (398/400, timeout) | done | pending (not run) | pending (not run) | pending (not run) | pending (not run) |
-| mppi | done | done | pending (not run) | pending (not run) | pending (not run) | pending (not run) |
-| dial | done | done | pending (not run) | pending (not run) | pending (not run) | pending (not run) |
-| mtp | done | done | pending (not run) | pending (not run) | pending (not run) | pending (not run) |
-| cbo | done | unfinished (stopped) | pending (not run) | pending (not run) | pending (not run) | pending (not run) |
-| gm | failed (cuSOLVER error 7) | pending (not run) | pending (not run) | pending (not run) | pending (not run) | pending (not run) |
+| ps | unfinished (stopped by hand at 130/400; earlier attempt 398/400, timeout) | done | pending (left for a rerun) | pending (left for a rerun) | pending (left for a rerun) | pending (left for a rerun) |
+| mppi | done | done | pending (left for a rerun) | pending (left for a rerun) | pending (left for a rerun) | pending (left for a rerun) |
+| dial | done | done | pending (left for a rerun) | pending (left for a rerun) | pending (left for a rerun) | pending (left for a rerun) |
+| mtp | done | done | pending (left for a rerun) | pending (left for a rerun) | pending (left for a rerun) | pending (left for a rerun) |
+| cbo | done | unfinished (stopped) | pending (left for a rerun) | pending (left for a rerun) | pending (left for a rerun) | pending (left for a rerun) |
+| gm | failed (cuSOLVER error 7); later by-hand run stopped at cycle 66/400 | pending (left for a rerun) | pending (left for a rerun) | pending (left for a rerun) | pending (left for a rerun) | pending (left for a rerun) |
 
-8 done, 1 failed (gm s0: cuSOLVER error 7 under GPU memory shortage, attempt 1 reached cycle 118), 2 unfinished (ps s0: 398 of 400 cycles, hit the 3600 s timeout; cbo s1: stopped), 25 pending (not run yet). Every folder that is not done holds a `PENDING.md` with the status, the cause and the exact command to produce the run; these folders contain no data. **The figure and the summary currently cover only the 8 finished runs**; they are regenerated with `script/final_figs.py` once more runs exist (see "Extending this folder").
+8 done, 1 failed (gm s0: cuSOLVER error 7 under GPU memory shortage, attempt 1 reached cycle 118; a later by-hand run with an 8 h timeout was stopped by hand at cycle 66 of 400), 2 unfinished (ps s0: stopped by hand at 130 of 400 cycles, earlier attempt 398 of 400 hit the 3600 s timeout; cbo s1: stopped), 25 pending (not run). The 28 runs that are not done, including all gm runs, are left for a rerun on a free GPU. Every folder that is not done holds a `PENDING.md` with the status, the cause and the exact command to produce the run; these folders contain no data. **The figure and the summary currently cover only the 8 finished runs**; they are regenerated with `script/final_figs.py` once more runs exist (see "Extending this folder").
 
 ## Unfinished runs
 
 | run | status | cause |
 |---|---|---|
-| gm s0 | no result | cuSOLVER error 7 (`cusolverDnCreate`) under GPU memory shortage: the GPU was nearly full (28 of 32.6 GB in use at the start of attempts 2 and 3). Attempt 1 reached cycle 118 (about 74 min); attempts 2 and 3 failed in cycle 1 |
-| ps s0 | 398 of 400 cycles | hit the 3600 s timeout (about 9 to 10 s per cycle on the loaded GPU); no `final.json`, not retried |
+| gm s0 | no result | cuSOLVER error 7 (`cusolverDnCreate`) under GPU memory shortage: the GPU was nearly full (28 of 32.6 GB in use at the start of attempts 2 and 3). Attempt 1 reached cycle 118 (about 74 min); attempts 2 and 3 failed in cycle 1. A later by-hand run with an 8 h timeout (more than 6 GB free) was stopped by hand at cycle 66 of 400: no crash, plan time about 36 to 43 s per cycle |
+| ps s0 | no result | stopped by hand at 130 of 400 cycles (an earlier attempt reached 398 of 400 and hit the 3600 s timeout, about 9 to 10 s per cycle on the loaded GPU); no `final.json` |
 | cbo s1 | stopped | the queue was stopped by hand while it was running |
-| seeds 2 to 5, all methods; gm s1 | not run | |
+| seeds 2 to 5, all methods; gm s1 | not run | left for a rerun on a free GPU |
 
-**GlobalMPPI cost on a shared GPU** (measured on the 118 cycles of gm s0 attempt 1, during the walk): about **36 s per cycle** (median 35.6 s,
-range 22 to 64 s; cycle 0 with JIT 151 s), i.e. about **100 cycles per hour and about 4 h per 400-cycle run**. gm needs at least **6 GB of free GPU
+**GlobalMPPI cost on a shared GPU** (measured on the 118 cycles of gm s0 attempt 1 and the 66 cycles of the later by-hand run, during the walk): about **36 to 43 s per cycle** (median 35.6 s in attempt 1,
+range 22 to 64 s; cycle 0 with JIT 151 s), i.e. about **85 to 100 cycles per hour and 4 to 5 h per 400-cycle run**. gm needs at least **6 GB of free GPU
 memory** (its cuSOLVER handles failed with 3 to 4 GB free). These times depend strongly on what else runs on the GPU.
 
 ## Rerun
@@ -103,7 +103,7 @@ script/fetch_g1_model.sh                      # once: the G1 model
 export XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl
 # ps | mppi | dial | mtp | cbo   (seed S; the reference is downloaded on the first run)
 python examples/g1_walk.py --headless --seed-start S --seed-end $((S+1)) --max-cycles 400 --out-dir OUT ps
-# GlobalMPPI (one run: about 4 h on a shared GPU)
+# GlobalMPPI (one run: 4 to 5 h on a shared GPU)
 CUKERNELSOS_PYTHON=/path/to/cuKernelSOS_gpu/python \
 python examples/g1_walk.py --headless --seed-start S --seed-end $((S+1)) --max-cycles 400 --out-dir OUT --gpu globalmppi
 # the whole batch (6 methods x 6 seeds), retries, logs, figure and table
@@ -111,8 +111,8 @@ TASKS=g1_walk CUKS_GPU=/path/to/cuKernelSOS_gpu/python PY=$(which python) script
 ```
 
 **Timeouts of the queue** (`script/overnight_queue.sh`): 3600 s per attempt for ps, mppi, dial, mtp and cbo, 14400 s for gm (`BASE_TIMEOUT` and `GM_TIMEOUT`: the defaults, overridable as environment variables, e.g. `GM_TIMEOUT=28800 script/overnight_queue.sh`; before every attempt the queue also waits for free GPU memory, see the header of the script). A timed-out run is not retried.
-For this task both are too tight on a shared GPU: a baseline run needed up to 59 minutes, and a gm run takes about 4 h (14400 s), so raise
-`GM_TIMEOUT` (and `BASE_TIMEOUT`) before running the batch on a busy GPU.
+The gm timeout is overridable by the environment variable `GM_TIMEOUT` (default 14400 s), and **a gm run needs more than that default on a shared GPU** (4 to 5 h per run):
+set a higher `GM_TIMEOUT` (for example 28800) for this task; a baseline run needed up to 59 minutes, so `BASE_TIMEOUT` (default 3600 s) is also close to the limit on a busy GPU.
 
 ## Extending this folder
 

@@ -17,6 +17,6 @@ or through the queue (writes `<queue>/g1_walk/results/gm/s3/`):
 TASKS=g1_walk SEEDS=3 METHODS=gm CUKS_GPU=/path/to/cuKernelSOS_gpu/python PY=$(which python) script/overnight_queue.sh
 ```
 
-About 4 h on a shared GPU and at least 6 GB of free GPU memory; raise `GM_TIMEOUT` in `script/overnight_queue.sh` first if you use the queue (14400 s is too tight).
+About 4 to 5 h on a shared GPU and at least 6 GB of free GPU memory; if you use the queue, set `GM_TIMEOUT` (environment variable, default 14400 s) higher first: a gm run needs more than the default on a shared GPU.
 
 Then package it with `script/package_task_results.py` (see the README of this folder, section "Extending this folder") and delete this file.

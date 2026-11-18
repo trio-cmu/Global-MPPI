@@ -1,7 +1,7 @@
 # PENDING: ps seed 0
 
 - **Status:** unfinished
-- **Cause:** 398 of 400 cycles done, then the queue's 3600 s timeout (about 9 to 10 s per cycle on the loaded GPU) stopped it; no `final.json`, not retried.
+- **Cause:** an earlier attempt reached 398 of 400 cycles and then hit the queue's 3600 s timeout (about 9 to 10 s per cycle on the loaded GPU); a later attempt was stopped by hand at 130 of 400 cycles. No `final.json`; left for a rerun on a free GPU (with a higher `BASE_TIMEOUT`).
 - **No data here:** this folder has no `cycles.csv` or `final.json`; `script/final_figs.py` and the summary ignore it.
 
 ## Command to produce it (from the repo root, G1 model fetched with `script/fetch_g1_model.sh`, reference downloaded on first use)
