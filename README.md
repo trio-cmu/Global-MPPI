@@ -1,4 +1,4 @@
-Benchmark overview (all tasks, branches, data, results): see https://github.com/trio-cmu/Global-MPPI/blob/benchmark-map/BENCHMARK_MAP.md
+Benchmark overview (all seven tasks on this branch): see [BENCHMARK_MAP.md](BENCHMARK_MAP.md).
 # Global-MPPI
 
 Global Sampling-Based Trajectory Optimization for Contact-Rich Manipulation
