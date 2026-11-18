@@ -7,11 +7,13 @@ Unitree G1 humanoid standing up from a fallen start (50 Hz, horizon 0.6 s, 4 kno
 ```bash
 script/fetch_g1_model.sh                                   # once: downloads the model (35 MB), checks sha256
 export CUKERNELSOS_PYTHON=<path>/cuKernelSOS_gpu/python    # gpu-solve build, see docs/cube_benchmark_reproduce.md
-script/run_g1_benchmark.sh runs/g1_benchmark               # ps mppi dial gm, seeds 0-5, 100 cycles
+ALGOS="ps mppi dial mtp cbo gm" script/run_g1_benchmark.sh runs/g1_benchmark   # all six methods need ALGOS (the default runs only ps mppi dial gm), seeds 0-5, 100 cycles
 python data/g1_results/figures/plot_g1_cost.py runs/g1_benchmark --out g1_fixed_cost.png
 ```
 
 One run: `python examples/g1.py --headless --seed-start 0 --seed-end 1 --max-cycles 100 --out-dir runs/g1 ps` (also `mppi`, `dial`, `mtp`, `cbo`; `--gpu globalmppi` for gm). `script/run_g1_benchmark.sh` takes `ALGOS="ps mppi dial mtp cbo gm"`.
+
+MTP and CBO use Hydrax defaults (the MTP paper used per-task settings). gm needs the cuKernelSOS gpu-solve branch (`ssisyg/cuKernelSOS`, branch `gpu-solve`, `2768612`) with `KSOS_GPU_SOLVE=1`.
 
 ## The task and the one-line fix
 

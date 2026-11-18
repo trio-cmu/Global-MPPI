@@ -2,6 +2,14 @@
 
 6 seeds (0-5) × {ps, mppi, dial, mtp, cbo, gm, gm_noise0.02}, 100 control cycles, headless, run unattended on a shared RTX 5090 (ps, mppi, dial, gm, gm_noise0.02 on 2026-11-12; mtp and cbo on 2026-11-16). How to reproduce: `docs/cube_benchmark_reproduce.md`, driver `script/run_cube_benchmark.sh`, cost plot `script/plot_cube_cost.py`.
 
+Full rerun (the script's default runs only ps mppi dial gm):
+
+```bash
+CONFIGS="ps mppi dial mtp cbo gm gm_noise0.02" script/run_cube_benchmark.sh runs/cube_benchmark
+```
+
+MTP and CBO use Hydrax defaults (the MTP paper used per-task settings). gm needs the cuKernelSOS gpu-solve branch (`ssisyg/cuKernelSOS`, branch `gpu-solve`, `2768612`) with `KSOS_GPU_SOLVE=1`.
+
 ## Versions
 
 - MuJoCo / mujoco-mjx **3.3.6** (not 4.0.0, whose contact dynamics differ), Python 3.12, jax 0.5.3

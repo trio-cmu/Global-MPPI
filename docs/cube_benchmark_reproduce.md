@@ -48,8 +48,13 @@ From the `Global-MPPI` root, with the `ksos` env active:
 
 ```bash
 export CUKERNELSOS_PYTHON=<path>/cuKernelSOS_gpu/python
-script/run_cube_benchmark.sh runs/cube_benchmark        # configs ps mppi dial gm, seeds 0-5, 100 cycles
+script/run_cube_benchmark.sh runs/cube_benchmark        # default: only ps mppi dial gm, seeds 0-5, 100 cycles
+CONFIGS="ps mppi dial mtp cbo gm gm_noise0.02" script/run_cube_benchmark.sh runs/cube_benchmark   # all methods of the results table
 ```
+
+The default configs are only `ps mppi dial gm`; mtp, cbo and gm_noise0.02 must be added through `CONFIGS` as above.
+
+MTP and CBO use Hydrax defaults (the MTP paper used per-task settings). gm needs the cuKernelSOS gpu-solve branch (`ssisyg/cuKernelSOS`, branch `gpu-solve`, `2768612`) with `KSOS_GPU_SOLVE=1`.
 
 One run is:
 
