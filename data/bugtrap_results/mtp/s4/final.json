@@ -1,0 +1,11 @@
+{
+  "final_x": 0.26518469420436314,
+  "final_y": 0.00024944144899840805,
+  "final_distance": 0.01518674287385211,
+  "left_cup": true,
+  "reached": true,
+  "reached_5cm": true,
+  "sim_time": 2.0000000000000013,
+  "cycles": 100,
+  "mean_plan_s_excl_cycle0": 6.744771181935012
+}
