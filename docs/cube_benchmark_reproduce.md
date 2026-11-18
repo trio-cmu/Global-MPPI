@@ -8,7 +8,7 @@ Results below were produced on the code of `58f9add` (clean tree, `git_dirty: fa
 
 | Repo | Remote | Branch | Commit | Role |
 | --- | --- | --- | --- | --- |
-| **Global-MPPI** | `https://github.com/trio-cmu/Global-MPPI` | `cube-gpu` | `58f9add` (+ the commit that adds this file) | planners, cube task, `examples/cube.py`, `script/` |
+| **Global-MPPI** | `https://github.com/trio-cmu/Global-MPPI` | `cube` | `58f9add` (+ the commit that adds this file) | planners, cube task, `examples/cube.py`, `script/` |
 | **ksos-tools** (submodule of Global-MPPI) | `https://github.com/Zhongqi2/ksos-tools` | `gpu-solve-exp` | `86e6163` | KSOS problem building, `ADMM.solve_ksos` (records `solve_path`) |
 | **cuKernelSOS** | `https://github.com/ssisyg/cuKernelSOS` | `gpu-solve` | `2768612` (on top of `4180908`) | GPU ADMM solver with the `gpu_solve` option |
 
@@ -16,7 +16,7 @@ Results below were produced on the code of `58f9add` (clean tree, `git_dirty: fa
 
 ```
 kernelSOS_project/
-├── Global-MPPI/            (cube-gpu; ksos-tools/ inside, gpu-solve-exp)
+├── Global-MPPI/            (cube; ksos-tools/ inside, gpu-solve-exp)
 └── cuKernelSOS_gpu/        (gpu-solve, built in place)
 export CUKERNELSOS_PYTHON=$PWD/cuKernelSOS_gpu/python
 ```
@@ -54,7 +54,7 @@ CONFIGS="ps mppi dial mtp cbo gm gm_noise0.02" script/run_cube_benchmark.sh runs
 
 The default configs are only `ps mppi dial gm`; mtp, cbo and gm_noise0.02 must be added through `CONFIGS` as above.
 
-MTP and CBO use Hydrax defaults (the MTP paper used per-task settings). gm needs the cuKernelSOS gpu-solve branch (`ssisyg/cuKernelSOS`, branch `gpu-solve`, `2768612`) with `KSOS_GPU_SOLVE=1`.
+MTP and CBO use Hydrax defaults (the MTP paper used per-task settings). gm needs the cuKernelSOS gpu-solve branch (`ssisyg/cuKernelSOS`, branch `gpu-solve`, `2768612`), selected with `CUKERNELSOS_PYTHON`. For the cube task `KSOS_GPU_SOLVE=1` is not needed (`examples/cube.py --gpu` sets `gpu_solve` itself); the other tasks (walker, double cart-pole, bugtrap, G1 walk, PushT) need it.
 
 One run is:
 

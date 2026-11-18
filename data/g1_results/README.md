@@ -13,7 +13,9 @@ python data/g1_results/figures/plot_g1_cost.py runs/g1_benchmark --out g1_fixed_
 
 One run: `python examples/g1.py --headless --seed-start 0 --seed-end 1 --max-cycles 100 --out-dir runs/g1 ps` (also `mppi`, `dial`, `mtp`, `cbo`; `--gpu globalmppi` for gm). `script/run_g1_benchmark.sh` takes `ALGOS="ps mppi dial mtp cbo gm"`.
 
-MTP and CBO use Hydrax defaults (the MTP paper used per-task settings). gm needs the cuKernelSOS gpu-solve branch (`ssisyg/cuKernelSOS`, branch `gpu-solve`, `2768612`) with `KSOS_GPU_SOLVE=1`.
+MTP and CBO use Hydrax defaults (the MTP paper used per-task settings). gm needs the cuKernelSOS gpu-solve branch (`ssisyg/cuKernelSOS`, branch `gpu-solve`, `2768612`), selected with `CUKERNELSOS_PYTHON`. For the G1 task `KSOS_GPU_SOLVE=1` is not needed (`examples/g1.py --gpu` sets `gpu_solve` itself); the other tasks (walker, double cart-pole, bugtrap, G1 walk, PushT) need it.
+
+The driver's timeout is 3600 s per attempt (`RUN_TIMEOUT`); gm may need more on a busy GPU.
 
 ## The task and the one-line fix
 
@@ -25,7 +27,7 @@ The same experiment was also run on the unmodified upstream task (same settings,
 
 - MuJoCo / mujoco-mjx 3.3.6; Global-MPPI `db94bc7` (clean tree, as recorded in every `args.json`). The runs were made with a driver script that `examples/g1.py` is the port of (same controller, simulation and initial-state settings, checked with a 10-cycle rerun; reruns of one seed are not bit-identical on the GPU), ksos-tools `86e6163`, cuKernelSOS `2768612` (`gpu-solve`), G1 model from hydrax `bd53d43` (`hydrax/models/g1`, from MuJoCo Menagerie, BSD-3-Clause, Unitree Robotics).
 - Parameters are those of the cube benchmark (`data/cube_results_mj336/README.md`): ps / mppi / dial 2000 samples × 5 iterations, noise 0.2 (ps, mppi) / 1.0 (dial), temperature 0.001 (mppi) / 0.01 (dial), beta 1.0 / 1.0; gm `--gpu` with CACS, 5 restarts × 1000 candidates, ADMM-cuda with `gpu_solve`, warm start, final MPPI 1000 samples × 5 iterations, noise 0.1, temperature 0.1. Changed for G1: horizon 0.6 s, and the CACS radius `h = 0.7 × vmax = 2.162` (vmax = 3.089 here, 1.88 for the cube; cube.py's scaling rule).
-- **mtp and cbo (ported from hydrax `bd53d43`; code of `6af9f9d`, the 12 runs' `args.json` record `227f7ca`, clean): upstream default hyperparameters, untuned for this task**, 2000 samples × 5 iterations, horizon 0.6 s, 4 knots. mtp: the defaults of its constructor (`m_pts` 3, `n_per_layer` 50, `degree` 2, `num_elites` 5, `sigma_start` 0.5, `sigma_min` 0.1, `sigma_max` 1.0, `temperature` 0.1, `beta` 0.1, `alpha` 0.5, akima). cbo has no defaults for four of its arguments; they are taken from the hydrax bugtrap example, not from a humanoid task: `initial_noise_level` 1.0, `temperature` 0.01, `consensus_weight` 1.0, `noise_weight` 10.0 (`step_size` 0.1 is its default).
+- **mtp and cbo (ported from hydrax `bd53d43`; code of `6af9f9d`, the 12 runs' `args.json` record `227f7ca`, clean: `args.json` records an unpushed local bugtrap commit, and `mtp.py`, `cbo.py` and `g1.py` are identical to this branch): upstream default hyperparameters, untuned for this task**, 2000 samples × 5 iterations, horizon 0.6 s, 4 knots. mtp: the defaults of its constructor (`m_pts` 3, `n_per_layer` 50, `degree` 2, `num_elites` 5, `sigma_start` 0.5, `sigma_min` 0.1, `sigma_max` 1.0, `temperature` 0.1, `beta` 0.1, `alpha` 0.5, akima). cbo has no defaults for four of its arguments; they are taken from the hydrax bugtrap example, not from a humanoid task: `initial_noise_level` 1.0, `temperature` 0.01, `consensus_weight` 1.0, `noise_weight` 10.0 (`step_size` 0.1 is its default).
 - Simulated robot: timestep 0.01, stiffer contacts (`o_solimp`), start = "stand" keyframe with base quaternion (0.7, 0, -0.7, 0) (lying on its side). Every gm run has `solve_paths = {'gpu': 505}` (all ADMM solves on the GPU).
 
 ## Results (6 seeds, after 100 cycles)
