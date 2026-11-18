@@ -22,14 +22,104 @@ Notes on the table:
 - G1 walk is **not completed on our side**: 8 of 36 runs are done and the remaining 28 (including all gm runs) are left for a rerun on a free GPU; there is no finished GlobalMPPI run. The 28 missing runs have a folder with a `PENDING.md` that gives the status, the cause and the command to produce the run. The README has a 6 x 6 status matrix. Design doc: [docs/g1_walk.md](https://github.com/trio-cmu/Global-MPPI/blob/benchmarks/docs/g1_walk.md). The g1_walk runs that are not done are left for a rerun on a free GPU; the folder can be extended with `script/package_task_results.py` (see its README).
 - Older cube and G1 standup folders have a `figures/` subfolder and `args.json` per run. The later tasks keep the figure and summary directly in the data folder.
 
-## Setup needed for GlobalMPPI (gm)
+## Quick start from a fresh clone
 
-gm calls ksos-tools, which calls cuKernelSOS (GPU ADMM). Use the GPU solve branch:
+Follow the steps in order; each says what you should see. Tested in a fresh clone of this branch: step 1 (clone, submodule), the import check and `--help` of all seven examples (with the existing `ksos` env), and that every line of the pinned pip list parses as a requirement. Not run: creating a new environment and installing the pinned list (step 2), the cuKernelSOS build (step 3) and the GPU checks (step 4); those commands are copied from `docs/cube_benchmark_reproduce.md` and the task READMEs.
 
-- `https://github.com/ssisyg/cuKernelSOS`, branch `gpu-solve`, commit `2768612`
-- `export CUKERNELSOS_PYTHON=<path to cuKernelSOS_gpu>/python`
+**Step 1: clone, switch to this branch, fetch the ksos-tools submodule.**
+
+```bash
+git clone https://github.com/trio-cmu/Global-MPPI.git
+cd Global-MPPI
+git checkout benchmarks
+git submodule update --init
+git submodule status
+```
+
+You should see `Submodule path 'ksos-tools': checked out '86e6163040ddea1d8df5af947bbc5bac64ce1b36'`, and `git submodule status` lists `86e6163... ksos-tools (remotes/origin/gpu-solve-exp)`. `git branch --show-current` prints `benchmarks`.
+
+**Step 2: create the Python 3.12 environment and install the repo.** Two ways:
+
+- *Exact versions we used (use this to reproduce results):* `docs/env_ksos_pip_freeze.txt` is the pip freeze and conda export of the env `ksos` (MuJoCo / MJX 3.3.6, jax 0.5.3, Python 3.12.16). Install its pip section without dependency resolution, because it is complete and `mujoco-warp` 4.0.0 asks for a newer mujoco than the 3.3.6 we ran:
+
+```bash
+conda create -n ksos python=3.12 -y && conda activate ksos
+sed -n '/^## pip freeze/,/^## conda list/p' docs/env_ksos_pip_freeze.txt | grep -vE '^#|^$' > /tmp/ksos_requirements.txt
+pip install --no-deps -r /tmp/ksos_requirements.txt
+pip install -e .
+pip install -e ./ksos-tools
+```
+
+- *A fresh, unpinned environment (only if you just need something that runs):* `conda env create -f environment.yml` (name `global-mppi`; CUDA 12.3 libraries from the nvidia channel, Python 3.12), then `pip install -e .` and `pip install -e ./ksos-tools`, then `pip install mujoco==3.3.6 mujoco-mjx==3.3.6`. `environment.yml` and `pyproject.toml` do not pin MuJoCo (`mujoco>=3.2.4`), a plain install now gets 4.0.0 whose contact dynamics differ, so the numbers in the READMEs would not reproduce.
+
+Hydrax is not installed or needed: the tasks and baselines are ported copies of Hydrax `bd53d43` inside this repo (nothing was patched). Check:
+
+```bash
+python -c "import global_mppi, ksos_tools, mujoco; print(global_mppi.__file__); print(ksos_tools.__file__); print(mujoco.__version__)"
+python examples/cube.py --help | head -3
+```
+
+You should see the paths of this checkout (and of `ksos-tools/`), `3.3.6`, and a `usage:` line. The same `--help` works for `examples/pusht.py`, `walker.py`, `double_cart_pole.py`, `bugtrap.py` and `g1_walk.py`. `examples/g1.py --help` needs the G1 model first (see "Common problems").
+
+**Step 3: build cuKernelSOS (gpu-solve) and point `CUKERNELSOS_PYTHON` at it.** Needed by GlobalMPPI (gm) only; the five baselines never call it. Requirements: an NVIDIA GPU, a CUDA toolkit with `nvcc` (we used 12.9 for an RTX 5090, `sm_120`), CMake >= 3.18, a C++ compiler, Python 3.12, and internet access (CMake downloads pybind11). Set `CMAKE_CUDA_ARCHITECTURES` to your GPU and `CMAKE_CUDA_COMPILER` to your `nvcc`.
+
+```bash
+cd ..                                   # leave the Global-MPPI checkout
+git clone -b gpu-solve https://github.com/ssisyg/cuKernelSOS cuKernelSOS_gpu    # 2768612
+cd cuKernelSOS_gpu
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCUKERNELSOS_BUILD_PYTHON=ON \
+  -DCMAKE_CUDA_ARCHITECTURES=120 -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.9/bin/nvcc \
+  -DPython_EXECUTABLE=$(which python)
+cmake --build build -j4        # puts _cukernelsos.cpython-312-*.so into python/cukernelsos/
+export CUKERNELSOS_PYTHON=$PWD/python
+```
+
+`git rev-parse --short HEAD` should print `2768612` (the `gpu-solve` branch sits on `4180908`, the asynchronous host-to-device copies commit, and adds the WIP `gpu_solve` option; not merged upstream). After the build, `ls python/cukernelsos/` shows the `_cukernelsos.cpython-312-*.so`, and `PYTHONPATH=$CUKERNELSOS_PYTHON python -c "import cukernelsos"` runs without an error. Without `CUKERNELSOS_PYTHON`, gm silently uses a `cuKernelSOS/python` it finds in a parent folder, which is not this build; check that `solve_paths` in the gm `final.json` is `{'gpu': N}`.
+
+**Step 4: quick checks (a minute or two on a free GPU).** From the Global-MPPI root, with the env active. A baseline (`ps`) with 3 cycles per task, output into `/tmp/quick`:
+
+```bash
+export XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl
+python examples/cube.py --headless --seed-start 0 --seed-end 1 --max-cycles 3 --out-dir /tmp/quick/cube ps
+python examples/pusht.py --no-wandb --headless --seed 0 --num-samples 2000 --max-cycles 3 ps
+python examples/walker.py --headless --seed-start 0 --seed-end 1 --max-cycles 3 --out-dir /tmp/quick/walker ps
+python examples/double_cart_pole.py --headless --seed-start 0 --seed-end 1 --max-cycles 3 --out-dir /tmp/quick/dcp ps
+python examples/bugtrap.py --headless --seed-start 0 --seed-end 1 --max-cycles 3 --horizon 2.0 --num-knots 11 --spline-type cubic --out-dir /tmp/quick/bugtrap ps
+script/fetch_g1_model.sh               # once, for the two G1 tasks
+python examples/g1.py --headless --seed-start 0 --seed-end 1 --max-cycles 3 --out-dir /tmp/quick/g1 ps
+python examples/g1_walk.py --headless --seed-start 0 --seed-end 1 --max-cycles 3 --out-dir /tmp/quick/g1_walk ps    # downloads the mocap file on first use
+```
+
+Each run prints `Jitting the controller...`, `Time to jit: ...`, then a `Cycle N: ...` line per cycle, and writes `<out-dir>/ps/s0/final.json` and `cycles.csv` (3 rows plus the header). The same through the queue (any of `pusht walker double_cart_pole bugtrap g1_walk`): `TASKS=walker METHODS=ps SEEDS=0 MAX_CYCLES=3 CUKS_GPU=$CUKERNELSOS_PYTHON PY=$(which python) RUNS_DIR=/tmp/quick script/overnight_queue.sh` (`MAX_CYCLES` does not apply to `pusht`).
+
+One gm check (needs the build of step 3 and at least 6 GB of free GPU memory; the first cycle takes 1 to 2 minutes for JIT and the planning, later ones about 10 s on a free GPU):
+
+```bash
+CUKERNELSOS_PYTHON=$CUKERNELSOS_PYTHON python examples/cube.py --headless --seed-start 0 --seed-end 1 --max-cycles 2 --out-dir /tmp/quick/cube_gm --gpu globalmppi
+```
+
+You should see `Running GlobalMPPI (CACS + ADMM-cuda, gpu_solve)`, one `ADMM-cuda: restart 0 ... restart 4` block per cycle, and `solve_paths` equal to `{'gpu': 15}` in `/tmp/quick/cube_gm/gm/s0/final.json` (3 planning calls x 5 restarts, all on the GPU).
+
+**Step 5: the full commands per task** are in "Rerun commands" below; each task README has the exact version, the settings and the caveats.
+
+**Step 6: common problems.**
+
+- `KSOS solver failed: cuSOLVER error 7` / `ValueError: UNKNOWN: cuSolver execution failed`: not enough free GPU memory for gm (it needs about 6 GB free; it failed with 3 to 4 GB free on the shared GPU). Check `nvidia-smi`, wait for other jobs, rerun. The `OpenGL ... EGLError` lines after it are only a shutdown message, not the cause.
+- Timeouts: the queue allows 3600 s per attempt for the five baselines and 14400 s for gm; a timed-out run is not retried. A G1 walk gm run takes 4 to 5 hours on a shared GPU, so set `GM_TIMEOUT` (environment variable) higher, for example `GM_TIMEOUT=28800 ...script/overnight_queue.sh`; `BASE_TIMEOUT` works the same way. The queue also waits for free GPU memory (`MIN_FREE_GM_MB`, default 6144; `MIN_FREE_BASE_MB`, default 2048).
+- `ParseXML: Error opening file '.../global_mppi/models/g1/scene.xml'`: the G1 model is not in the repo. Run `script/fetch_g1_model.sh` once (35 MB, checked against `script/g1_model.sha256`).
+- G1 walk: the reference motion is not in the repo either (CC-BY-NC-ND 4.0). It is downloaded from Hugging Face (`robfiras/loco-mujoco-datasets`, `Lafan1/mocap/UnitreeG1/walk1_subject1.npz`) into `~/.cache/huggingface` (or `$HF_HOME`) on first use, so the first run needs internet access; see `docs/g1_walk.md`.
+- `pip` warns that `mujoco-warp` wants a newer mujoco, or `Failed to import mujoco.mjx.third_party.mujoco_warp`: harmless here, the examples do not use it; keep MuJoCo / MJX at 3.3.6.
+
+## Setup needed for GlobalMPPI (gm): the pins
+
+gm calls ksos-tools, which calls cuKernelSOS (GPU ADMM).
+
+- **cuKernelSOS:** `https://github.com/ssisyg/cuKernelSOS`, branch `gpu-solve`, commit `2768612` (on top of `4180908`; WIP, not merged). Build and `CUKERNELSOS_PYTHON`: Quick start, step 3.
+- **ksos-tools:** a git submodule pinned by this branch: `https://github.com/Zhongqi2/ksos-tools`, branch `gpu-solve-exp`, commit `86e6163`. `git submodule update --init` fetches it (the commit is the tip of that branch).
+- **Install:** `pip install -e .` and `pip install -e ./ksos-tools` from this checkout (Python 3.12).
+- **Hydrax is not required.** The tasks and baselines are ported copies from Hydrax `bd53d43` (the MTP and CBO hyperparameters are its defaults); nothing in Hydrax was patched.
+- **MuJoCo / MJX 3.3.6** was used for all runs. The env also has `mujoco-warp` 4.0.0 (and `mujoco-core`, `mujoco-studio` 4.0.0); imports resolve to 3.3.6. `environment.yml` does not pin versions, so the exact list is in `docs/env_ksos_pip_freeze.txt`.
 - `solve_paths` in a gm run must be `{gpu: N}`. The READMEs and `final.json`/logs show this for the runs we did.
-- `ksos-tools` is a submodule pinned by each branch.
 
 ## Rerun commands
 

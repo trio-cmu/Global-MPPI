@@ -92,6 +92,8 @@ compare the behaviour, not the times. The wall time of the finished runs was 26 
 range 22 to 64 s; cycle 0 with JIT 151 s), i.e. about **85 to 100 cycles per hour and 4 to 5 h per 400-cycle run**. gm needs at least **6 GB of free GPU
 memory** (its cuSOLVER handles failed with 3 to 4 GB free). These times depend strongly on what else runs on the GPU.
 
+ksos-tools and cuKernelSOS pins (as in the cube and G1 standup READMEs): ksos-tools is a git submodule of this branch, `https://github.com/Zhongqi2/ksos-tools`, branch `gpu-solve-exp`, commit `86e6163` (`git submodule update --init`); cuKernelSOS: `https://github.com/ssisyg/cuKernelSOS`, branch `gpu-solve`, commit `2768612` (on top of `4180908`), built as described in `BENCHMARK_MAP.md` ("Quick start from a fresh clone", step 3) and selected with `CUKERNELSOS_PYTHON`. MuJoCo / MJX 3.3.6; the exact package list of the env is `docs/env_ksos_pip_freeze.txt`. Hydrax is not required (ported copies of Hydrax `bd53d43`).
+
 ## Rerun
 
 Environment: the Global-MPPI env with MuJoCo / mujoco-mjx **3.3.6** (not 4.0). GlobalMPPI needs the `gpu-solve` build of cuKernelSOS:

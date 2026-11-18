@@ -78,6 +78,8 @@ imageio-ffmpeg, warp, ...) are declared in `pyproject.toml` and installed
 automatically. The `ksos-tools` submodule is the only piece that must be
 installed separately, because it is a git submodule rather than a PyPI package.
 
+**To reproduce the benchmark results** (`benchmarks` branch), use MuJoCo / MJX 3.3.6: `pyproject.toml` does not pin MuJoCo (`mujoco>=3.2.4`), and a plain install now gets 4.0.0, whose contact dynamics differ. The exact package list, the cuKernelSOS `gpu-solve` build for GlobalMPPI and a quick start are in [BENCHMARK_MAP.md](BENCHMARK_MAP.md) ("Quick start from a fresh clone") and `docs/env_ksos_pip_freeze.txt`.
+
 ## Project layout
 
 ```

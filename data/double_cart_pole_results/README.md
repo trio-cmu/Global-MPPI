@@ -57,6 +57,8 @@ MTP and CBO use the untuned hyperparameters of hydrax `bd53d43` (`global_mppi/al
 `double_cart_pole.py` only turns on the GPU ADMM). All 6 gm runs have `solve_paths: {'gpu': 505}` (101 planning calls x 5 restarts, no
 CPU fallback). The baselines never call cuKernelSOS. `KSOS_GPU_SOLVE=1` is needed for this task; the cube and G1 standup benchmarks do not need it (`examples/cube.py --gpu` and `examples/g1.py --gpu` set `gpu_solve` themselves).
 
+ksos-tools and cuKernelSOS pins (as in the cube and G1 standup READMEs): ksos-tools is a git submodule of this branch, `https://github.com/Zhongqi2/ksos-tools`, branch `gpu-solve-exp`, commit `86e6163` (`git submodule update --init`); cuKernelSOS: `https://github.com/ssisyg/cuKernelSOS`, branch `gpu-solve`, commit `2768612` (on top of `4180908`), built as described in `BENCHMARK_MAP.md` ("Quick start from a fresh clone", step 3) and selected with `CUKERNELSOS_PYTHON`. MuJoCo / MJX 3.3.6; the exact package list of the env is `docs/env_ksos_pip_freeze.txt`. Hydrax is not required (ported copies of Hydrax `bd53d43`).
+
 ## Rerun
 
 Environment: the Global-MPPI env with MuJoCo / mujoco-mjx **3.3.6** (not 4.0), the `benchmarks` branch checked out. `script/` is
