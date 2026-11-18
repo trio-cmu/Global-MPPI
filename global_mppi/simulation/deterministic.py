@@ -513,6 +513,10 @@ def run_interactive(  # noqa: PLR0912, PLR0915
                         out_pos_npy,
                         np.asarray(robot_pos_history, dtype=float),
                     )
+                    np.savetxt(
+                        out_pos_npy.replace(".npy", ".txt"),
+                        np.asarray(robot_pos_history, dtype=float),
+                    )
                     np.save(
                         out_cost_npy,
                         np.asarray(best_cost_history, dtype=float),

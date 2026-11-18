@@ -159,7 +159,7 @@ elif args.algorithm == "globalmppi":
 
 # Run the interactive simulation
 start_seed = 0
-for trial_idx in range(start_seed, 6):
+for trial_idx in range(start_seed, 1):
     # Define the model used for simulation
     mj_model = task.mj_model
     mj_model.opt.timestep = 0.001
@@ -179,7 +179,7 @@ for trial_idx in range(start_seed, 6):
         record_video=False,
         max_traces=5,
         current_seed=trial_idx,
-        max_cycles=100,
+        max_cycles=500,
         current_task="pushT_globalmppi",
         use_wandb=args.wandb,
         wandb_project=args.wandb_project,

@@ -1,0 +1,20 @@
+# Batch 1: which of noise / temperature / horizon / approach term matters? (3 seeds each, 60 s, fixed duration)
+# fields: id, mppi (overrides of algos.mppi), w_approach
+- id: b1c1_paper_default          # control: paper defaults (noise 1.0 = 10 x vmax), no approach term
+  mppi: {noise_level_vmax: 10.0, temperature: 0.1, plan_horizon: 1.0, iterations: 5}
+  w_approach: 0
+- id: b1c2_noise1v                # the requested scaled version: noise = 1 x vmax
+  mppi: {noise_level_vmax: 1.0, temperature: 0.1, plan_horizon: 1.0, iterations: 5}
+  w_approach: 0
+- id: b1c3_noise1v_T0.01
+  mppi: {noise_level_vmax: 1.0, temperature: 0.01, plan_horizon: 1.0, iterations: 2}
+  w_approach: 0
+- id: b1c4_noise1v_T0.001
+  mppi: {noise_level_vmax: 1.0, temperature: 0.001, plan_horizon: 1.0, iterations: 2}
+  w_approach: 0
+- id: b1c5_noise1v_T0.01_h2
+  mppi: {noise_level_vmax: 1.0, temperature: 0.01, plan_horizon: 2.0, iterations: 2}
+  w_approach: 0
+- id: b1c6_noise1v_T0.01_h2_appr10
+  mppi: {noise_level_vmax: 1.0, temperature: 0.01, plan_horizon: 2.0, iterations: 2}
+  w_approach: 10
