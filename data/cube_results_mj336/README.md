@@ -5,17 +5,19 @@
 Full rerun (the script's default runs only ps mppi dial gm):
 
 ```bash
-CONFIGS="ps mppi dial mtp cbo gm gm_noise0.02" script/run_cube_benchmark.sh runs/cube_benchmark
+CUKERNELSOS_PYTHON=<path>/cuKernelSOS_gpu/python CONFIGS="ps mppi dial mtp cbo gm gm_noise0.02" script/run_cube_benchmark.sh runs/cube_benchmark
 ```
 
-MTP and CBO use Hydrax defaults (the MTP paper used per-task settings). gm needs the cuKernelSOS gpu-solve branch (`ssisyg/cuKernelSOS`, branch `gpu-solve`, `2768612`) with `KSOS_GPU_SOLVE=1`.
+MTP and CBO use Hydrax defaults (the MTP paper used per-task settings). gm needs the cuKernelSOS gpu-solve branch (`ssisyg/cuKernelSOS`, branch `gpu-solve`, `2768612`), selected with `CUKERNELSOS_PYTHON`. For the cube task `KSOS_GPU_SOLVE=1` is not needed (`examples/cube.py --gpu` sets `gpu_solve` itself); the other tasks (walker, double cart-pole, bugtrap, G1 walk, PushT) need it.
+
+The driver's timeout is 3600 s per attempt (`RUN_TIMEOUT`); gm may need more on a busy GPU.
 
 ## Versions
 
 - MuJoCo / mujoco-mjx **3.3.6** (not 4.0.0, whose contact dynamics differ), Python 3.12, jax 0.5.3
-- Global-MPPI `58f9add` (branch `cube-gpu`), ksos-tools `86e6163` (`gpu-solve-exp`), cuKernelSOS `2768612` (`gpu-solve`, from `ssisyg/cuKernelSOS`)
+- Global-MPPI `58f9add` (code of the ps, mppi, dial, gm and gm_noise0.02 runs), ksos-tools `86e6163` (`gpu-solve-exp`), cuKernelSOS `2768612` (`gpu-solve`, from `ssisyg/cuKernelSOS`)
 - the ps, mppi, dial, gm and gm_noise0.02 `args.json` record `git_commit` 58f9add, `git_dirty` false, mujoco 3.3.6
-- the mtp and cbo runs use the code of `6af9f9d` (branch `more-baselines`: `global_mppi/algs/mtp.py`, `cbo.py`, and the `mtp` / `cbo` subcommands of `examples/cube.py`). Their `args.json` record the commit the working tree was on while the batch ran: `b9184da` with uncommitted changes (3 runs), `6af9f9d` with uncommitted changes (1 run), `227f7ca` (8 runs); the files used (`examples/`, `global_mppi/algs`, `alg_base.py`, `simulation`, `utils`) are identical in `6af9f9d` and `227f7ca` and the uncommitted changes were this code before it was committed. mujoco 3.3.6
+- the mtp and cbo runs use the code of `6af9f9d` (contained in this branch: `global_mppi/algs/mtp.py`, `cbo.py`, and the `mtp` / `cbo` subcommands of `examples/cube.py`). Their `args.json` record the commit the working tree was on while the batch ran: `b9184da` with uncommitted changes (3 runs), `6af9f9d` with uncommitted changes (1 run), `227f7ca` (8 runs); the files used (`examples/`, `global_mppi/algs`, `alg_base.py`, `simulation`, `utils`) are identical in `6af9f9d` and `227f7ca` and the uncommitted changes were this code before it was committed. mujoco 3.3.6
 
 ## Settings (all read back from `args.json`)
 

@@ -54,7 +54,7 @@ CONFIGS="ps mppi dial mtp cbo gm gm_noise0.02" script/run_cube_benchmark.sh runs
 
 The default configs are only `ps mppi dial gm`; mtp, cbo and gm_noise0.02 must be added through `CONFIGS` as above.
 
-MTP and CBO use Hydrax defaults (the MTP paper used per-task settings). gm needs the cuKernelSOS gpu-solve branch (`ssisyg/cuKernelSOS`, branch `gpu-solve`, `2768612`) with `KSOS_GPU_SOLVE=1`.
+MTP and CBO use Hydrax defaults (the MTP paper used per-task settings). gm needs the cuKernelSOS gpu-solve branch (`ssisyg/cuKernelSOS`, branch `gpu-solve`, `2768612`), selected with `CUKERNELSOS_PYTHON`. For the cube task `KSOS_GPU_SOLVE=1` is not needed (`examples/cube.py --gpu` sets `gpu_solve` itself); the other tasks (walker, double cart-pole, bugtrap, G1 walk, PushT) need it.
 
 One run is:
 
