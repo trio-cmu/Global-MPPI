@@ -37,7 +37,7 @@ those of hydrax's bugtrap example).
 
 GlobalMPPI needs the `gpu-solve` build of cuKernelSOS: `ssisyg/cuKernelSOS`, branch `gpu-solve`, commit `2768612`
 (a WIP, not merged: GPU affine solve, off by default). `gpu_solve` is switched on with `KSOS_GPU_SOLVE=1` and the build is selected
-with `CUKERNELSOS_PYTHON=<cuKernelSOS checkout>/python`. All 6 gm runs report `solve_paths: {'gpu': 505}` (101 cycles x 5 restarts,
+with `CUKERNELSOS_PYTHON=<cuKernelSOS checkout>/python`. `KSOS_GPU_SOLVE=1` is needed for PushT (`examples/pusht.py` reads it); the cube and G1 benchmarks do not need it (`examples/cube.py --gpu` and `examples/g1.py --gpu` set `gpu_solve` themselves), the other tasks do. All 6 gm runs report `solve_paths: {'gpu': 505}` (101 cycles x 5 restarts,
 all on the GPU, no CPU fallback). The baselines never call cuKernelSOS.
 
 ## Rerun
@@ -72,6 +72,8 @@ python script/final_figs.py data/pusht_results pusht data/pusht_results      # f
 
 ## Notes
 
+- Timeouts of `script/overnight_queue.sh`: 3600 s per attempt for ps, mppi, dial, mtp and cbo, 14400 s for gm (`BASE_TIMEOUT` and `GM_TIMEOUT`, set at the top of the script; they are plain assignments, not environment variables, so change them in the script). A timed-out run is not retried. gm may need more than 14400 s on a busy GPU.
+- This folder holds `cycles.csv` per run only, no `args.json`: the settings in the table above were checked against the defaults in the code (`examples/pusht.py`, `global_mppi/algs/`), not against recorded files.
 - The GPU was shared with other users' jobs during these runs. Plan times are therefore inflated (GlobalMPPI about 14.7 s per cycle
   against about 7.3 s in the senior's reproduction document); compare the costs, not the times. The queue stored an `nvidia-smi`
   snapshot before every run (not included here).
