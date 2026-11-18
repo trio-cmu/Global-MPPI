@@ -10,21 +10,17 @@
 #   PY         python that runs the planners (default: python in PATH; needs the Global-MPPI env, MuJoCo 3.3.6)
 #   SYSPY      python that draws the figures (default: PY; needs matplotlib)
 #   RUNS_DIR   where the queue writes (default: <repo>/logs/overnight_runs); one folder <RUNS_DIR>/<timestamp> per queue
-#   TASKS      tasks to run, any of "pusht walker double_cart_pole bugtrap g1_walk" (default: pusht; the others come from their own
-#              branches `walker` / `double-cart-pole` / `bugtrap` / `g1-walk`, which must exist locally, through git worktrees in $WT)
-#   WT         worktree folder for walker / double_cart_pole / bugtrap / g1_walk (default: <repo>/../overnight_wt)
+#   TASKS      tasks to run, any of "pusht walker double_cart_pole bugtrap g1_walk" (default: pusht); all run the code of this checkout
 #   MAX_CYCLES control cycles per run of walker / double_cart_pole / bugtrap / g1_walk (default 100; g1_walk 400, see docs/g1_walk.md)
-#   g1_walk needs the G1 model (script/fetch_g1_model.sh, copied into the worktree: set G1_MODEL_DIR=<dir> to reuse a fetched one)
+#   g1_walk needs the G1 model (script/fetch_g1_model.sh, into global_mppi/models/g1 of this checkout: set G1_MODEL_DIR=<dir> to reuse a fetched one)
 #   and downloads its reference motion from Hugging Face on first use (CC-BY-NC-ND 4.0; set HF_HOME for the cache)
 #   SEEDS, METHODS  (default: "0 1 2 3 4 5", "ps mppi dial mtp cbo gm")
 #   BASE_TIMEOUT, GM_TIMEOUT  seconds per attempt for ps/mppi/dial/mtp/cbo and for gm (defaults 3600 and 14400)
 #   MIN_FREE_BASE_MB, MIN_FREE_GM_MB  free GPU memory (MiB, from nvidia-smi) that must be available before an attempt starts
 #              (defaults 2048 for the baselines, 6144 for gm); the queue polls every WAIT_POLL_S seconds (default 30) and logs the wait
-# PushT runs the code of the checkout this script lives in (check out the branch pusht-bench first).
+# Every task runs the code of the checkout this script lives in (PYTHONPATH selects it); there is no branch or worktree switching.
 #
 # The queue starts at once and runs one process at a time (no two runs of this queue overlap); before every attempt it waits for enough free GPU memory (see MIN_FREE_*_MB).
-# Code of walker / double_cart_pole / bugtrap / g1_walk comes from its own git branch through a worktree outside the repo ($WT/<branch>):
-#   PushT -> pusht-bench, walker -> walker, double_cart_pole -> double-cart-pole, bugtrap -> bugtrap, g1_walk -> g1-walk   (committed code only; PYTHONPATH selects it)
 # Per task: <Q>/<task>/batch.log, <Q>/<task>/gpu_snapshots/<method>_s<seed>.txt (nvidia-smi before every run), logs/, results/;
 # overall: <Q>/STATUS.txt (rewritten after every run). A failed run is retried (max 2) after ANY crash (nonzero exit, or no finished
 # marker), except a timeout (exit code 124), which is not retried; after the retries it is logged "GAVE UP" and the queue goes on. A task that cannot start is "SKIPPED"; a failed or
@@ -34,7 +30,6 @@ REPO=$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)
 export QUEUE_TS=${QUEUE_TS:-$(date +%Y%m%d_%H%M%S)}
 Q=${RUNS_DIR:-$REPO/logs/overnight_runs}/$QUEUE_TS
 STATUS=$Q/STATUS.txt
-WT=${WT:-$REPO/../overnight_wt}; mkdir -p "$WT" && WT=$(cd "$WT" && pwd -P)   # canonical path (the import check compares strings)
 PY=${PY:-python}                                 # runs the planners
 SYSPY=${SYSPY:-$PY}                              # draws the figures (matplotlib)
 TOOLS=$REPO/script
@@ -127,15 +122,9 @@ run_with_retries() {
   return 1
 }
 
-make_worktree() {   # branch -> $WT/<branch>, or return 1
-  local b=$1
-  mkdir -p "$WT"
-  if [ ! -d "$WT/$b" ]; then git -C "$REPO" worktree add --detach "$WT/$b" "$b" >> "$Q/$TASK/batch.log" 2>&1 || return 1; fi
-  # an existing worktree may be older than the branch: bring it to the branch head (only when it is clean)
-  if [ -z "$(git -C "$WT/$b" status --porcelain 2>/dev/null)" ]; then git -C "$WT/$b" checkout -q --detach "$b" >> "$Q/$TASK/batch.log" 2>&1; fi
-  # the code must come from the worktree, not from the main checkout
-  local f; f=$(cd "$WT/$b" && PYTHONPATH="$WT/$b" "$PY" -c "import global_mppi; print(global_mppi.__file__)" 2>/dev/null | tail -1)
-  case $f in "$WT/$b"/*) say "code: $f (branch $b, $(git -C "$WT/$b" rev-parse --short HEAD))"; return 0;; *) say "import resolves to '$f', not to the worktree"; return 1;; esac
+check_code() {   # the code must come from this checkout (PYTHONPATH), or return 1
+  local f; f=$(cd "$REPO" && PYTHONPATH="$REPO" "$PY" -c "import global_mppi; print(global_mppi.__file__)" 2>/dev/null | tail -1)
+  case $f in "$REPO"/*) say "code: $f ($(git -C "$REPO" rev-parse --short HEAD 2>/dev/null), branch $(git -C "$REPO" branch --show-current 2>/dev/null))"; return 0;; *) say "import resolves to '$f', not to this checkout"; return 1;; esac
 }
 
 # ------------------------------------------------------------------ (a) PushT
@@ -188,15 +177,15 @@ task_pusht() {
 }
 
 # ------------------------------------------------------------------ (b) walker, (c) double_cart_pole, (d) bugtrap, (e) g1_walk
-task_example() {   # <task name = example name> <branch>
-  TASK=$1; local b=$2 W=$WT/$2 RES=$Q/$1/results
+task_example() {   # <task name = example name>
+  TASK=$1; local W=$REPO RES=$Q/$1/results
   mkdir -p "$Q/$TASK/gpu_snapshots" "$Q/$TASK/logs" "$RES"
   say "=== $TASK batch: $METHODS, seeds $SEEDS, $([ "$TASK" = g1_walk ] && echo ${MAX_CYCLES:-400} || echo ${MAX_CYCLES:-100}) cycles (settings as the cube runs; walker / double_cart_pole: horizon, knots, spline from the hydrax example; bugtrap: horizon 2.0, 11 knots, cubic)"
-  make_worktree "$b" || { TASK_STATE[$TASK]=SKIPPED; say "SKIPPED (no usable worktree of $b)"; return 1; }
+  check_code || { TASK_STATE[$TASK]=SKIPPED; say "SKIPPED (global_mppi does not import from this checkout)"; return 1; }
   if [ "$TASK" = g1_walk ] && [ ! -d "$W/global_mppi/models/g1" ]; then   # the G1 model is not vendored
     if [ -n "${G1_MODEL_DIR:-}" ]; then cp -r "$G1_MODEL_DIR" "$W/global_mppi/models/g1"; else (cd "$W" && bash script/fetch_g1_model.sh) >> "$Q/$TASK/batch.log" 2>&1; fi
   fi
-  [ -f "$W/examples/$TASK.py" ] || { TASK_STATE[$TASK]=SKIPPED; say "SKIPPED (no examples/$TASK.py on $b)"; return 1; }
+  [ -f "$W/examples/$TASK.py" ] || { TASK_STATE[$TASK]=SKIPPED; say "SKIPPED (no examples/$TASK.py in $W)"; return 1; }
   TASK_STATE[$TASK]=RUNNING; status
   local s m arg algo final log
   local EXTRA=""   # per-task benchmark setting
@@ -237,10 +226,10 @@ status
 for t in $TASKS; do
   case $t in
     pusht) task_pusht || true;;
-    walker) task_example walker walker || true;;
-    double_cart_pole) task_example double_cart_pole double-cart-pole || true;;
-    bugtrap) task_example bugtrap bugtrap || true;;
-    g1_walk) task_example g1_walk g1-walk || true;;
+    walker) task_example walker || true;;
+    double_cart_pole) task_example double_cart_pole || true;;
+    bugtrap) task_example bugtrap || true;;
+    g1_walk) task_example g1_walk || true;;
     *) echo "unknown task $t" >> "$Q/queue/batch.log";;
   esac
 done
