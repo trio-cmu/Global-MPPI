@@ -15,6 +15,7 @@ therefore **no comparison with GlobalMPPI yet**, and the numbers below are not a
 - `g1_walk_final.png`: planner cost (predicted), tracking cost of the real state, base distance to the reference and base height versus
   cycle (median over the seeds that exist, IQR band; with 1 or 2 seeds the "band" is the range); the grey band marks the first step of the
   reference (3.62 to 4.22 s, cycles 181 to 211). `g1_walk_summary.txt`: the table and the per-seed final base error and minimum base height.
+- `<method>/s<seed>/PENDING.md` instead of data: the runs that are not done (see the status matrix).
 - Not included: videos, per-run logs, `args.json`, the `.npy` histories. **The reference motion is not included either** (see below).
   Because there is no `args.json` here, the settings below were checked against the code defaults (`examples/g1_walk.py`,
   `global_mppi/algs/`), not against recorded files.
@@ -64,6 +65,19 @@ they are only a restatement of the table above. No conclusions about GlobalMPPI 
 
 **Plan times are inflated.** The baselines took 3.7 to 8.6 s per cycle (about 0.6 s in a 20-cycle test on a less loaded GPU) because the GPU was shared with other users' jobs;
 compare the behaviour, not the times. The wall time of the finished runs was 26 to 59 minutes.
+
+## Status of the 36 planned runs
+
+| method | s0 | s1 | s2 | s3 | s4 | s5 |
+|---|---|---|---|---|---|---|
+| ps | unfinished (398/400, timeout) | done | pending (not run) | pending (not run) | pending (not run) | pending (not run) |
+| mppi | done | done | pending (not run) | pending (not run) | pending (not run) | pending (not run) |
+| dial | done | done | pending (not run) | pending (not run) | pending (not run) | pending (not run) |
+| mtp | done | done | pending (not run) | pending (not run) | pending (not run) | pending (not run) |
+| cbo | done | unfinished (stopped) | pending (not run) | pending (not run) | pending (not run) | pending (not run) |
+| gm | failed (cuSOLVER error 7) | pending (not run) | pending (not run) | pending (not run) | pending (not run) | pending (not run) |
+
+8 done, 1 failed (gm s0: cuSOLVER error 7 under GPU memory shortage, attempt 1 reached cycle 118), 2 unfinished (ps s0: 398 of 400 cycles, hit the 3600 s timeout; cbo s1: stopped), 25 pending (not run yet). Every folder that is not done holds a `PENDING.md` with the status, the cause and the exact command to produce the run; these folders contain no data. **The figure and the summary currently cover only the 8 finished runs**; they are regenerated with `script/final_figs.py` once more runs exist (see "Extending this folder").
 
 ## Unfinished runs
 
