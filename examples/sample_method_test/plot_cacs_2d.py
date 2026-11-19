@@ -161,8 +161,8 @@ def below(ax, handles, ncol=3):
               fontsize=8.2, handlelength=1.2, columnspacing=1.4, labelcolor=INK)
 
 
-def save(fig, name):
-    fig.savefig(out / f"{name}.png", facecolor="white")
+def save(fig, name, tight=False):
+    fig.savefig(out / f"{name}.png", facecolor="white", **(dict(bbox_inches="tight", pad_inches=0.15) if tight else {}))
     plt.close(fig)
     print("saved", out / f"{name}.png")
 
@@ -493,31 +493,45 @@ print("sobol direct aggregate pattern, pairs:", aggregate_direct(S, cS, "sobol_2
 def comparison_figure(paper=False):
     from matplotlib.gridspec import GridSpec
     from matplotlib.patches import Patch
-    fig = plt.figure(figsize=(12.6, 12.4), dpi=170)
+    fig = plt.figure(figsize=(12.6, 13.4) if paper else (12.6, 12.4), dpi=170)
     # paper: top row samples (a) Sobol (b) CACS, bottom row patterns (c) Sobol (d) CACS; else one row per method
     P_SP, P_CP, P_SM, P_CM = ((0, 0), (0, 1), (1, 0), (1, 1)) if not paper else ((0, 0), (1, 0), (0, 1), (1, 1))
     gs = GridSpec(2, 2, figure=fig, width_ratios=[1.12, 1] if not paper else [1, 1],
-                  wspace=0.16 if not paper else 0.22, hspace=0.2 if not paper else 0.3,
-                  left=0.07, right=0.94 if paper else 0.98, top=0.89 if paper else 0.87, bottom=0.085)
+                  wspace=0.16 if not paper else 0.08, hspace=0.2 if not paper else 0.28,
+                  left=0.05 if paper else 0.07, right=0.98, top=0.93 if paper else 0.87,
+                  bottom=0.07 if paper else 0.085)  # paper: tight grid, the square panels fill the width
     lab = (lambda k, t: f"({k}) {t}") if paper else (lambda k, t: t)
 
+    if paper:  # cost on the whole plot area (the margin around the box too), so the frame is the axes frame
+        ge = np.linspace(-0.035, 1.035, 500)
+        GXe, GYe = np.meshgrid(ge, ge)
+        Ze = cost(np.stack([GXe.ravel(), GYe.ravel()], 1)).reshape(GXe.shape)
+
     def points(ax, P, f, title):
-        cf = ax.contourf(GX, GY, Z, levels=levels, cmap=CMAP, extend="max")
-        ax.contour(GX, GY, Z, levels=levels[::2], colors="white", linewidths=0.6, alpha=0.8)
-        ax.add_patch(plt.Rectangle((0, 0), 1, 1, fill=False, ec=INK2, lw=0.9, zorder=2))
+        gx, gy, z = (GXe, GYe, Ze) if paper else (GX, GY, Z)
+        cf = ax.contourf(gx, gy, z, levels=levels, cmap=CMAP, extend="max")
+        ax.contour(gx, gy, z, levels=levels[::2], colors="white", linewidths=0.6, alpha=0.8)
+        if not paper:
+            ax.add_patch(plt.Rectangle((0, 0), 1, 1, fill=False, ec=INK2, lw=0.9, zorder=2))
         ax.plot(*tm[:2], marker="*", ms=17, color=STAR, mec=INK, mew=1.0, zorder=7, ls="none")
         ax.scatter(P[:, 0], P[:, 1], s=22, c="white", edgecolors=SAMPLE_EDGE, linewidths=0.9, zorder=5)
         ax.scatter(*P[np.argmin(f)], s=90, facecolors="none", edgecolors=BEST, linewidths=2.2, zorder=6)
         ax.set(xlim=(-0.035, 1.035), ylim=(-0.035, 1.035), aspect="equal")
         ax.set_xticks([0, 0.5, 1]); ax.set_yticks([0, 0.5, 1])
-        ax.tick_params(colors=INK2, labelsize=8.5, length=0)
-        for sp in ax.spines.values():
-            sp.set_visible(False)
+        if paper:  # dark axes frame (same size as the matrix frames below), readable ticks
+            ax.tick_params(colors=INK, labelsize=13, length=4, width=1.2, pad=4)
+            for sp in ax.spines.values():
+                sp.set_visible(True); sp.set_color(INK); sp.set_linewidth(1.8); sp.set_zorder(8)
+        else:
+            ax.tick_params(colors=INK2, labelsize=8.5, length=0)
+            for sp in ax.spines.values():
+                sp.set_visible(False)
         ax.set_title(title, fontsize=15 if paper else 10.5, weight="bold" if paper else "normal", color=INK, loc="left")
-        cb = fig.colorbar(cf, ax=ax, fraction=0.04, pad=0.02)
-        cb.set_label("cost", color=INK2, fontsize=8.5)
-        cb.ax.tick_params(labelsize=7.5, colors=INK2, length=0)
-        cb.outline.set_visible(False)
+        if not paper:  # the paper figure has no cost colour bar
+            cb = fig.colorbar(cf, ax=ax, fraction=0.04, pad=0.02)
+            cb.set_label("cost", color=INK2, fontsize=8.5)
+            cb.ax.tick_params(labelsize=7.5, colors=INK2, length=0)
+            cb.outline.set_visible(False)
 
     def pattern(ax, st, title):
         n = st.n
@@ -533,6 +547,9 @@ def comparison_figure(paper=False):
         A[big, big] = 2
         ax.imshow(A, cmap=ListedColormap([ZERO, NZ, BIGC, DIAG]), vmin=0, vmax=3, interpolation="nearest")
         tiles(ax, n)
+        if paper:  # a clear dark frame around the matrix, readable ticks
+            ax.add_patch(plt.Rectangle((-0.5, -0.5), n, n, fill=False, ec=INK, lw=1.8, zorder=5, clip_on=False))
+            ax.tick_params(colors=INK, labelsize=13, length=4, width=1.2, pad=4)
         ax.set_title(title, fontsize=15 if paper else 10.5, weight="bold" if paper else "normal", color=INK, loc="left",
                      pad=24 if paper else 20)
         ax.text(0.03, 0.03, f"largest clique: {len(big)} x {len(big)}", transform=ax.transAxes, ha="left", va="bottom",
@@ -543,10 +560,10 @@ def comparison_figure(paper=False):
     # top: Sobol
     a = fig.add_subplot(gs[0, 0])
     a_sobol = a
-    points(a, S, cS, f"{len(S)} samples in 2D" if paper else f"Sobol: {len(S)} samples, best {cS.min():.3f}")
+    points(a, S, cS, "" if paper else f"Sobol: {len(S)} samples, best {cS.min():.3f}")
     stS2 = structure_of(S, cS, rcm_order(S, args.h), False)
     pattern(fig.add_subplot(gs[1, 0] if paper else gs[0, 1]), stS2,
-            "aggregate sparsity pattern" if paper else
+            "" if paper else
             f"Sobol: aggregate pattern E\n{stS2.stats['E_edges']} pairs, {stS2.stats['num_cliques']} cliques")
     # bottom: CACS, samples with the kernel graph and the cliques of H
     a = fig.add_subplot(gs[0, 1] if paper else gs[1, 0])
@@ -562,11 +579,11 @@ def comparison_figure(paper=False):
             a.plot(*Pq.T, color=col, lw=2.5, alpha=0.7, zorder=2, solid_capstyle="round")
     a.add_collection(LineCollection([X[[i, j]] for i, j in G_edges], colors=EDGE, linewidths=0.55, alpha=0.4, zorder=3))
     a_cacs = a
-    points(a, X, c, f"{len(X)} samples in 2D" if paper else
+    points(a, X, c, "" if paper else
            f"CACS (max_clique {args.max_clique}): {len(X)} samples, best {c.min():.3f}")
     stC2 = structure_of(X, c, rcm_order(X, args.h), False)  # as cacs_2d_sparsity_rcm.png
     pattern(fig.add_subplot(gs[1, 1]), stC2,
-            "aggregate sparsity pattern" if paper else
+            "" if paper else
             f"CACS: aggregate pattern E\n{stC2.stats['E_edges']} pairs, {stC2.stats['num_cliques']} cliques")
 
     if not paper:
@@ -581,20 +598,24 @@ def comparison_figure(paper=False):
     fig.legend(handles=[Line2D([], [], ls="none", marker="o", ms=6, mfc="white", mec=SAMPLE_EDGE, label="sample"),
                         Line2D([], [], ls="none", marker="o", ms=10, mfc="none", mec=BEST, mew=2, label="best sample"),
                         Line2D([], [], ls="none", marker="*", ms=13, mfc=STAR, mec=INK, label="true minimum"),
-                        Line2D([], [], color=EDGE, lw=1, alpha=0.6, label="kernel edge (distance < h)"),
+                        *([] if paper else [Line2D([], [], color=EDGE, lw=1, alpha=0.6, label="kernel edge (distance < h)")]),
                         Patch(facecolor=CLIQUE[0], alpha=0.45, edgecolor=CLIQUE[0], label="clique of H (one colour each)")],
-               loc="lower center", bbox_to_anchor=(0.5, 0.475) if paper else (0.3, 0.008), ncol=5 if paper else 3, frameon=False, fontsize=10.5 if paper else 9, labelcolor=INK,
+               loc="center" if paper else "lower center",
+               bbox_to_anchor=(0.5, (a_sobol.get_position().y0 + min(ax_.get_position().y1 for ax_ in fig.axes
+                                                                        if ax_.get_position().y1 < 0.6)) / 2)
+               if paper else (0.3, 0.008), ncol=4 if paper else 3, frameon=False, prop=dict(size=14 if paper else 9, weight="bold" if paper else "normal"), labelcolor=INK,
                columnspacing=1.2, handletextpad=0.5)
     fig.legend(handles=[Patch(color=NZ, label="nonzero of E"), Patch(color=DIAG, label="diagonal"),
                         Patch(color=BIGC, label="one largest clique (one ADMM block)")],
-               loc="lower center", bbox_to_anchor=(0.5, 0.008) if paper else (0.77, 0.008), ncol=3 if paper else 2, frameon=False, fontsize=10.5 if paper else 9, labelcolor=INK,
+               loc="lower center", bbox_to_anchor=(0.5, 0.008) if paper else (0.77, 0.008), ncol=3 if paper else 2, frameon=False, prop=dict(size=14 if paper else 9, weight="bold" if paper else "normal"), labelcolor=INK,
                columnspacing=1.2)
     if paper:  # column headers: (a) Sobol on the left, (b) CACS on the right
         fig.canvas.draw()
         for ax_, txt in ((a_sobol, "(a) Sobol sampling"), (a_cacs, "(b) CACS sampling")):
             pos = ax_.get_position()
-            fig.text((pos.x0 + pos.x1) / 2, 0.965, txt, ha="center", va="top", fontsize=19, weight="bold", color=INK)
-    save(fig, "sobol_vs_cacs_2d_paper" if paper else "sobol_vs_cacs_2d")
+            fig.text((pos.x0 + pos.x1) / 2, pos.y1 + 0.025, txt, ha="center", va="bottom", fontsize=19, weight="bold",
+                     color=INK)  # just above the top-row plot (no panel titles in the paper figure)
+    save(fig, "sobol_vs_cacs_2d_paper" if paper else "sobol_vs_cacs_2d", tight=paper)
 
 
 comparison_figure()
