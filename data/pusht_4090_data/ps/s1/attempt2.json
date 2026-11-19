@@ -1,0 +1,12 @@
+{
+  "complete": false,
+  "method": "ps",
+  "seed": 1,
+  "finished": "2026-11-18T23:07:37-05:00",
+  "returncode": -11,
+  "timed_out": false,
+  "wall_s": 10.549443946999986,
+  "attempt": 2,
+  "last_cycle": null,
+  "solve_paths": {}
+}

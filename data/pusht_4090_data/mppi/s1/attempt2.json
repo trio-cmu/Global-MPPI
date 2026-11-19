@@ -1,0 +1,12 @@
+{
+  "complete": false,
+  "method": "mppi",
+  "seed": 1,
+  "finished": "2026-11-18T23:08:16-05:00",
+  "returncode": -4,
+  "timed_out": false,
+  "wall_s": 13.108223297999984,
+  "attempt": 2,
+  "last_cycle": null,
+  "solve_paths": {}
+}

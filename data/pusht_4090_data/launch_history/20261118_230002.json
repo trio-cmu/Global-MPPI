@@ -1,0 +1,24 @@
+{
+  "restarted": "2026-11-18T23:00:02-05:00",
+  "new_boot_id": "d83a6d9b-fbd4-45aa-9218-c0581b92dbe3",
+  "previous_status": {
+    "state": "INTERRUPTED",
+    "updated": "2026-11-18T22:49:08-05:00",
+    "runner_pid": 125168,
+    "current": "gm/s0",
+    "current_cycle": 39,
+    "child_pid": 137250,
+    "completed": 5,
+    "total": 36,
+    "finished_runs": [
+      "ps/s0",
+      "mppi/s0",
+      "dial/s0",
+      "mtp/s0",
+      "cbo/s0"
+    ],
+    "failed_runs": [],
+    "detected": "2026-11-18T22:59:27-05:00",
+    "interruption_reason": "The recorded runner is absent or belongs to an earlier system boot."
+  }
+}

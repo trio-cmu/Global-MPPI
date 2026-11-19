@@ -1,0 +1,30 @@
+{
+  "method": "dial",
+  "seed": 0,
+  "command": [
+    "/home/zhongqi/.cache/global-mppi/pusht_4090/venv/bin/python",
+    "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/data/pusht_4090_data/run_one.py",
+    "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/data/pusht_4090_data/dial/s0",
+    "--no-wandb",
+    "--headless",
+    "--seed",
+    "0",
+    "--max-cycles",
+    "100",
+    "--num-samples",
+    "2000",
+    "dial"
+  ],
+  "example_arguments": [
+    "--no-wandb",
+    "--headless",
+    "--seed",
+    "0",
+    "--max-cycles",
+    "100",
+    "--num-samples",
+    "2000",
+    "dial"
+  ],
+  "manifest": "../../manifest.json"
+}

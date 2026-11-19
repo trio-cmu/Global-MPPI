@@ -1,0 +1,25 @@
+{
+  "state": "STOPPED_HARDWARE_ERRORS",
+  "updated": "2026-11-18T23:09:38-05:00",
+  "boot_id": "d83a6d9b-fbd4-45aa-9218-c0581b92dbe3",
+  "runner_pid": 12158,
+  "current": "dial/s1",
+  "current_cycle": null,
+  "child_pid": 23512,
+  "completed": 5,
+  "total": 36,
+  "finished_runs": [
+    "ps/s0",
+    "mppi/s0",
+    "dial/s0",
+    "mtp/s0",
+    "cbo/s0"
+  ],
+  "failed_runs": [
+    "gm/s0",
+    "ps/s1",
+    "mppi/s1"
+  ],
+  "reason": "Kernel machine-check hardware errors at 23:08:00 and 23:08:28, with repeated native crashes on CPU threads 8/9; stopped for investigation",
+  "stopped_run": "dial/s1"
+}

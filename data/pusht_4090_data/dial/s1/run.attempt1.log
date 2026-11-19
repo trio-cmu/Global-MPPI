@@ -1,0 +1,17 @@
+Failed to import warp: No module named 'warp'
+Failed to import mujoco.mjx.third_party.mujoco_warp as mujoco_warp: No module named 'warp'
+Running DIAL
+GPU snapshot: /home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/logs/pushT_globalmppi_dial/20261118_230854/gpu_snapshot.txt
+
+=== Seed 1 ===
+Planning with 100 steps over a 1.0 second horizon with 6 knots.
+Planning at 50.0 Hz, simulating at 1000.0 Hz
+Jitting the controller...
+Time to jit: 28.047 seconds
+Recording video to /home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/data/pusht_4090_data/dial/s1/simulation_20261118_230922.mp4
+
+Cycle 0: Best cost: 7.007243633270264, Best sample: 6.994976997375488
+Cost for optimal action (cycle 0): [Array(7.0072436, dtype=float32)]
+
+Cycle 0: plan time: 15.6677s
+Realtime rate: 0.00, plan time: 15.6677s

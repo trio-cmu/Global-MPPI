@@ -1,0 +1,12 @@
+{
+  "complete": false,
+  "method": "mtp",
+  "seed": 0,
+  "finished": "2026-11-18T22:38:01-05:00",
+  "returncode": 1,
+  "timed_out": false,
+  "wall_s": 45.58000108399938,
+  "attempt": 1,
+  "last_cycle": null,
+  "solve_paths": {}
+}

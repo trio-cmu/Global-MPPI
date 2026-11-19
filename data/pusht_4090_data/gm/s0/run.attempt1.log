@@ -1,0 +1,1063 @@
+Failed to import warp: No module named 'warp'
+Failed to import mujoco.mjx.third_party.mujoco_warp as mujoco_warp: No module named 'warp'
+Running GlobalMPPI (KSOS solver: ADMM-cuda, two-level sampling, no LSE)
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/algs/global_mppi.py:219: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  ).random(self.ksos_num_samples),
+GPU snapshot: /home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/logs/pushT_globalmppi_globalmppi/20261118_224149/gpu_snapshot.txt
+
+=== Seed 0 ===
+Planning with 100 steps over a 1.0 second horizon with 6 knots.
+Planning at 50.0 Hz, simulating at 1000.0 Hz
+Jitting the controller...
+Time to jit: 21.698 seconds
+Recording video to /home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/data/pusht_4090_data/gm/s0/simulation_20261118_224211.mp4
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 11.9980 admm 2.2044 guard 0.0000
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=time_limit iters=3010 best sample 8.6577 warm 16.4590 -> solution 8.6577
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 6.2432 admm 2.0916 guard 0.0005
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5500 best sample 8.8776 -> solution 8.6577
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6491 admm 0.4481 guard 5.1348
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=490 best sample 8.1637 x 8.1536 -> solution 8.1536
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6485 admm 0.7860 guard 0.1133
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=900 best sample 7.8946 x 7.8897 -> solution 7.8897
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6442 admm 1.6738 guard 0.1149
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=2300 best sample 8.1946 x 8.1966 -> solution 7.8897
+[Timing total] cycle=0, num_restart=5, sampling_rollout=0.588s, autocalib=0.000s, ksos_solve=32.755s, mppi=14.463s, total=47.805s
+
+Cycle 0: Best cost: 7.811960697174072
+Cost for optimal action (cycle 0): [Array(7.8119607, dtype=float32)]
+
+Cycle 0: plan time: 47.8498s
+Realtime rate: 0.00, plan time: 47.8498s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6741 admm 2.0875 guard 0.0000
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=time_limit iters=3050 best sample 7.4290 warm 7.9531 -> solution 7.4290
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.7052 admm 1.1033 guard 0.1253
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=1500 best sample 7.8075 x 7.8007 -> solution 7.4290
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.7001 admm 2.0843 guard 0.0005
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5570 best sample 7.5471 -> solution 7.4290
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6936 admm 0.3872 guard 0.1227
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=370 best sample 7.5316 x 7.5275 -> solution 7.4290
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6931 admm 0.2213 guard 0.1227
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=150 best sample 7.4716 x 7.4778 -> solution 7.4290
+[Timing total] cycle=1.0, num_restart=5, sampling_rollout=0.327s, autocalib=0.000s, ksos_solve=9.726s, mppi=0.604s, total=10.658s
+
+Cycle 1.0: Best cost: 7.339574813842773
+
+Cycle 1.0: plan time: 10.6620s
+Realtime rate: 0.00, plan time: 10.6620s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.7278 admm 0.4293 guard 0.1218
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=460 best sample 6.9080 warm 7.1895 x 6.9007 -> solution 6.9007
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6934 admm 0.4105 guard 0.1238
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=440 best sample 7.4605 x 7.4579 -> solution 6.9007
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6647 admm 0.3033 guard 0.1219
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=250 best sample 7.2169 x 7.2142 -> solution 6.9007
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6617 admm 0.2508 guard 0.1223
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=80 best sample 6.9161 x 6.9167 -> solution 6.9007
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6616 admm 0.2533 guard 0.1207
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=200 best sample 6.8427 x 9.4062 -> solution 6.8427
+[Timing total] cycle=2.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=5.671s, mppi=0.582s, total=6.304s
+
+Cycle 2.0: Best cost: 8.445638656616211
+
+Cycle 2.0: plan time: 6.3077s
+Realtime rate: 0.00, plan time: 6.3077s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6576 admm 0.1807 guard 0.1201
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=80 best sample 6.4339 warm 8.8895 x 6.3930 -> solution 6.3930
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6647 admm 0.1463 guard 0.1217
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=50 best sample 6.3109 x 6.3273 -> solution 6.3109
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6676 admm 0.2105 guard 0.1211
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=120 best sample 6.0554 x 6.0559 -> solution 6.0554
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6695 admm 0.2891 guard 0.1205
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=250 best sample 5.6319 x 5.6139 -> solution 5.6139
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6678 admm 0.3801 guard 0.1195
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=380 best sample 5.7376 x 5.7443 -> solution 5.6139
+[Timing total] cycle=3.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=5.142s, mppi=0.578s, total=5.771s
+
+Cycle 3.0: Best cost: 5.410600662231445
+
+Cycle 3.0: plan time: 5.7757s
+Realtime rate: 0.00, plan time: 5.7757s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6589 admm 2.1602 guard 0.0000
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=time_limit iters=3000 best sample 4.8651 warm 4.9125 -> solution 4.8651
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6512 admm 2.0836 guard 0.0003
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5560 best sample 5.4377 -> solution 4.8651
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6684 admm 0.2896 guard 0.1217
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=250 best sample 5.1591 x 5.2546 -> solution 4.8651
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6624 admm 0.4634 guard 0.1213
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=220 best sample 4.9213 x 5.4763 -> solution 4.8651
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6574 admm 2.0852 guard 0.0005
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=4720 best sample 4.8717 -> solution 4.8651
+[Timing total] cycle=4.0, num_restart=5, sampling_rollout=0.052s, autocalib=0.000s, ksos_solve=10.629s, mppi=0.588s, total=11.269s
+
+Cycle 4.0: Best cost: 4.8420257568359375
+
+Cycle 4.0: plan time: 11.2730s
+Realtime rate: 0.00, plan time: 11.2730s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6666 admm 0.8637 guard 0.1222
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=1160 best sample 4.3089 warm 4.3089 x 4.3039 -> solution 4.3039
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6625 admm 0.5009 guard 0.1215
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=560 best sample 4.5429 x 4.5350 -> solution 4.3039
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6595 admm 0.4968 guard 0.1216
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=540 best sample 4.4805 x 4.4791 -> solution 4.3039
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6632 admm 0.9921 guard 0.1210
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=1170 best sample 4.5011 x 4.5142 -> solution 4.3039
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6598 admm 2.0880 guard 0.0004
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5610 best sample 4.1544 -> solution 4.1544
+[Timing total] cycle=5.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=8.744s, mppi=0.588s, total=9.383s
+
+Cycle 5.0: Best cost: 4.308075428009033
+
+Cycle 5.0: plan time: 9.3867s
+Realtime rate: 0.00, plan time: 9.3867s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6539 admm 0.2643 guard 0.1207
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=190 best sample 5.1143 warm 33.8455 x 5.0070 -> solution 5.0070
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6634 admm 0.6862 guard 0.1203
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=850 best sample 4.8020 x 4.8108 -> solution 4.8020
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6615 admm 1.0565 guard 0.1209
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=1390 best sample 4.8339 x 4.8323 -> solution 4.8020
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6587 admm 2.0956 guard 0.0003
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5570 best sample 4.6610 -> solution 4.6610
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6591 admm 2.0856 guard 0.0005
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5650 best sample 4.4208 -> solution 4.4208
+[Timing total] cycle=6.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=9.852s, mppi=0.579s, total=10.482s
+
+Cycle 6.0: Best cost: 4.506427764892578
+
+Cycle 6.0: plan time: 10.4866s
+Realtime rate: 0.00, plan time: 10.4866s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6593 admm 0.4726 guard 0.1226
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=260 best sample 6.5983 warm 32.2820 x 6.6216 -> solution 6.5983
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6547 admm 0.2399 guard 0.1228
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=190 best sample 5.8042 x 5.7986 -> solution 5.7986
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6618 admm 0.3263 guard 0.1216
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=320 best sample 5.8381 x 6.5580 -> solution 5.7986
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6741 admm 0.3051 guard 0.1219
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=260 best sample 5.5938 x 5.5895 -> solution 5.5895
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.7042 admm 2.0823 guard 0.0004
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5580 best sample 5.1330 -> solution 5.1330
+[Timing total] cycle=7.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=7.274s, mppi=0.588s, total=7.913s
+
+Cycle 7.0: Best cost: 5.603390693664551
+
+Cycle 7.0: plan time: 7.9171s
+Realtime rate: 0.00, plan time: 7.9171s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6914 admm 0.2079 guard 0.1219
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=110 best sample 5.3964 warm 27.1454 x 12.9113 -> solution 5.3964
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6677 admm 0.2257 guard 0.1211
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=160 best sample 5.0035 x 5.0775 -> solution 5.0035
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6652 admm 2.0859 guard 0.0005
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5440 best sample 5.0440 -> solution 5.0035
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6680 admm 0.2133 guard 0.1227
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=150 best sample 5.1237 x 4.9621 -> solution 4.9621
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6625 admm 0.1490 guard 0.1217
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=50 best sample 4.7837 x 4.8146 -> solution 4.7837
+[Timing total] cycle=8.0, num_restart=5, sampling_rollout=0.052s, autocalib=0.000s, ksos_solve=6.729s, mppi=0.585s, total=7.366s
+
+Cycle 8.0: Best cost: 4.730524063110352
+
+Cycle 8.0: plan time: 7.3700s
+Realtime rate: 0.00, plan time: 7.3700s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6617 admm 0.3341 guard 0.1225
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=310 best sample 4.4283 warm 18.7494 x 4.4094 -> solution 4.4094
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6637 admm 0.3145 guard 0.1212
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=290 best sample 4.3235 x 5.1947 -> solution 4.3235
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6604 admm 0.1769 guard 0.1237
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=80 best sample 3.9126 x 4.1027 -> solution 3.9126
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6639 admm 2.0882 guard 0.0005
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5600 best sample 3.9896 -> solution 3.9126
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6539 admm 1.4129 guard 0.1209
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=1950 best sample 4.0700 x 4.0956 -> solution 3.9126
+[Timing total] cycle=9.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=8.123s, mppi=0.590s, total=8.764s
+
+Cycle 9.0: Best cost: 4.206890106201172
+
+Cycle 9.0: plan time: 8.7686s
+Realtime rate: 0.00, plan time: 8.7686s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6559 admm 0.4343 guard 0.1260
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=470 best sample 3.7204 warm 3.8231 x 3.7245 -> solution 3.7204
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6749 admm 0.2510 guard 0.1218
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=200 best sample 3.6526 x 3.6540 -> solution 3.6526
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6820 admm 0.3509 guard 0.1202
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=260 best sample 3.6446 x 3.6426 -> solution 3.6426
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6737 admm 0.9813 guard 0.1248
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=1310 best sample 3.7021 x 3.7024 -> solution 3.6426
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6593 admm 0.2605 guard 0.1194
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=220 best sample 3.6397 x 3.5789 -> solution 3.5789
+[Timing total] cycle=10.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=6.240s, mppi=0.583s, total=6.874s
+
+Cycle 10.0: Best cost: 3.607386827468872
+Cost for optimal action (cycle 10.0): [Array(7.8119607, dtype=float32), Array(7.339575, dtype=float32), Array(8.445639, dtype=float32), Array(5.4106007, dtype=float32), Array(4.8420258, dtype=float32), Array(4.3080754, dtype=float32), Array(4.506428, dtype=float32), Array(5.6033907, dtype=float32), Array(4.730524, dtype=float32), Array(4.20689, dtype=float32), Array(3.6073868, dtype=float32)]
+
+Cycle 10.0: plan time: 6.8791s
+Realtime rate: 0.00, plan time: 6.8791s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6640 admm 0.1492 guard 0.1196
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=60 best sample 3.1019 warm 5.7329 x 3.5655 -> solution 3.1019
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6600 admm 0.2351 guard 0.1222
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=170 best sample 3.1496 x 3.1480 -> solution 3.1019
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6593 admm 0.1370 guard 0.1212
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=40 best sample 3.0169 x 3.0103 -> solution 3.0103
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6590 admm 1.0668 guard 0.1211
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=1170 best sample 3.3495 x 3.3264 -> solution 3.0103
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6751 admm 0.2892 guard 0.1201
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=250 best sample 3.1249 x 3.4373 -> solution 3.0103
+[Timing total] cycle=11.0, num_restart=5, sampling_rollout=0.054s, autocalib=0.000s, ksos_solve=5.803s, mppi=0.587s, total=6.444s
+
+Cycle 11.0: Best cost: 3.3385562896728516
+
+Cycle 11.0: plan time: 6.4485s
+Realtime rate: 0.00, plan time: 6.4485s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6576 admm 1.3080 guard 0.1212
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=1700 best sample 3.0347 warm 3.2028 x 3.0183 -> solution 3.0183
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6547 admm 2.0832 guard 0.0005
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5570 best sample 3.0746 -> solution 3.0183
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6588 admm 0.3025 guard 0.1211
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=280 best sample 3.0694 x 3.0686 -> solution 3.0183
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6517 admm 0.1850 guard 0.1192
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=90 best sample 2.6851 x 2.4731 -> solution 2.4731
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6628 admm 0.1784 guard 0.1229
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=60 best sample 2.9216 x 2.8353 -> solution 2.4731
+[Timing total] cycle=12.0, num_restart=5, sampling_rollout=0.050s, autocalib=0.000s, ksos_solve=7.832s, mppi=0.600s, total=8.482s
+
+Cycle 12.0: Best cost: 7.429028511047363
+
+Cycle 12.0: plan time: 8.4866s
+Realtime rate: 0.00, plan time: 8.4866s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6574 admm 0.3286 guard 0.1242
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=320 best sample 2.7284 warm 2.7284 x 3.0370 -> solution 2.7284
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6634 admm 0.2802 guard 0.1199
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=250 best sample 2.7436 x 2.7367 -> solution 2.7284
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6550 admm 0.4110 guard 0.1235
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=450 best sample 2.6185 x 2.5609 -> solution 2.5609
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6678 admm 2.0872 guard 0.0005
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5550 best sample 2.7411 -> solution 2.5609
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6872 admm 1.7276 guard 0.1218
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=2420 best sample 2.7146 x 2.7134 -> solution 2.5609
+[Timing total] cycle=13.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=8.659s, mppi=0.592s, total=9.303s
+
+Cycle 13.0: Best cost: 2.9048190116882324
+
+Cycle 13.0: plan time: 9.3069s
+Realtime rate: 0.00, plan time: 9.3069s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6707 admm 0.9842 guard 0.1195
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=1320 best sample 2.4635 warm 2.5750 x 2.4505 -> solution 2.4505
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6692 admm 0.1314 guard 0.1225
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=30 best sample 2.0257 x 2.0330 -> solution 2.0257
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6724 admm 0.2295 guard 0.1219
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=150 best sample 2.1770 x 2.0857 -> solution 2.0257
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6641 admm 0.8653 guard 0.1232
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=1120 best sample 2.4900 x 2.5004 -> solution 2.0257
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6707 admm 0.1736 guard 0.1209
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=80 best sample 2.0822 x 2.3241 -> solution 2.0257
+[Timing total] cycle=14.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=6.344s, mppi=0.580s, total=6.974s
+
+Cycle 14.0: Best cost: 2.4298148155212402
+
+Cycle 14.0: plan time: 6.9785s
+Realtime rate: 0.00, plan time: 6.9785s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6620 admm 0.3715 guard 0.1226
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=380 best sample 2.1107 warm 2.2568 x 2.6510 -> solution 2.1107
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6569 admm 0.8367 guard 0.1246
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=1060 best sample 2.3364 x 2.3187 -> solution 2.1107
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6626 admm 0.1970 guard 0.1214
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=130 best sample 2.1873 x 2.8339 -> solution 2.1107
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6540 admm 0.1898 guard 0.1218
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=120 best sample 2.0190 x 2.0596 -> solution 2.0190
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6578 admm 0.1762 guard 0.1206
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=90 best sample 1.9178 x 1.9436 -> solution 1.9178
+[Timing total] cycle=15.0, num_restart=5, sampling_rollout=0.050s, autocalib=0.000s, ksos_solve=5.680s, mppi=0.581s, total=6.311s
+
+Cycle 15.0: Best cost: 2.7141876220703125
+
+Cycle 15.0: plan time: 6.3156s
+Realtime rate: 0.00, plan time: 6.3156s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6683 admm 0.1815 guard 0.1227
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=110 best sample 1.6012 warm 2.1727 x 1.5644 -> solution 1.5644
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6612 admm 2.0870 guard 0.0003
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=3950 best sample 2.0863 -> solution 1.5644
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6616 admm 0.2639 guard 0.1195
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=210 best sample 1.9050 x 1.9094 -> solution 1.5644
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6579 admm 0.1726 guard 0.1283
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=90 best sample 1.6663 x 1.6419 -> solution 1.5644
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.5301 admm 1.0428 guard 0.1251
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=3 replaced=0 status=converged iters=1210 best sample 1.5767 x 1.5433 -> solution 1.5433
+[Timing total] cycle=16.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=7.426s, mppi=0.580s, total=8.058s
+
+Cycle 16.0: Best cost: 5.751723289489746
+
+Cycle 16.0: plan time: 8.0627s
+Realtime rate: 0.00, plan time: 8.0627s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6610 admm 0.1575 guard 0.1234
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=60 best sample 1.4670 warm 2.4238 x 1.6956 -> solution 1.4670
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6572 admm 0.1737 guard 0.1216
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=80 best sample 1.7893 x 1.8296 -> solution 1.4670
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6693 admm 0.9636 guard 0.1231
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=1160 best sample 1.5112 x 1.5100 -> solution 1.4670
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6663 admm 0.2059 guard 0.1206
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=130 best sample 1.5865 x 1.6245 -> solution 1.4670
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6618 admm 1.5755 guard 0.1220
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=2050 best sample 1.5883 x 1.5944 -> solution 1.4670
+[Timing total] cycle=17.0, num_restart=5, sampling_rollout=0.050s, autocalib=0.000s, ksos_solve=7.007s, mppi=0.586s, total=7.643s
+
+Cycle 17.0: Best cost: 3.16798734664917
+
+Cycle 17.0: plan time: 7.6477s
+Realtime rate: 0.00, plan time: 7.6477s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6654 admm 0.1945 guard 0.1216
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=110 best sample 1.1631 warm 1.1631 x 1.1590 -> solution 1.1590
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6640 admm 0.1367 guard 0.1220
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=30 best sample 1.4761 x 1.4843 -> solution 1.1590
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6582 admm 0.1292 guard 0.1239
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=20 best sample 1.1813 x 1.0998 -> solution 1.0998
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6762 admm 0.5194 guard 0.1201
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=560 best sample 1.2406 x 1.2867 -> solution 1.0998
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.5315 admm 0.5117 guard 0.1227
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=3 replaced=0 status=converged iters=570 best sample 1.0946 x 1.1588 -> solution 1.0946
+[Timing total] cycle=18.0, num_restart=5, sampling_rollout=0.053s, autocalib=0.000s, ksos_solve=5.302s, mppi=0.577s, total=5.931s
+
+Cycle 18.0: Best cost: 1.034008264541626
+
+Cycle 18.0: plan time: 5.9355s
+Realtime rate: 0.00, plan time: 5.9355s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6587 admm 0.3812 guard 0.1213
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=410 best sample 1.6140 warm 10.4671 x 1.6093 -> solution 1.6093
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6665 admm 0.3405 guard 0.1255
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=310 best sample 1.1965 x 1.1886 -> solution 1.1886
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.7011 admm 0.2296 guard 0.1234
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=170 best sample 1.2831 x 1.7620 -> solution 1.1886
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6641 admm 0.8449 guard 0.1255
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=1140 best sample 1.2906 x 1.3159 -> solution 1.1886
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6698 admm 0.2821 guard 0.1209
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=250 best sample 1.1940 x 1.1996 -> solution 1.1886
+[Timing total] cycle=19.0, num_restart=5, sampling_rollout=0.053s, autocalib=0.000s, ksos_solve=6.060s, mppi=0.588s, total=6.701s
+
+Cycle 19.0: Best cost: 1.0680739879608154
+
+Cycle 19.0: plan time: 6.7056s
+Realtime rate: 0.00, plan time: 6.7056s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6590 admm 0.3962 guard 0.1187
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=360 best sample 1.3851 warm 10.1302 x 1.3877 -> solution 1.3851
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6543 admm 0.9454 guard 0.1221
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=1230 best sample 1.3177 x 1.2948 -> solution 1.2948
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6540 admm 0.8592 guard 0.1225
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=1110 best sample 1.1765 x 1.1734 -> solution 1.1734
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6753 admm 0.2823 guard 0.1194
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=250 best sample 1.0122 x 1.0017 -> solution 1.0017
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6597 admm 0.8255 guard 0.1228
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=1020 best sample 1.0568 x 0.9987 -> solution 0.9987
+[Timing total] cycle=20.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=7.221s, mppi=0.588s, total=7.859s
+
+Cycle 20.0: Best cost: 1.0590842962265015
+Cost for optimal action (cycle 20.0): [Array(7.8119607, dtype=float32), Array(7.339575, dtype=float32), Array(8.445639, dtype=float32), Array(5.4106007, dtype=float32), Array(4.8420258, dtype=float32), Array(4.3080754, dtype=float32), Array(4.506428, dtype=float32), Array(5.6033907, dtype=float32), Array(4.730524, dtype=float32), Array(4.20689, dtype=float32), Array(3.6073868, dtype=float32), Array(3.3385563, dtype=float32), Array(7.4290285, dtype=float32), Array(2.904819, dtype=float32), Array(2.4298148, dtype=float32), Array(2.7141876, dtype=float32), Array(5.7517233, dtype=float32), Array(3.1679873, dtype=float32), Array(1.0340083, dtype=float32), Array(1.068074, dtype=float32), Array(1.0590843, dtype=float32)]
+
+Cycle 20.0: plan time: 7.8644s
+Realtime rate: 0.00, plan time: 7.8644s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.5781 admm 0.2199 guard 0.1206
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=3 replaced=0 status=converged iters=160 best sample 0.7958 warm 0.7958 x 0.7981 -> solution 0.7958
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6556 admm 0.6891 guard 0.1208
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=820 best sample 0.9717 x 0.9900 -> solution 0.7958
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.5370 admm 2.0866 guard 0.0004
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=3 replaced=0 status=time_limit iters=5580 best sample 0.9252 -> solution 0.7958
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6594 admm 1.7173 guard 0.1228
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=2420 best sample 0.8882 x 0.8884 -> solution 0.7958
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6555 admm 2.0879 guard 0.0004
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5580 best sample 0.8335 -> solution 0.7958
+[Timing total] cycle=21.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=10.256s, mppi=0.589s, total=10.896s
+
+Cycle 21.0: Best cost: 0.8814550042152405
+
+Cycle 21.0: plan time: 10.8994s
+Realtime rate: 0.00, plan time: 10.8994s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.5412 admm 0.2392 guard 0.1192
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=3 replaced=0 status=converged iters=180 best sample 0.7202 warm 1.5690 x 0.7436 -> solution 0.7202
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6616 admm 0.2613 guard 0.1193
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=210 best sample 0.8729 x 1.0608 -> solution 0.7202
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6759 admm 2.0880 guard 0.0004
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5530 best sample 0.7917 -> solution 0.7202
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6625 admm 1.6555 guard 0.1227
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=2360 best sample 0.7929 x 0.8035 -> solution 0.7202
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6640 admm 1.0912 guard 0.1227
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=1500 best sample 0.6951 x 0.7350 -> solution 0.6951
+[Timing total] cycle=22.0, num_restart=5, sampling_rollout=0.054s, autocalib=0.000s, ksos_solve=9.029s, mppi=0.586s, total=9.669s
+
+Cycle 22.0: Best cost: 0.6768078207969666
+
+Cycle 22.0: plan time: 9.6735s
+Realtime rate: 0.00, plan time: 9.6735s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.7416 admm 0.2310 guard 0.1231
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=180 best sample 0.6656 warm 0.9557 x 0.6456 -> solution 0.6456
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6679 admm 1.7178 guard 0.1216
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=2380 best sample 0.9199 x 0.8804 -> solution 0.6456
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6864 admm 2.1094 guard 0.0004
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5530 best sample 0.6854 -> solution 0.6456
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6593 admm 0.7705 guard 0.1221
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=980 best sample 0.7640 x 0.7521 -> solution 0.6456
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6734 admm 2.0858 guard 0.0003
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5540 best sample 0.6549 -> solution 0.6456
+[Timing total] cycle=23.0, num_restart=5, sampling_rollout=0.052s, autocalib=0.000s, ksos_solve=10.715s, mppi=0.590s, total=11.358s
+
+Cycle 23.0: Best cost: 0.6359929442405701
+
+Cycle 23.0: plan time: 11.3615s
+Realtime rate: 0.00, plan time: 11.3615s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6902 admm 0.1658 guard 0.1202
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=70 best sample 0.6035 warm 1.4374 x 0.5955 -> solution 0.5955
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.5367 admm 2.0877 guard 0.0004
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=3 replaced=0 status=time_limit iters=3050 best sample 0.7757 -> solution 0.5955
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6676 admm 2.0918 guard 0.0006
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=2240 best sample 0.6413 -> solution 0.5955
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6769 admm 0.3747 guard 0.1208
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=360 best sample 0.5953 x 0.5848 -> solution 0.5848
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6563 admm 0.6006 guard 0.1222
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=710 best sample 0.6199 x 0.6131 -> solution 0.5848
+[Timing total] cycle=24.0, num_restart=5, sampling_rollout=0.052s, autocalib=0.000s, ksos_solve=8.917s, mppi=0.587s, total=9.556s
+
+Cycle 24.0: Best cost: 0.566903829574585
+
+Cycle 24.0: plan time: 9.5606s
+Realtime rate: 0.00, plan time: 9.5606s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6605 admm 0.3912 guard 0.1222
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=410 best sample 0.5492 warm 1.5283 x 0.5446 -> solution 0.5446
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6722 admm 2.0884 guard 0.0005
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5530 best sample 0.6043 -> solution 0.5446
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6649 admm 1.8994 guard 0.1226
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=2700 best sample 0.6829 x 0.6881 -> solution 0.5446
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6649 admm 2.0853 guard 0.0003
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5540 best sample 0.5666 -> solution 0.5446
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6899 admm 1.8629 guard 0.1226
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=2630 best sample 0.5191 x 0.5299 -> solution 0.5191
+[Timing total] cycle=25.0, num_restart=5, sampling_rollout=0.052s, autocalib=0.000s, ksos_solve=12.052s, mppi=0.586s, total=12.690s
+
+Cycle 25.0: Best cost: 0.5234973430633545
+
+Cycle 25.0: plan time: 12.6938s
+Realtime rate: 0.00, plan time: 12.6938s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6658 admm 0.6582 guard 0.1214
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=830 best sample 0.4692 warm 0.6050 x 0.4704 -> solution 0.4692
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6656 admm 2.0859 guard 0.0005
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=3040 best sample 0.6083 -> solution 0.4692
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.5426 admm 1.0919 guard 0.1215
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=3 replaced=0 status=converged iters=1350 best sample 0.5233 x 0.5191 -> solution 0.4692
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6858 admm 0.7733 guard 0.1222
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=940 best sample 0.4877 x 0.5055 -> solution 0.4692
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6661 admm 0.7280 guard 0.1215
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=900 best sample 0.4982 x 0.4982 -> solution 0.4692
+[Timing total] cycle=26.0, num_restart=5, sampling_rollout=0.054s, autocalib=0.000s, ksos_solve=9.054s, mppi=0.577s, total=9.686s
+
+Cycle 26.0: Best cost: 0.4686558246612549
+
+Cycle 26.0: plan time: 9.6902s
+Realtime rate: 0.00, plan time: 9.6902s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6548 admm 0.6484 guard 0.1253
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=820 best sample 0.4338 warm 0.4373 x 0.4382 -> solution 0.4338
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6712 admm 1.4359 guard 0.1228
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=1980 best sample 0.4393 x 0.4384 -> solution 0.4338
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6784 admm 0.8964 guard 0.1229
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=1170 best sample 0.5127 x 0.5366 -> solution 0.4338
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6672 admm 1.0950 guard 0.1276
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=1450 best sample 0.4668 x 0.4669 -> solution 0.4338
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6709 admm 1.1551 guard 0.1225
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=1550 best sample 0.4414 x 0.4418 -> solution 0.4338
+[Timing total] cycle=27.0, num_restart=5, sampling_rollout=0.053s, autocalib=0.000s, ksos_solve=9.199s, mppi=0.594s, total=9.846s
+
+Cycle 27.0: Best cost: 0.43401241302490234
+
+Cycle 27.0: plan time: 9.8497s
+Realtime rate: 0.00, plan time: 9.8497s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.7537 admm 1.0683 guard 0.1227
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=1450 best sample 0.3927 warm 0.4112 x 0.3882 -> solution 0.3882
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 1.1647 admm 0.7063 guard 0.1231
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=640 best sample 0.4666 x 0.4669 -> solution 0.3882
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6954 admm 1.3911 guard 0.1200
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=1930 best sample 0.4450 x 0.4303 -> solution 0.3882
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6630 admm 2.0881 guard 0.0004
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5560 best sample 0.4183 -> solution 0.3882
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6662 admm 1.8728 guard 0.1207
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=2610 best sample 0.4266 x 0.4266 -> solution 0.3882
+[Timing total] cycle=28.0, num_restart=5, sampling_rollout=0.052s, autocalib=0.000s, ksos_solve=11.561s, mppi=0.585s, total=12.197s
+
+Cycle 28.0: Best cost: 0.3972248136997223
+
+Cycle 28.0: plan time: 12.2015s
+Realtime rate: 0.00, plan time: 12.2015s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6632 admm 0.4474 guard 0.1209
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=500 best sample 0.3665 warm 0.4168 x 0.3637 -> solution 0.3637
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6654 admm 0.3826 guard 0.1213
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=370 best sample 0.3842 x 0.3856 -> solution 0.3637
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6559 admm 1.4562 guard 0.1220
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=2020 best sample 0.4175 x 0.4108 -> solution 0.3637
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6757 admm 0.9883 guard 0.1216
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=1290 best sample 0.3629 x 0.3628 -> solution 0.3628
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6624 admm 1.3867 guard 0.1215
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=1860 best sample 0.3724 x 0.3717 -> solution 0.3628
+[Timing total] cycle=29.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=8.596s, mppi=0.583s, total=9.230s
+
+Cycle 29.0: Best cost: 0.36192068457603455
+
+Cycle 29.0: plan time: 9.2345s
+Realtime rate: 0.00, plan time: 9.2345s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6614 admm 1.2512 guard 0.1223
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=1700 best sample 0.3277 warm 0.4032 x 0.3262 -> solution 0.3262
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6615 admm 0.7761 guard 0.1223
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=990 best sample 0.4421 x 0.4402 -> solution 0.3262
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6719 admm 1.6684 guard 0.1464
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=2340 best sample 0.3446 x 0.3412 -> solution 0.3262
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6593 admm 0.7415 guard 0.1204
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=940 best sample 0.3366 x 0.3360 -> solution 0.3262
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6601 admm 0.6679 guard 0.1220
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=810 best sample 0.3539 x 0.3410 -> solution 0.3262
+[Timing total] cycle=30.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=9.057s, mppi=0.585s, total=9.693s
+
+Cycle 30.0: Best cost: 0.3399673402309418
+Cost for optimal action (cycle 30.0): [Array(7.8119607, dtype=float32), Array(7.339575, dtype=float32), Array(8.445639, dtype=float32), Array(5.4106007, dtype=float32), Array(4.8420258, dtype=float32), Array(4.3080754, dtype=float32), Array(4.506428, dtype=float32), Array(5.6033907, dtype=float32), Array(4.730524, dtype=float32), Array(4.20689, dtype=float32), Array(3.6073868, dtype=float32), Array(3.3385563, dtype=float32), Array(7.4290285, dtype=float32), Array(2.904819, dtype=float32), Array(2.4298148, dtype=float32), Array(2.7141876, dtype=float32), Array(5.7517233, dtype=float32), Array(3.1679873, dtype=float32), Array(1.0340083, dtype=float32), Array(1.068074, dtype=float32), Array(1.0590843, dtype=float32), Array(0.881455, dtype=float32), Array(0.6768078, dtype=float32), Array(0.63599294, dtype=float32), Array(0.5669038, dtype=float32), Array(0.52349734, dtype=float32), Array(0.46865582, dtype=float32), Array(0.4340124, dtype=float32), Array(0.3972248, dtype=float32), Array(0.36192068, dtype=float32), Array(0.33996734, dtype=float32)]
+
+Cycle 30.0: plan time: 9.6984s
+Realtime rate: 0.00, plan time: 9.6984s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.5335 admm 0.4846 guard 0.1233
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=3 replaced=0 status=converged iters=560 best sample 0.3325 warm 0.3803 x 0.3170 -> solution 0.3170
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.7449 admm 1.0303 guard 0.1207
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=1380 best sample 0.3868 x 0.3969 -> solution 0.3170
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6534 admm 0.6719 guard 0.1265
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=810 best sample 0.3234 x 0.3128 -> solution 0.3128
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6967 admm 0.5587 guard 0.1297
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=650 best sample 0.3159 x 0.3158 -> solution 0.3128
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.7073 admm 0.8473 guard 0.1207
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=1100 best sample 0.3148 x 0.3124 -> solution 0.3124
+[Timing total] cycle=31.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=7.554s, mppi=0.588s, total=8.193s
+
+Cycle 31.0: Best cost: 0.3184332847595215
+
+Cycle 31.0: plan time: 8.1974s
+Realtime rate: 0.00, plan time: 8.1974s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.7127 admm 2.0914 guard 0.0001
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=time_limit iters=3040 best sample 0.2815 warm 0.3620 -> solution 0.2815
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.7000 admm 1.3722 guard 0.1222
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=1810 best sample 0.3755 x 0.3827 -> solution 0.2815
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6589 admm 2.0912 guard 0.0004
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=3000 best sample 0.3447 -> solution 0.2815
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6938 admm 2.0863 guard 0.0004
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=3000 best sample 0.2838 -> solution 0.2815
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.7027 admm 0.7329 guard 0.1249
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=910 best sample 0.2898 x 0.2898 -> solution 0.2815
+[Timing total] cycle=32.0, num_restart=5, sampling_rollout=0.053s, autocalib=0.000s, ksos_solve=12.095s, mppi=0.592s, total=12.740s
+
+Cycle 32.0: Best cost: 0.2779363691806793
+
+Cycle 32.0: plan time: 12.7443s
+Realtime rate: 0.00, plan time: 12.7443s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6598 admm 0.7124 guard 0.1213
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=910 best sample 0.2523 warm 0.3037 x 0.2530 -> solution 0.2523
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.7260 admm 2.0861 guard 0.0004
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5610 best sample 0.3309 -> solution 0.2523
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6644 admm 0.3094 guard 0.1241
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=290 best sample 0.2546 x 0.2533 -> solution 0.2523
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.7268 admm 1.9143 guard 0.1214
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=2670 best sample 0.2765 x 0.2709 -> solution 0.2523
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6581 admm 0.4053 guard 0.1235
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=440 best sample 0.2443 x 0.2444 -> solution 0.2443
+[Timing total] cycle=33.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=9.358s, mppi=0.585s, total=9.994s
+
+Cycle 33.0: Best cost: 0.2461676299571991
+
+Cycle 33.0: plan time: 9.9985s
+Realtime rate: 0.00, plan time: 9.9985s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.5801 admm 1.7670 guard 0.1203
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=3 replaced=0 status=converged iters=2500 best sample 0.2393 warm 0.2646 x 0.2335 -> solution 0.2335
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6584 admm 2.0901 guard 0.0005
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5520 best sample 0.3099 -> solution 0.2335
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6653 admm 1.7122 guard 0.1244
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=2350 best sample 0.2229 x 0.2224 -> solution 0.2224
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6961 admm 1.4443 guard 0.1208
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=1970 best sample 0.2265 x 0.2267 -> solution 0.2224
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6577 admm 0.6874 guard 0.1246
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=870 best sample 0.2284 x 0.2279 -> solution 0.2224
+[Timing total] cycle=34.0, num_restart=5, sampling_rollout=0.054s, autocalib=0.000s, ksos_solve=11.453s, mppi=0.585s, total=12.092s
+
+Cycle 34.0: Best cost: 0.22535470128059387
+
+Cycle 34.0: plan time: 12.0965s
+Realtime rate: 0.00, plan time: 12.0965s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.5323 admm 1.1004 guard 0.1251
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=3 replaced=0 status=converged iters=1500 best sample 0.2029 warm 0.2407 x 0.2011 -> solution 0.2011
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6721 admm 2.0855 guard 0.0002
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5560 best sample 0.2725 -> solution 0.2011
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6920 admm 0.6456 guard 0.1200
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=770 best sample 0.2491 x 0.2489 -> solution 0.2011
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6597 admm 1.1165 guard 0.1204
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=1480 best sample 0.2139 x 0.2668 -> solution 0.2011
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6703 admm 0.7927 guard 0.1208
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=1000 best sample 0.2062 x 0.2043 -> solution 0.2011
+[Timing total] cycle=35.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=9.458s, mppi=0.586s, total=10.095s
+
+Cycle 35.0: Best cost: 0.1975732296705246
+
+Cycle 35.0: plan time: 10.0998s
+Realtime rate: 0.00, plan time: 10.0998s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6601 admm 0.4173 guard 0.1225
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=440 best sample 0.1895 warm 0.2364 x 0.2247 -> solution 0.1895
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.5377 admm 1.8940 guard 0.1225
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=3 replaced=0 status=converged iters=2660 best sample 0.2247 x 0.2810 -> solution 0.1895
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6594 admm 1.2113 guard 0.1219
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=1610 best sample 0.2097 x 0.2169 -> solution 0.1895
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6584 admm 1.2200 guard 0.1197
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=1660 best sample 0.1832 x 0.1763 -> solution 0.1763
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6552 admm 0.4126 guard 0.1211
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=440 best sample 0.1978 x 0.1958 -> solution 0.1763
+[Timing total] cycle=36.0, num_restart=5, sampling_rollout=0.052s, autocalib=0.000s, ksos_solve=8.938s, mppi=0.584s, total=9.574s
+
+Cycle 36.0: Best cost: 0.18653282523155212
+
+Cycle 36.0: plan time: 9.5781s
+Realtime rate: 0.00, plan time: 9.5781s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.5356 admm 1.1710 guard 0.1264
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=3 replaced=0 status=converged iters=1610 best sample 0.1527 warm 0.2083 x 0.1528 -> solution 0.1527
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6641 admm 1.1877 guard 0.1249
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=1580 best sample 0.1586 x 0.1583 -> solution 0.1527
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6581 admm 2.0870 guard 0.0004
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5510 best sample 0.1489 -> solution 0.1489
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6793 admm 0.1646 guard 0.1225
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=60 best sample 0.1495 x 0.1496 -> solution 0.1489
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6668 admm 0.6121 guard 0.1230
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=720 best sample 0.1513 x 0.1515 -> solution 0.1489
+[Timing total] cycle=37.0, num_restart=5, sampling_rollout=0.052s, autocalib=0.000s, ksos_solve=8.928s, mppi=0.591s, total=9.571s
+
+Cycle 37.0: Best cost: 0.16537153720855713
+
+Cycle 37.0: plan time: 9.5745s
+Realtime rate: 0.00, plan time: 9.5745s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6643 admm 1.4956 guard 0.1244
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=2050 best sample 0.1380 warm 0.1383 x 0.1364 -> solution 0.1364
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6587 admm 1.7601 guard 0.1202
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=2430 best sample 0.1650 x 0.1717 -> solution 0.1364
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6620 admm 0.4837 guard 0.1198
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=560 best sample 0.1506 x 0.1506 -> solution 0.1364
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6668 admm 1.2041 guard 0.1201
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=1670 best sample 0.1398 x 0.1398 -> solution 0.1364
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6688 admm 2.0893 guard 0.0005
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=3080 best sample 0.1391 -> solution 0.1364
+[Timing total] cycle=38.0, num_restart=5, sampling_rollout=0.051s, autocalib=0.000s, ksos_solve=10.843s, mppi=0.582s, total=11.476s
+
+Cycle 38.0: Best cost: 0.13907207548618317
+
+Cycle 38.0: plan time: 11.4800s
+Realtime rate: 0.00, plan time: 11.4800s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6710 admm 1.0495 guard 0.1228
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=1380 best sample 0.1191 warm 0.2471 x 0.1220 -> solution 0.1191
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6972 admm 2.0856 guard 0.0005
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5750 best sample 0.1259 -> solution 0.1191
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6635 admm 2.0838 guard 0.0004
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5530 best sample 0.1217 -> solution 0.1191
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.7119 admm 0.3079 guard 0.1201
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=280 best sample 0.1132 x 0.1183 -> solution 0.1132
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6678 admm 1.5123 guard 0.1221
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=2050 best sample 0.1105 x 0.1108 -> solution 0.1105
+[Timing total] cycle=39.0, num_restart=5, sampling_rollout=0.055s, autocalib=0.000s, ksos_solve=10.822s, mppi=0.598s, total=11.474s
+
+Cycle 39.0: Best cost: 0.11835326254367828
+
+Cycle 39.0: plan time: 11.4782s
+Realtime rate: 0.00, plan time: 11.4782s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.5354 admm 0.5215 guard 0.1192
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=3 replaced=0 status=converged iters=590 best sample 0.1026 warm 0.1686 x 0.1014 -> solution 0.1014
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6617 admm 0.9579 guard 0.1206
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=1270 best sample 0.0986 x 0.0975 -> solution 0.0975
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6640 admm 2.0885 guard 0.0004
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=3030 best sample 0.0946 -> solution 0.0946
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6574 admm 2.0837 guard 0.0004
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5550 best sample 0.0988 -> solution 0.0946
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6629 admm 0.9696 guard 0.1241
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=converged iters=1160 best sample 0.0961 x 0.0964 -> solution 0.0946
+[Timing total] cycle=40.0, num_restart=5, sampling_rollout=0.052s, autocalib=0.000s, ksos_solve=10.171s, mppi=0.586s, total=10.809s
+
+Cycle 40.0: Best cost: 0.09673105180263519
+Cost for optimal action (cycle 40.0): [Array(7.8119607, dtype=float32), Array(7.339575, dtype=float32), Array(8.445639, dtype=float32), Array(5.4106007, dtype=float32), Array(4.8420258, dtype=float32), Array(4.3080754, dtype=float32), Array(4.506428, dtype=float32), Array(5.6033907, dtype=float32), Array(4.730524, dtype=float32), Array(4.20689, dtype=float32), Array(3.6073868, dtype=float32), Array(3.3385563, dtype=float32), Array(7.4290285, dtype=float32), Array(2.904819, dtype=float32), Array(2.4298148, dtype=float32), Array(2.7141876, dtype=float32), Array(5.7517233, dtype=float32), Array(3.1679873, dtype=float32), Array(1.0340083, dtype=float32), Array(1.068074, dtype=float32), Array(1.0590843, dtype=float32), Array(0.881455, dtype=float32), Array(0.6768078, dtype=float32), Array(0.63599294, dtype=float32), Array(0.5669038, dtype=float32), Array(0.52349734, dtype=float32), Array(0.46865582, dtype=float32), Array(0.4340124, dtype=float32), Array(0.3972248, dtype=float32), Array(0.36192068, dtype=float32), Array(0.33996734, dtype=float32), Array(0.31843328, dtype=float32), Array(0.27793637, dtype=float32), Array(0.24616763, dtype=float32), Array(0.2253547, dtype=float32), Array(0.19757323, dtype=float32), Array(0.18653283, dtype=float32), Array(0.16537154, dtype=float32), Array(0.13907208, dtype=float32), Array(0.11835326, dtype=float32), Array(0.09673105, dtype=float32)]
+
+Cycle 40.0: plan time: 10.8151s
+Realtime rate: 0.00, plan time: 10.8151s/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6709 admm 0.5780 guard 0.1201
+ADMM-cuda: restart 0 CACS n=1000 h=0.700 rollouts=1161 rounds=4 replaced=0 status=converged iters=710 best sample 0.0874 warm 0.1673 x 0.0865 -> solution 0.0865
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6546 admm 1.6346 guard 0.1217
+ADMM-cuda: restart 1 CACS n=1000 h=0.560 rollouts=1160 rounds=4 replaced=0 status=converged iters=2260 best sample 0.0877 x 0.0898 -> solution 0.0865
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6619 admm 1.8171 guard 0.1205
+ADMM-cuda: restart 2 CACS n=1000 h=0.448 rollouts=1160 rounds=4 replaced=0 status=converged iters=2590 best sample 0.0853 x 0.0852 -> solution 0.0852
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6660 admm 0.4479 guard 0.1199
+ADMM-cuda: restart 3 CACS n=1000 h=0.358 rollouts=1160 rounds=4 replaced=0 status=converged iters=500 best sample 0.0841 x 0.0840 -> solution 0.0840
+/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/cacs.py:260: UserWarning: The balance properties of Sobol' points require n to be a power of 2.
+  X0 = qmc.Sobol(dim, scramble=True, seed=seed).random(cfg.initial) * (hi - lo) + lo
+KSOS timing: cacs 0.6797 admm 2.0868 guard 0.0005
+ADMM-cuda: restart 4 CACS n=1000 h=0.287 rollouts=1160 rounds=4 replaced=0 status=time_limit iters=5550 be

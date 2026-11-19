@@ -1,0 +1,48 @@
+{
+  "started": "2026-11-18T22:31:43-05:00",
+  "python": "/home/zhongqi/.cache/global-mppi/pusht_4090/venv/bin/python",
+  "versions": "3.12.12 | packaged by Anaconda, Inc. | (main, Oct 21 2025, 20:16:04) [GCC 11.2.0]\njax 0.5.3\nmujoco 3.3.6\nksos_tools /home/zhongqi/.cache/global-mppi/pusht_4090/ksos-tools/ksos_tools/__init__.py\n[CudaDevice(id=0)]\n",
+  "environment": {
+    "PYTHONPATH": "/home/zhongqi/.cache/global-mppi/pusht_4090/ksos-tools:/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI",
+    "CUKERNELSOS_PYTHON": "/home/zhongqi/.cache/global-mppi/pusht_4090/cuKernelSOS/python",
+    "KSOS_GPU_SOLVE": "1",
+    "XLA_PYTHON_CLIENT_PREALLOCATE": "false",
+    "MUJOCO_GL": "egl"
+  },
+  "repositories": {
+    "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI": "7d71c56880fe43d329374275788639abf2a730a1",
+    "/home/zhongqi/.cache/global-mppi/pusht_4090/cuKernelSOS": "276861259a8e6028c68301cd611cd1365a7e9734",
+    "/home/zhongqi/.cache/global-mppi/pusht_4090/ksos-tools": "86e6163040ddea1d8df5af947bbc5bac64ce1b36"
+  },
+  "build_toolkit": "CUDA 13.1.80",
+  "methods": [
+    "ps",
+    "mppi",
+    "dial",
+    "mtp",
+    "cbo",
+    "gm"
+  ],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "cycles": 100,
+  "baseline_samples": 2000,
+  "iterations": 5,
+  "globalmppi": {
+    "samples": 1000,
+    "ksos_candidates": 1000,
+    "restarts": 5,
+    "sampling": "cacs",
+    "solver": "ADMM-cuda",
+    "warm_start": true,
+    "gpu_solve": true,
+    "mppi_noise": 0.1
+  },
+  "differences_from_5090": "RTX 4090; Python 3.12.12; CUDA toolkit 13.1.80; other installed package versions are in pip_freeze.txt. MuJoCo/MJX 3.3.6, JAX 0.5.3 and solver source commits match the benchmark map."
+}

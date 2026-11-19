@@ -1,0 +1,48 @@
+Failed to import warp: No module named 'warp'
+Failed to import mujoco.mjx.third_party.mujoco_warp as mujoco_warp: No module named 'warp'
+Running MTP (hydrax hyperparameters): {'num_samples': 2000, 'plan_horizon': 1.0, 'spline_type': 'cubic', 'num_knots': 6, 'iterations': 5, 'm_pts': 3, 'n_per_layer': 50, 'degree': 2, 'num_elites': 5, 'sigma_start': 0.5, 'sigma_min': 0.1, 'sigma_max': 1.0, 'temperature': 0.1, 'beta': 0.1, 'alpha': 0.5, 'mtp_interpolation': 'akima'}
+GPU snapshot: /home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/logs/pushT_globalmppi_mtp/20261118_223717/gpu_snapshot.txt
+
+=== Seed 0 ===
+Planning with 100 steps over a 1.0 second horizon with 6 knots.
+Planning at 50.0 Hz, simulating at 1000.0 Hz
+Jitting the controller...
+Time to jit: 28.917 seconds
+Recording video to /home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/data/pusht_4090_data/mtp/s0/simulation_20261118_223747.mp4
+Traceback (most recent call last):
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/data/pusht_4090_data/run_one.py", line 47, in <module>
+    runpy.run_path(sys.argv[0], run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/examples/pusht.py", line 378, in <module>
+    run_interactive(
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/data/pusht_4090_data/run_one.py", line 37, in redirected
+    result = original(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/simulation/deterministic.py", line 470, in run_interactive
+    policy_params, rollouts, rollouts_best = jit_optimize(mjx_data, policy_params)
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+jaxlib.xla_extension.XlaRuntimeError: INTERNAL: ptxas exited with non-zero error code 139, output: 
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+Exception ignored in: <function Renderer.__del__ at 0x757c1f16fba0>
+Traceback (most recent call last):
+  File "/home/zhongqi/.cache/global-mppi/pusht_4090/venv/lib/python3.12/site-packages/mujoco/renderer.py", line 340, in __del__
+    self.close()
+  File "/home/zhongqi/.cache/global-mppi/pusht_4090/venv/lib/python3.12/site-packages/mujoco/renderer.py", line 326, in close
+    self._gl_context.free()
+  File "/home/zhongqi/.cache/global-mppi/pusht_4090/venv/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 131, in free
+    EGL.eglMakeCurrent(EGL_DISPLAY, EGL.EGL_NO_SURFACE,
+  File "/home/zhongqi/miniconda3/envs/benchmark/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>
+Exception ignored in: <function GLContext.__del__ at 0x757c1f16f380>
+Traceback (most recent call last):
+  File "/home/zhongqi/.cache/global-mppi/pusht_4090/venv/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 138, in __del__
+    self.free()
+  File "/home/zhongqi/.cache/global-mppi/pusht_4090/venv/lib/python3.12/site-packages/mujoco/egl/__init__.py", line 131, in free
+    EGL.eglMakeCurrent(EGL_DISPLAY, EGL.EGL_NO_SURFACE,
+  File "/home/zhongqi/miniconda3/envs/benchmark/lib/python3.12/site-packages/OpenGL/error.py", line 230, in glCheckError
+    raise self._errorClass(
+OpenGL.raw.EGL._errors.EGLError: <exception str() failed>

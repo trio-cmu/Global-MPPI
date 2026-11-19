@@ -1,0 +1,26 @@
+Failed to import warp: No module named 'warp'
+Failed to import mujoco.mjx.third_party.mujoco_warp as mujoco_warp: No module named 'warp'
+Running MPPI
+GPU snapshot: /home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/logs/pushT_globalmppi_mppi/20261118_230748/gpu_snapshot.txt
+
+=== Seed 1 ===
+Planning with 100 steps over a 1.0 second horizon with 6 knots.
+Planning at 50.0 Hz, simulating at 1000.0 Hz
+Jitting the controller...
+Traceback (most recent call last):
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/data/pusht_4090_data/run_one.py", line 47, in <module>
+    runpy.run_path(sys.argv[0], run_name="__main__")
+  File "<frozen runpy>", line 287, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/examples/pusht.py", line 378, in <module>
+    run_interactive(
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/data/pusht_4090_data/run_one.py", line 37, in redirected
+    result = original(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zhongqi/Documents/workspace/kernelSOS_project/Global-MPPI/global_mppi/simulation/deterministic.py", line 219, in run_interactive
+    policy_params, rollouts, rollouts_best = jit_optimize(mjx_data, policy_params)
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+jaxlib.xla_extension.XlaRuntimeError: INTERNAL: ptxas exited with non-zero error code 139, output: 
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.

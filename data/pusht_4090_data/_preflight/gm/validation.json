@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "planning_calls": 11,
+  "execution_cycles": 10,
+  "solve_paths": {
+    "gpu": 55
+  }
+}
