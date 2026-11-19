@@ -76,6 +76,9 @@ class Graph:
     def __init__(self, cfg: CacsConfig):
         self.cfg = cfg
         self.r = cfg.h * (1.0 + 1e-9)  # kernel-graph radius (see the class docstring)
+        # a point this close to a sample is a copy of it (KSOS needs distinct samples). Copies
+        # come from clipping: a step out of the box from a sample on a corner lands on it again.
+        self.min_sep = 1e-6 * cfg.h
         self.X, self.cost, self.G, self.F, self.H = [], [], [], [], []
         self._buf = None  # the samples as one array (rows 0..len(X)-1), grown in place
 
@@ -85,9 +88,13 @@ class Graph:
         return self._buf[: len(self.X)] if self._buf is not None else np.empty((0, 0))
 
     def neighbours(self, y):
+        """Indices of the samples within the kernel radius of y; None if y copies a sample
+        (rule() then rejects it)."""
         if not self.X:
             return set()
         d2 = np.sum((self.arr - y) ** 2, axis=1)
+        if d2.min() <= self.min_sep ** 2:
+            return None
         return set(np.flatnonzero(d2 < self.r ** 2).tolist())
 
     def rule(self, S, allow_isolated):
@@ -101,6 +108,8 @@ class Graph:
         every new E pair between existing samples is already in H, and the samples that
         become E-adjacent to v, T, number < max_clique and form a clique of H.
         """
+        if S is None:  # a copy of a sample (see neighbours)
+            return None
         if not self.X:
             return set(), set(), []
         if not S and not allow_isolated:
@@ -148,10 +157,14 @@ class Graph:
         """[(index into Y, (S, T, fill))] for the proposals the rules allow."""
         if not self.X:
             return [(i, (set(), set(), [])) for i in range(len(Y))]
-        within = _within(self.arr, np.atleast_2d(Y), self.r)  # as neighbours()
+        Y = np.atleast_2d(Y)
+        within = _within(self.arr, Y, self.r)  # as neighbours()
         out = []
         for i, row in enumerate(within):
-            st = self.rule(set(np.flatnonzero(row).tolist()), allow_isolated)
+            near = np.flatnonzero(row)
+            if len(near) and np.sum((self.arr[near] - Y[i]) ** 2, axis=1).min() <= self.min_sep ** 2:
+                continue  # a copy of a sample (as neighbours)
+            st = self.rule(set(near.tolist()), allow_isolated)
             if st is not None:
                 out.append((i, st))
         return out

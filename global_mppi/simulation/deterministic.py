@@ -136,6 +136,8 @@ def run_interactive(  # noqa: PLR0912, PLR0915
     wandb_project: str = "global-mppi",
     wandb_entity: str = None,
     headless: bool = False,
+    out_dir: str = None,
+    cycle_logger=None,
 ) -> None:
     """Run an interactive simulation with the MPC controller.
 
@@ -163,6 +165,9 @@ def run_interactive(  # noqa: PLR0912, PLR0915
         reference: The reference trajectory (qs) to visualize.
         reference_fps: The frame rate of the reference trajectory.
         record_video: Whether to record a video of the simulation.
+        out_dir: Optional directory for this run's video and cost/state histories.
+        cycle_logger: Optional callback(cycle, plan_time, best_cost, model, data),
+            called after planning and before executing each control cycle.
     """
     # Report the planning horizon in seconds for debugging
     print(
@@ -249,6 +254,8 @@ def run_interactive(  # noqa: PLR0912, PLR0915
         f"{current_task}_{controller.ctrl_name}",
         RUN_TIMESTAMP,
     )
+    if out_dir is not None:
+        run_log_dir = out_dir
     os.makedirs(run_log_dir, exist_ok=True)
 
     # Initialize video recording if enabled
@@ -531,6 +538,8 @@ def run_interactive(  # noqa: PLR0912, PLR0915
                 
             plan_time = time.time() - plan_start
             print(f"\nCycle {cycle_count}: plan time: {plan_time:.4f}s"),
+            if cycle_logger is not None:
+                cycle_logger(int(cycle_count), plan_time, best_cost, mj_model, mj_data)
             cycle_count += 1.0
             
             # Visualize the rollouts

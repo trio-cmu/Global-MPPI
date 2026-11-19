@@ -24,6 +24,8 @@ with the same simulation loop.
 | MPPI | `mppi` | Model-predictive path integral control: a softmax-weighted average over sampled rollouts. |
 | DIAL-MPC | `dial` | MPPI with noise annealed across both optimization iterations and the planning horizon. |
 | GlobalMPPI | `globalmppi` | This work: a KernelSOS global-search step seeds the mean, followed by an MPPI local-search refinement. |
+| MTP | `mtp` | Model Tensor Planning baseline, with the benchmark branch's Hydrax defaults. |
+| CBO | `cbo` | Consensus-Based Optimization baseline, with the benchmark branch's Hydrax settings. |
 
 ## Tasks
 
@@ -32,7 +34,69 @@ with the same simulation loop.
 - **CubeRotation** (`global_mppi/tasks/cube.py`) — reorient a cube to a target
   orientation using a LEAP hand.
 
-Both tasks define their dynamics via a MuJoCo model (`global_mppi/models/`)
+The seven tasks from `benchmarks` are available on this branch:
+
+| Task | Example | Benchmark horizon / knots / spline |
+| --- | --- | --- |
+| PushT, original benchmark objective | `examples/pusht_benchmark.py` | 1.0 s / 6 / cubic |
+| Cube rotation, LEAP hand | `examples/cube.py` | 0.25 s / 4 / zero |
+| Double cart-pole | `examples/double_cart_pole.py` | 1.0 s / 4 / cubic |
+| G1 standup | `examples/g1.py` | 0.6 s / 4 / zero |
+| Bugtrap | `examples/bugtrap.py` | 2.0 s / 11 / cubic |
+| Walker | `examples/walker.py` | 0.6 s / 5 / zero |
+| G1 walking, mocap tracking | `examples/g1_walk.py` | 0.8 s / 4 / zero |
+
+These task definitions and models come from `benchmarks` commit `7d71c56`.
+They use this branch's existing fill-aware CACS, explicit clique construction,
+and solver settings. The `--gpu` flag selects CACS with GPU ADMM; it does not
+force the separate GPU affine-solve option from the benchmark branch.
+The CACS implementation, `GlobalMPPI` controller, and `ksos-tools` pin are preserved.
+
+`examples/pusht.py` retains the GCS-comparison objective and `--gcs-model` support.
+Use `pusht_benchmark.py` for the original benchmark objective: squared position
+and orientation errors, without the off-contact pusher-path penalty. The two
+objectives produce different costs and should not be compared as identical metrics.
+
+Use MuJoCo/MJX **3.3.6** to match the benchmark task dynamics. For GlobalMPPI,
+activate the existing environment and set `CUKERNELSOS_PYTHON` to your current
+cuKernelSOS `python` directory before running examples.
+
+```bash
+# Once, for both G1 tasks; downloads the pinned model and verifies checksums.
+script/fetch_g1_model.sh
+
+# One run with this branch's CACS implementation.
+python examples/bugtrap.py --headless --gpu --seed-start 0 --seed-end 1 \
+  --horizon 2.0 --num-knots 11 --spline-type cubic --out-dir logs/bugtrap_test globalmppi
+
+# A baseline run on the original PushT benchmark task.
+python examples/pusht_benchmark.py --no-wandb --headless --seed 0 \
+  --num-samples 2000 --out-dir logs/pusht_benchmark_test ps
+
+# Inspect the full batch commands, then run a selected batch.
+python script/run_benchmark_tasks.py --dry-run
+python script/run_benchmark_tasks.py --tasks cube walker bugtrap --methods gm --seeds 0 \
+  --out-dir logs/pre_release_benchmarks
+```
+
+The batch launcher defaults to all seven tasks, all six methods, and seeds 0–5.
+Runs are sequential, with 100 control cycles each (G1 walk: 400). It skips
+completed runs with the same cycle count. Existing files from an interrupted
+attempt are archived under that run's `attempts/` directory before rerunning.
+Each run writes `args.json`, `cycles.csv`, `final.json`, histories, and a video.
+The simulation loop retains its existing stop checks at multiples of ten cycles;
+for short smoke runs, use `--max-cycles 10`.
+
+G1 walking downloads `walk1_subject1.npz` from
+`robfiras/loco-mujoco-datasets` into the Hugging Face cache on first use.
+The reference motion is licensed CC-BY-NC-ND 4.0. The G1 model is BSD-3-Clause,
+with its license included by the fetch script.
+
+On this desktop, the previous GCS benchmark scripts excluded CPU threads 8–11
+after machine-check errors. The same affinity can be applied to the launcher:
+`taskset -c 0-7,12-31 python script/run_benchmark_tasks.py ...`.
+
+The imported benchmark tasks define their dynamics via a MuJoCo model (`global_mppi/models/`)
 and their running/terminal costs via the abstract `Task` interface in
 `global_mppi/task_base.py`.
 
@@ -81,8 +145,8 @@ installed separately, because it is a git submodule rather than a PyPI package.
 
 ```
 global_mppi/
-├── algs/          # Controllers: PS, MPPI, DIAL, GlobalMPPI
-├── tasks/         # Task definitions (dynamics + costs): PushT, CubeRotation
+├── algs/          # Controllers: PS, MPPI, DIAL, GlobalMPPI, MTP, CBO
+├── tasks/         # Seven benchmark tasks, plus the existing PushT/GCS variants
 ├── models/        # MuJoCo XML models for each task
 ├── simulation/    # Interactive/async simulation loops, W&B + video logging
 ├── utils/         # Control-spline interpolation utilities
