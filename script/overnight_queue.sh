@@ -1,0 +1,238 @@
+#!/bin/bash
+# script/overnight_queue.sh -- unattended, strictly sequential queue of six-method batches (ps mppi dial mtp cbo gm x 6 seeds x 100 cycles; g1_walk 400).
+#
+#   CUKS_GPU=/path/to/cuKernelSOS/python  script/overnight_queue.sh      start detached (nohup + setsid) and print where to look
+#   (the queue itself is `script/overnight_queue.sh --run`, started by the launcher; do not call it by hand)
+#
+# Environment (all optional except CUKS_GPU):
+#   CUKS_GPU   cuKernelSOS `python` dir of the gpu-solve build (ssisyg/cuKernelSOS, branch gpu-solve, 2768612); REQUIRED, gm needs it
+#   CUKS_OLD   cuKernelSOS python dir for the baselines (default: CUKS_GPU; ps/mppi/dial/mtp/cbo never call cuKernelSOS)
+#   PY         python that runs the planners (default: python in PATH; needs the Global-MPPI env, MuJoCo 3.3.6)
+#   SYSPY      python that draws the figures (default: PY; needs matplotlib)
+#   RUNS_DIR   where the queue writes (default: <repo>/logs/overnight_runs); one folder <RUNS_DIR>/<timestamp> per queue
+#   TASKS      tasks to run, any of "pusht walker double_cart_pole bugtrap g1_walk" (default: pusht); all run the code of this checkout
+#   MAX_CYCLES control cycles per run of walker / double_cart_pole / bugtrap / g1_walk (default 100; g1_walk 400, see docs/g1_walk.md)
+#   g1_walk needs the G1 model (script/fetch_g1_model.sh, into global_mppi/models/g1 of this checkout: set G1_MODEL_DIR=<dir> to reuse a fetched one)
+#   and downloads its reference motion from Hugging Face on first use (CC-BY-NC-ND 4.0; set HF_HOME for the cache)
+#   SEEDS, METHODS  (default: "0 1 2 3 4 5", "ps mppi dial mtp cbo gm")
+#   BASE_TIMEOUT, GM_TIMEOUT  seconds per attempt for ps/mppi/dial/mtp/cbo and for gm (defaults 3600 and 14400)
+#   MIN_FREE_BASE_MB, MIN_FREE_GM_MB  free GPU memory (MiB, from nvidia-smi) that must be available before an attempt starts
+#              (defaults 2048 for the baselines, 6144 for gm); the queue polls every WAIT_POLL_S seconds (default 30) and logs the wait
+# Every task runs the code of the checkout this script lives in (PYTHONPATH selects it); there is no branch or worktree switching.
+#
+# The queue starts at once and runs one process at a time (no two runs of this queue overlap); before every attempt it waits for enough free GPU memory (see MIN_FREE_*_MB).
+# Per task: <Q>/<task>/batch.log, <Q>/<task>/gpu_snapshots/<method>_s<seed>.txt (nvidia-smi before every run), logs/, results/;
+# overall: <Q>/STATUS.txt (rewritten after every run). A failed run is retried (max 2) after ANY crash (nonzero exit, or no finished
+# marker), except a timeout (exit code 124), which is not retried; after the retries it is logged "GAVE UP" and the queue goes on. A task that cannot start is "SKIPPED"; a failed or
+# skipped task never blocks the next one. At the end of each task the figure and the tables are made (no GCS anywhere).
+set -u
+REPO=$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)
+export QUEUE_TS=${QUEUE_TS:-$(date +%Y%m%d_%H%M%S)}
+Q=${RUNS_DIR:-$REPO/logs/overnight_runs}/$QUEUE_TS
+STATUS=$Q/STATUS.txt
+PY=${PY:-python}                                 # runs the planners
+SYSPY=${SYSPY:-$PY}                              # draws the figures (matplotlib)
+TOOLS=$REPO/script
+SEEDS=${SEEDS:-"0 1 2 3 4 5"}
+METHODS=${METHODS:-"ps mppi dial mtp cbo gm"}
+TASKS=${TASKS:-pusht}
+PUSHT_SEEDS_DIR=$REPO/examples/single_run_test/PushT/closed_loop/seeds   # (gitignored *.log, as the senior's doc)
+BASE_TIMEOUT=${BASE_TIMEOUT:-3600}      # s per attempt, ps / mppi / dial / mtp / cbo
+GM_TIMEOUT=${GM_TIMEOUT:-14400}         # s per attempt, globalmppi
+MIN_FREE_BASE_MB=${MIN_FREE_BASE_MB:-2048}   # MiB of free GPU memory required before a baseline attempt
+MIN_FREE_GM_MB=${MIN_FREE_GM_MB:-6144}       # MiB of free GPU memory required before a gm attempt (cuSOLVER fails with less)
+WAIT_POLL_S=${WAIT_POLL_S:-30}               # s between two nvidia-smi polls while waiting
+RETRIES=2              # extra attempts after a crash (any crash except a timeout)
+GPU_CUKS=${CUKS_GPU:-}
+OLD_CUKS=${CUKS_OLD:-$GPU_CUKS}
+[ -n "$GPU_CUKS" ] || { echo "set CUKS_GPU=<cuKernelSOS gpu-solve build>/python (see the header of this script)"; exit 1; }
+
+if [ "${1:-}" != "--run" ]; then
+  mkdir -p "$Q"
+  nohup setsid systemd-inhibit --what=sleep:idle:handle-lid-switch --who="overnight queue" \
+    --why="Global-MPPI batch queue" --mode=block env QUEUE_TS="$QUEUE_TS" "$0" --run > "$Q/queue.out" 2>&1 < /dev/null &
+  echo "queue $QUEUE_TS started (detached)."
+  echo "  status : $STATUS"
+  echo "  logs   : $Q/<task>/batch.log      (tail -f $Q/pusht/batch.log)"
+  echo "  stop   : kill the PID of 'overnight_queue.sh --run' and of the current python child (by PID, not pkill -f)"
+  exit 0
+fi
+
+mkdir -p "$Q"
+declare -A TASK_STATE TASK_DONE TASK_TOTAL TASK_FAILED
+for t in $TASKS; do TASK_STATE[$t]=PENDING; TASK_DONE[$t]=0; TASK_TOTAL[$t]=36; TASK_FAILED[$t]=""; done
+CURRENT="-"
+
+say() { echo "$(date '+%F %T') $*" >> "$Q/$TASK/batch.log"; }
+status() {
+  {
+    echo "overnight queue $QUEUE_TS   updated $(date '+%F %T')   queue pid $$"
+    echo "current: $CURRENT"
+    for t in $TASKS; do
+      echo "$t: ${TASK_STATE[$t]}   runs finished ${TASK_DONE[$t]}/${TASK_TOTAL[$t]}   gave up: ${TASK_FAILED[$t]:-none}"
+    done
+    echo "gpu now: $(nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader 2>/dev/null)"
+  } > "$STATUS.tmp" && mv "$STATUS.tmp" "$STATUS"
+}
+gpu_snapshot() {   # file
+  { echo "=== $(date '+%F %T') $CURRENT"; nvidia-smi; echo; nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv; } > "$1" 2>&1
+}
+
+free_gpu_mb() {   # free GPU memory in MiB (empty when nvidia-smi is not usable)
+  nvidia-smi --query-gpu=memory.total,memory.used --format=csv,noheader,nounits 2>/dev/null | head -n 1 | awk -F, '{printf "%d", $1 - $2}'
+}
+wait_for_gpu() {   # label: wait until enough GPU memory is free (gm: MIN_FREE_GM_MB, others: MIN_FREE_BASE_MB)
+  local need=$MIN_FREE_BASE_MB free t0 polls=0
+  case $1 in gm\ *) need=$MIN_FREE_GM_MB;; esac
+  free=$(free_gpu_mb); [ -n "$free" ] || return 0
+  [ "$free" -ge "$need" ] && return 0
+  t0=$(date +%s); say "WAIT $1: GPU memory free ${free} MiB < ${need} MiB needed (polling every ${WAIT_POLL_S} s)"
+  while [ "$free" -lt "$need" ]; do
+    CURRENT="$TASK $1: waiting for GPU memory (free ${free} MiB, need ${need} MiB)"; status
+    sleep "$WAIT_POLL_S"; polls=$((polls + 1)); free=$(free_gpu_mb); [ -n "$free" ] || break
+    [ $((polls % 20)) -eq 0 ] && say "  still waiting for $1: free ${free} MiB, need ${need} MiB ($(( ($(date +%s) - t0) / 60 )) min)"
+  done
+  say "  GPU memory ok for $1 after $(( $(date +%s) - t0 )) s (free ${free} MiB)"
+}
+
+# run_with_retries <kind> <label> <log> <run_dir> <timeout> <done-test-function> -- command...
+run_with_retries() {
+  local kind=$1 label=$2 log=$3 rdir=$4 to=$5 donefn=$6; shift 7
+  local attempt=0
+  while [ $attempt -le $RETRIES ]; do
+    attempt=$((attempt + 1))
+    wait_for_gpu "$label"
+    CURRENT="$TASK $label (attempt $attempt)"; status
+    gpu_snapshot "$Q/$TASK/gpu_snapshots/${label// /_}_a${attempt}.txt"
+    say "START $label (attempt $attempt)"
+    timeout "$to" "$@" > "$log" 2>&1
+    local rc=$?
+    if [ $rc -eq 0 ] && $donefn; then say "END   $label ok"; return 0; fi
+    say "FAILED $label (attempt $attempt, exit code $rc); last log line: $(tail -n 1 "$log" | cut -c1-160)"
+    cp "$log" "$log.attempt$attempt" 2>/dev/null
+    [ -n "$rdir" ] && [ -f "$rdir/cycles.csv" ] && cp "$rdir/cycles.csv" "$rdir/cycles.csv.attempt$attempt" 2>/dev/null   # keep the partial data of a failed attempt
+    if [ $rc -eq 124 ]; then say "  timeout (not retried)"; break; fi
+    if [ $attempt -le $RETRIES ]; then
+      say "  crash (exit code $rc, not a timeout): retrying"
+      continue
+    fi
+    break
+  done
+  say "GAVE UP $label (batch continues)"
+  return 1
+}
+
+check_code() {   # the code must come from this checkout (PYTHONPATH), or return 1
+  local f; f=$(cd "$REPO" && PYTHONPATH="$REPO" "$PY" -c "import global_mppi; print(global_mppi.__file__)" 2>/dev/null | tail -1)
+  case $f in "$REPO"/*) say "code: $f ($(git -C "$REPO" rev-parse --short HEAD 2>/dev/null), branch $(git -C "$REPO" branch --show-current 2>/dev/null))"; return 0;; *) say "import resolves to '$f', not to this checkout"; return 1;; esac
+}
+
+# ------------------------------------------------------------------ (a) PushT
+task_pusht() {
+  TASK=pusht; local W=$REPO
+  mkdir -p "$Q/pusht/gpu_snapshots" "$Q/pusht/logs" "$PUSHT_SEEDS_DIR"
+  say "=== PushT batch: ps mppi dial mtp cbo (2000 x 5) and globalmppi (CACS, ADMM-cuda, gpu_solve), seeds $SEEDS, 100 cycles"
+  [ -f "$W/examples/pusht.py" ] || { TASK_STATE[pusht]=SKIPPED; say "SKIPPED (no examples/pusht.py in $W)"; return 1; }
+  say "code: $W ($(git -C "$W" rev-parse --short HEAD 2>/dev/null), branch $(git -C "$W" branch --show-current 2>/dev/null))"
+  TASK_STATE[pusht]=RUNNING; status
+  local s m log marker
+  for s in $SEEDS; do
+    say "--- seed $s"
+    for m in $METHODS; do
+      if [ $m = gm ]; then log=$PUSHT_SEEDS_DIR/globalmppi_cacs5new_seed$s.log; else log=$PUSHT_SEEDS_DIR/${m}2000_seed$s.log; fi
+      if [ -f "$log" ] && grep -q "finish the seed" "$log"; then say "SKIP  $m s$s (finished log exists)"; TASK_DONE[pusht]=$((TASK_DONE[pusht] + 1)); continue; fi
+      pusht_done() { grep -q "finish the seed" "$log"; }
+      if [ $m = gm ]; then
+        # gpu_solve is switched on by KSOS_GPU_SOLVE=1 and the gpu-solve build of cuKernelSOS
+        ( cd "$W" && run_with_retries pusht "$m s$s" "$log" "" $GM_TIMEOUT pusht_done -- \
+            env PYTHONPATH="$W" KSOS_GPU_SOLVE=1 CUKERNELSOS_PYTHON=$GPU_CUKS XLA_PYTHON_CLIENT_PREALLOCATE=false \
+            "$PY" examples/pusht.py --no-wandb --headless --seed "$s" --ksos-solver ADMM-cuda --ksos-sampling cacs \
+            --ksos-restarts 5 --ksos-warm-start --mppi-noise 0.1 globalmppi )
+      else
+        ( cd "$W" && run_with_retries pusht "$m s$s" "$log" "" $BASE_TIMEOUT pusht_done -- \
+            env PYTHONPATH="$W" CUKERNELSOS_PYTHON=$OLD_CUKS XLA_PYTHON_CLIENT_PREALLOCATE=false \
+            "$PY" examples/pusht.py --no-wandb --headless --seed "$s" --num-samples 2000 "$m" )
+      fi
+      if [ $? -eq 0 ]; then
+        TASK_DONE[pusht]=$((TASK_DONE[pusht] + 1))
+        if [ $m = gm ]; then
+          if grep -q "solve_paths: {'gpu': " "$log" && ! grep -q "cpu (" "$log"; then say "  solve_paths: $(grep solve_paths "$log" | tail -1)"; else say "  WARNING gm s$s: solve_paths not all gpu: $(grep solve_paths "$log" | tail -1)"; fi
+        fi
+      else TASK_FAILED[pusht]="${TASK_FAILED[pusht]} $m/s$s"; fi
+      status
+    done
+  done
+  # figures and tables (no GCS): the doc's six_seeds_main directory, built here with the six methods
+  local D=$Q/pusht/six_seeds_main; mkdir -p "$D" "$Q/pusht/figures"
+  for s in $SEEDS; do
+    for m in ps mppi dial mtp cbo; do [ -f "$PUSHT_SEEDS_DIR/${m}2000_seed$s.log" ] && ln -sf "$PUSHT_SEEDS_DIR/${m}2000_seed$s.log" "$D/${m}2000_seed$s.log"; done
+    [ -f "$PUSHT_SEEDS_DIR/globalmppi_cacs5new_seed$s.log" ] && ln -sf "$PUSHT_SEEDS_DIR/globalmppi_cacs5new_seed$s.log" "$D/globalmppi_cacs5new_seed$s.log"
+  done
+  local C=$W/examples/single_run_test/PushT/closed_loop
+  ( cd "$C" && $SYSPY plot_closed_loop_seeds.py "$D" "$Q/pusht/figures/pusht_closed_loop_six.png" > "$Q/pusht/figures/plot_closed_loop_seeds.txt" 2>&1
+    $SYSPY plot_pareto.py "$D" "$Q/pusht/figures/pusht_pareto_six.png" > "$Q/pusht/figures/plot_pareto.txt" 2>&1
+    $SYSPY plot_paper_style.py "$D" "$Q/pusht/figures/pusht_cost_median_iqr_six.png" > "$Q/pusht/figures/plot_paper_style.txt" 2>&1 )
+  $SYSPY "$TOOLS/pusht_summary.py" "$D" "$Q/pusht/summary.txt" >> "$Q/pusht/batch.log" 2>&1
+  TASK_STATE[pusht]=DONE; say "=== PushT batch end (gave up:${TASK_FAILED[pusht]:- none}); tables in $Q/pusht/summary.txt, figures in $Q/pusht/figures/"
+}
+
+# ------------------------------------------------------------------ (b) walker, (c) double_cart_pole, (d) bugtrap, (e) g1_walk
+task_example() {   # <task name = example name>
+  TASK=$1; local W=$REPO RES=$Q/$1/results
+  mkdir -p "$Q/$TASK/gpu_snapshots" "$Q/$TASK/logs" "$RES"
+  say "=== $TASK batch: $METHODS, seeds $SEEDS, $([ "$TASK" = g1_walk ] && echo ${MAX_CYCLES:-400} || echo ${MAX_CYCLES:-100}) cycles (settings as the cube runs; walker / double_cart_pole: horizon, knots, spline from the hydrax example; bugtrap: horizon 2.0, 11 knots, cubic)"
+  check_code || { TASK_STATE[$TASK]=SKIPPED; say "SKIPPED (global_mppi does not import from this checkout)"; return 1; }
+  if [ "$TASK" = g1_walk ] && [ ! -d "$W/global_mppi/models/g1" ]; then   # the G1 model is not vendored
+    if [ -n "${G1_MODEL_DIR:-}" ]; then cp -r "$G1_MODEL_DIR" "$W/global_mppi/models/g1"; else (cd "$W" && bash script/fetch_g1_model.sh) >> "$Q/$TASK/batch.log" 2>&1; fi
+  fi
+  [ -f "$W/examples/$TASK.py" ] || { TASK_STATE[$TASK]=SKIPPED; say "SKIPPED (no examples/$TASK.py in $W)"; return 1; }
+  TASK_STATE[$TASK]=RUNNING; status
+  local s m arg algo final log
+  local EXTRA=""   # per-task benchmark setting
+  case $TASK in bugtrap) EXTRA="--horizon 2.0 --num-knots 11 --spline-type cubic";; esac
+  local CYC=${MAX_CYCLES:-100}; [ "$TASK" = g1_walk ] && CYC=${MAX_CYCLES:-400}   # g1_walk: 8 s, see docs/g1_walk.md
+  for s in $SEEDS; do
+    say "--- seed $s"
+    for m in $METHODS; do
+      if [ $m = gm ]; then arg="--gpu globalmppi"; else arg=$m; fi
+      final=$RES/$m/s$s/final.json; log=$Q/$TASK/logs/${m}_s$s.log
+      if [ -f "$final" ]; then say "SKIP  $m s$s (final.json exists)"; TASK_DONE[$TASK]=$((TASK_DONE[$TASK] + 1)); continue; fi
+      example_done() { [ -f "$final" ]; }
+      if [ $m = gm ]; then
+        ( cd "$W" && run_with_retries example "$m s$s" "$log" "$RES/$m/s$s" $GM_TIMEOUT example_done -- \
+            env PYTHONPATH="$W" KSOS_GPU_SOLVE=1 CUKERNELSOS_PYTHON=$GPU_CUKS XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
+            "$PY" examples/$TASK.py --headless --seed-start "$s" --seed-end $((s + 1)) --max-cycles $CYC --out-dir "$RES" $EXTRA $arg )
+      else
+        ( cd "$W" && run_with_retries example "$m s$s" "$log" "$RES/$m/s$s" $BASE_TIMEOUT example_done -- \
+            env PYTHONPATH="$W" CUKERNELSOS_PYTHON=$OLD_CUKS XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
+            "$PY" examples/$TASK.py --headless --seed-start "$s" --seed-end $((s + 1)) --max-cycles $CYC --out-dir "$RES" $EXTRA $arg )
+      fi
+      if [ $? -eq 0 ]; then
+        TASK_DONE[$TASK]=$((TASK_DONE[$TASK] + 1))
+        if [ $m = gm ]; then
+          if "$PY" -c "import json,sys; sys.exit(0 if set(json.load(open('$final')).get('solve_paths',{'?':1}))=={'gpu'} else 1)"; then say "  solve_paths: all gpu"; else say "  WARNING gm s$s: solve_paths not all gpu"; fi
+        fi
+      else TASK_FAILED[$TASK]="${TASK_FAILED[$TASK]} $m/s$s"; fi
+      status
+    done
+  done
+  case $TASK in bugtrap|g1_walk) ;; *) $SYSPY "$TOOLS/plot_task.py" "$TASK" "$RES" "$Q/$TASK/figures" >> "$Q/$TASK/batch.log" 2>&1;; esac   # bugtrap, g1_walk: final_figs only
+  TASK_STATE[$TASK]=DONE; say "=== $TASK batch end (gave up:${TASK_FAILED[$TASK]:- none}); figure and tables in $Q/$TASK/figures/"
+}
+
+TASK=queue; mkdir -p "$Q/queue"; echo "$(date '+%F %T') queue start" >> "$Q/queue/batch.log"
+status
+# plain calls (not subshells), so that STATUS.txt sees the state of every task; a failed or skipped task never stops the next one
+for t in $TASKS; do
+  case $t in
+    pusht) task_pusht || true;;
+    walker) task_example walker || true;;
+    double_cart_pole) task_example double_cart_pole || true;;
+    bugtrap) task_example bugtrap || true;;
+    g1_walk) task_example g1_walk || true;;
+    *) echo "unknown task $t" >> "$Q/queue/batch.log";;
+  esac
+done
+$SYSPY "$TOOLS/final_figs.py" "$Q" "$(echo $TASKS | tr ' ' ',')" >> "$Q/queue/batch.log" 2>&1   # final six-method figures + tables in $Q/final_figs/
+CURRENT="finished"; status
+echo "$(date '+%F %T') queue end" >> "$Q/queue/batch.log"
