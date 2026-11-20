@@ -1,17 +1,17 @@
 #!/bin/bash
 # script/overnight_queue.sh -- unattended, strictly sequential queue of six-method batches (ps mppi dial mtp cbo gm x 6 seeds x 100 cycles; g1_walk 400).
 #
-#   CUKS_GPU=/path/to/cuKernelSOS/python  script/overnight_queue.sh      start detached (nohup + setsid) and print where to look
+#   CUKS_GPU=/path/to/cuKernelSOS_zq/python  script/overnight_queue.sh      start detached (nohup + setsid) and print where to look
 #   (the queue itself is `script/overnight_queue.sh --run`, started by the launcher; do not call it by hand)
 #
 # Environment (all optional except CUKS_GPU):
-#   CUKS_GPU   cuKernelSOS `python` dir of the gpu-solve build (ssisyg/cuKernelSOS, branch gpu-solve, 2768612); REQUIRED, gm needs it
+#   CUKS_GPU   cuKernelSOS `python` dir of the build for gm (Zhongqi2/cuKernelSOS, branch cuKernelSOS, 31b7cf7; GPU ADMM always on, CPU fallback); REQUIRED
 #   CUKS_OLD   cuKernelSOS python dir for the baselines (default: CUKS_GPU; ps/mppi/dial/mtp/cbo never call cuKernelSOS)
 #   PY         python that runs the planners (default: python in PATH; needs the Global-MPPI env, MuJoCo 3.3.6)
 #   SYSPY      python that draws the figures (default: PY; needs matplotlib)
 #   RUNS_DIR   where the queue writes (default: <repo>/logs/overnight_runs); one folder <RUNS_DIR>/<timestamp> per queue
-#   TASKS      tasks to run, any of "pusht walker double_cart_pole bugtrap g1_walk" (default: pusht); all run the code of this checkout
-#   MAX_CYCLES control cycles per run of walker / double_cart_pole / bugtrap / g1_walk (default 100; g1_walk 400, see docs/g1_walk.md)
+#   TASKS      tasks to run, any of "pusht walker double_cart_pole bugtrap obstacle_field g1_walk" (default: pusht); all run the code of this checkout
+#   MAX_CYCLES control cycles per run of walker / double_cart_pole / bugtrap / obstacle_field / g1_walk (default 100; g1_walk 400, see docs/g1_walk.md)
 #   g1_walk needs the G1 model (script/fetch_g1_model.sh, into global_mppi/models/g1 of this checkout: set G1_MODEL_DIR=<dir> to reuse a fetched one)
 #   and downloads its reference motion from Hugging Face on first use (CC-BY-NC-ND 4.0; set HF_HOME for the cache)
 #   SEEDS, METHODS  (default: "0 1 2 3 4 5", "ps mppi dial mtp cbo gm")
@@ -45,7 +45,7 @@ WAIT_POLL_S=${WAIT_POLL_S:-30}               # s between two nvidia-smi polls wh
 RETRIES=2              # extra attempts after a crash (any crash except a timeout)
 GPU_CUKS=${CUKS_GPU:-}
 OLD_CUKS=${CUKS_OLD:-$GPU_CUKS}
-[ -n "$GPU_CUKS" ] || { echo "set CUKS_GPU=<cuKernelSOS gpu-solve build>/python (see the header of this script)"; exit 1; }
+[ -n "$GPU_CUKS" ] || { echo "set CUKS_GPU=<cuKernelSOS build>/python (see the header of this script)"; exit 1; }
 
 if [ "${1:-}" != "--run" ]; then
   mkdir -p "$Q"
@@ -123,7 +123,7 @@ run_with_retries() {
 }
 
 check_code() {   # the code must come from this checkout (PYTHONPATH), or return 1
-  local f; f=$(cd "$REPO" && PYTHONPATH="$REPO" "$PY" -c "import global_mppi; print(global_mppi.__file__)" 2>/dev/null | tail -1)
+  local f; f=$(cd "$REPO" && PYTHONPATH="$REPO:$REPO/ksos-tools" "$PY" -c "import global_mppi, ksos_tools as k; print(global_mppi.__file__ if k.__file__.startswith('$REPO/') else k.__file__)" 2>/dev/null | tail -1)
   case $f in "$REPO"/*) say "code: $f ($(git -C "$REPO" rev-parse --short HEAD 2>/dev/null), branch $(git -C "$REPO" branch --show-current 2>/dev/null))"; return 0;; *) say "import resolves to '$f', not to this checkout"; return 1;; esac
 }
 
@@ -131,7 +131,7 @@ check_code() {   # the code must come from this checkout (PYTHONPATH), or return
 task_pusht() {
   TASK=pusht; local W=$REPO
   mkdir -p "$Q/pusht/gpu_snapshots" "$Q/pusht/logs" "$PUSHT_SEEDS_DIR"
-  say "=== PushT batch: ps mppi dial mtp cbo (2000 x 5) and globalmppi (CACS, ADMM-cuda, gpu_solve), seeds $SEEDS, 100 cycles"
+  say "=== PushT batch: ps mppi dial mtp cbo (2000 x 5) and globalmppi (CACS, ADMM-cuda), seeds $SEEDS, 100 cycles"
   [ -f "$W/examples/pusht.py" ] || { TASK_STATE[pusht]=SKIPPED; say "SKIPPED (no examples/pusht.py in $W)"; return 1; }
   say "code: $W ($(git -C "$W" rev-parse --short HEAD 2>/dev/null), branch $(git -C "$W" branch --show-current 2>/dev/null))"
   TASK_STATE[pusht]=RUNNING; status
@@ -143,14 +143,13 @@ task_pusht() {
       if [ -f "$log" ] && grep -q "finish the seed" "$log"; then say "SKIP  $m s$s (finished log exists)"; TASK_DONE[pusht]=$((TASK_DONE[pusht] + 1)); continue; fi
       pusht_done() { grep -q "finish the seed" "$log"; }
       if [ $m = gm ]; then
-        # gpu_solve is switched on by KSOS_GPU_SOLVE=1 and the gpu-solve build of cuKernelSOS
         ( cd "$W" && run_with_retries pusht "$m s$s" "$log" "" $GM_TIMEOUT pusht_done -- \
-            env PYTHONPATH="$W" KSOS_GPU_SOLVE=1 CUKERNELSOS_PYTHON=$GPU_CUKS XLA_PYTHON_CLIENT_PREALLOCATE=false \
+            env PYTHONPATH="$W:$W/ksos-tools" CUKERNELSOS_PYTHON=$GPU_CUKS XLA_PYTHON_CLIENT_PREALLOCATE=false \
             "$PY" examples/pusht.py --no-wandb --headless --seed "$s" --ksos-solver ADMM-cuda --ksos-sampling cacs \
             --ksos-restarts 5 --ksos-warm-start --mppi-noise 0.1 globalmppi )
       else
         ( cd "$W" && run_with_retries pusht "$m s$s" "$log" "" $BASE_TIMEOUT pusht_done -- \
-            env PYTHONPATH="$W" CUKERNELSOS_PYTHON=$OLD_CUKS XLA_PYTHON_CLIENT_PREALLOCATE=false \
+            env PYTHONPATH="$W:$W/ksos-tools" CUKERNELSOS_PYTHON=$OLD_CUKS XLA_PYTHON_CLIENT_PREALLOCATE=false \
             "$PY" examples/pusht.py --no-wandb --headless --seed "$s" --num-samples 2000 "$m" )
       fi
       if [ $? -eq 0 ]; then
@@ -172,7 +171,7 @@ task_pusht() {
   ( cd "$C" && $SYSPY plot_closed_loop_seeds.py "$D" "$Q/pusht/figures/pusht_closed_loop_six.png" > "$Q/pusht/figures/plot_closed_loop_seeds.txt" 2>&1
     $SYSPY plot_pareto.py "$D" "$Q/pusht/figures/pusht_pareto_six.png" > "$Q/pusht/figures/plot_pareto.txt" 2>&1
     $SYSPY plot_paper_style.py "$D" "$Q/pusht/figures/pusht_cost_median_iqr_six.png" > "$Q/pusht/figures/plot_paper_style.txt" 2>&1 )
-  $SYSPY "$TOOLS/pusht_summary.py" "$D" "$Q/pusht/summary.txt" >> "$Q/pusht/batch.log" 2>&1
+  [ -f "$TOOLS/pusht_summary.py" ] && $SYSPY "$TOOLS/pusht_summary.py" "$D" "$Q/pusht/summary.txt" >> "$Q/pusht/batch.log" 2>&1   # not on pre-release
   TASK_STATE[pusht]=DONE; say "=== PushT batch end (gave up:${TASK_FAILED[pusht]:- none}); tables in $Q/pusht/summary.txt, figures in $Q/pusht/figures/"
 }
 
@@ -180,7 +179,7 @@ task_pusht() {
 task_example() {   # <task name = example name>
   TASK=$1; local W=$REPO RES=$Q/$1/results
   mkdir -p "$Q/$TASK/gpu_snapshots" "$Q/$TASK/logs" "$RES"
-  say "=== $TASK batch: $METHODS, seeds $SEEDS, $([ "$TASK" = g1_walk ] && echo ${MAX_CYCLES:-400} || echo ${MAX_CYCLES:-100}) cycles (settings as the cube runs; walker / double_cart_pole: horizon, knots, spline from the hydrax example; bugtrap: horizon 2.0, 11 knots, cubic)"
+  say "=== $TASK batch: $METHODS, seeds $SEEDS, $([ "$TASK" = g1_walk ] && echo ${MAX_CYCLES:-400} || echo ${MAX_CYCLES:-100}) cycles (settings as the cube runs; walker / double_cart_pole: horizon, knots, spline from the hydrax example; bugtrap / obstacle_field: horizon 2.0, 11 knots, cubic)"
   check_code || { TASK_STATE[$TASK]=SKIPPED; say "SKIPPED (global_mppi does not import from this checkout)"; return 1; }
   if [ "$TASK" = g1_walk ] && [ ! -d "$W/global_mppi/models/g1" ]; then   # the G1 model is not vendored
     if [ -n "${G1_MODEL_DIR:-}" ]; then cp -r "$G1_MODEL_DIR" "$W/global_mppi/models/g1"; else (cd "$W" && bash script/fetch_g1_model.sh) >> "$Q/$TASK/batch.log" 2>&1; fi
@@ -189,7 +188,7 @@ task_example() {   # <task name = example name>
   TASK_STATE[$TASK]=RUNNING; status
   local s m arg algo final log
   local EXTRA=""   # per-task benchmark setting
-  case $TASK in bugtrap) EXTRA="--horizon 2.0 --num-knots 11 --spline-type cubic";; esac
+  case $TASK in bugtrap|obstacle_field) EXTRA="--horizon 2.0 --num-knots 11 --spline-type cubic";; esac
   local CYC=${MAX_CYCLES:-100}; [ "$TASK" = g1_walk ] && CYC=${MAX_CYCLES:-400}   # g1_walk: 8 s, see docs/g1_walk.md
   for s in $SEEDS; do
     say "--- seed $s"
@@ -200,11 +199,11 @@ task_example() {   # <task name = example name>
       example_done() { [ -f "$final" ]; }
       if [ $m = gm ]; then
         ( cd "$W" && run_with_retries example "$m s$s" "$log" "$RES/$m/s$s" $GM_TIMEOUT example_done -- \
-            env PYTHONPATH="$W" KSOS_GPU_SOLVE=1 CUKERNELSOS_PYTHON=$GPU_CUKS XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
+            env PYTHONPATH="$W:$W/ksos-tools" CUKERNELSOS_PYTHON=$GPU_CUKS XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
             "$PY" examples/$TASK.py --headless --seed-start "$s" --seed-end $((s + 1)) --max-cycles $CYC --out-dir "$RES" $EXTRA $arg )
       else
         ( cd "$W" && run_with_retries example "$m s$s" "$log" "$RES/$m/s$s" $BASE_TIMEOUT example_done -- \
-            env PYTHONPATH="$W" CUKERNELSOS_PYTHON=$OLD_CUKS XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
+            env PYTHONPATH="$W:$W/ksos-tools" CUKERNELSOS_PYTHON=$OLD_CUKS XLA_PYTHON_CLIENT_PREALLOCATE=false MUJOCO_GL=egl \
             "$PY" examples/$TASK.py --headless --seed-start "$s" --seed-end $((s + 1)) --max-cycles $CYC --out-dir "$RES" $EXTRA $arg )
       fi
       if [ $? -eq 0 ]; then
@@ -216,7 +215,11 @@ task_example() {   # <task name = example name>
       status
     done
   done
-  case $TASK in bugtrap|g1_walk) ;; *) $SYSPY "$TOOLS/plot_task.py" "$TASK" "$RES" "$Q/$TASK/figures" >> "$Q/$TASK/batch.log" 2>&1;; esac   # bugtrap, g1_walk: final_figs only
+  case $TASK in   # figures and tables from the scripts of this checkout
+    bugtrap) $SYSPY "$TOOLS/plot_bugtrap_cost.py" "$RES" --out "$Q/$TASK/figures/bugtrap_cost_vs_cycle" >> "$Q/$TASK/batch.log" 2>&1;;
+    obstacle_field) $SYSPY "$TOOLS/obstacle_field_metrics.py" "$RES" --out-dir "$Q/$TASK/figures" >> "$Q/$TASK/batch.log" 2>&1;;
+    *) say "no figure script for $TASK in script/ (results are in $RES)";;
+  esac
   TASK_STATE[$TASK]=DONE; say "=== $TASK batch end (gave up:${TASK_FAILED[$TASK]:- none}); figure and tables in $Q/$TASK/figures/"
 }
 
@@ -229,10 +232,11 @@ for t in $TASKS; do
     walker) task_example walker || true;;
     double_cart_pole) task_example double_cart_pole || true;;
     bugtrap) task_example bugtrap || true;;
+    obstacle_field) task_example obstacle_field || true;;
     g1_walk) task_example g1_walk || true;;
     *) echo "unknown task $t" >> "$Q/queue/batch.log";;
   esac
 done
-$SYSPY "$TOOLS/final_figs.py" "$Q" "$(echo $TASKS | tr ' ' ',')" >> "$Q/queue/batch.log" 2>&1   # final six-method figures + tables in $Q/final_figs/
+# (no queue-level figure: script/final_figs.py is not on this branch; each task makes its own figures above)
 CURRENT="finished"; status
 echo "$(date '+%F %T') queue end" >> "$Q/queue/batch.log"
