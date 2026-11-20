@@ -4,8 +4,8 @@ numpy only (no jax / mujoco), so that script/obstacle_field_metrics.py can load 
 
 The arena is the particle model's square [-0.29, 0.29]^2 (the joint range; the inner faces of the outer walls are at
 +-0.29). The point mass has radius 0.01. ``make_layout(layout_seed)`` draws 9 circles with radius in [0.025, 0.045]
-by rejection sampling, with a free gap of at least ``MIN_GAP`` (0.04 m = 2 particle diameters) between any two
-circles, between a circle and the outer walls, and between a circle and the start or the goal. A layout is only
+by rejection sampling, with a free gap of at least ``MIN_GAP`` (0.06 m = 3 particle diameters) between any two
+circles (they never touch), between a circle and the outer walls, and between a circle and the start or the goal. A layout is only
 returned when ``shortest_path`` finds a collision-free path from start to goal on a grid.
 """
 
@@ -19,7 +19,7 @@ START = np.array([-0.25, 0.0])
 GOAL = np.array([0.25, 0.0])
 N_OBSTACLES = 9
 RADIUS_RANGE = (0.025, 0.045)
-MIN_GAP = 0.04  # m, free gap (surface to surface) between circles / walls / start / goal
+MIN_GAP = 0.06  # m, free gap (surface to surface) between circles / walls / start / goal: 3 particle diameters
 REF_MARGIN = 0.005  # m, extra clearance the reference path keeps from the obstacles and walls (surface to surface)
 GRID = 0.0025  # m, grid step of the reference search
 
@@ -111,108 +111,125 @@ def _spot_free(c, r, centers, radii):
 
 
 def _propose(rng):
-    """One candidate: a barrier across the straight line with a narrow gap and a wide opening, plus scattered circles.
+    """One candidate: 3 or 4 large circles on or close to the start-goal line, the rest scattered. (centers, radii) or None.
 
-    The barrier stands at x = x_b (about 0): a chain of overlapping circles (solid) from the bottom tip (leaving a wide
-    opening of 8 to 11 cm to the bottom wall) up to just below the narrow gap (surface-to-surface width 4 to 5 cm, about
-    2 particle diameters) at height y_g; one circle above the gap closes the rest up to the top wall. Both routes are far
-    from the straight line, the remaining circles are scattered at random (min gap MIN_GAP). The whole layout is mirrored
-    in y at random. Returns (centers, radii, gap_center, gap_width), or None.
+    The large circles (radius 0.038 to 0.045) stand at x in [-0.13, 0.13], at most 8 cm off the line; at least two of them
+    block the straight line (|y| < r + particle radius), so a greedy straight path gets stuck in front of them. The other
+    circles have a radius in [0.025, 0.045] and a random position. All gaps are at least MIN_GAP.
     """
-    x_b = rng.uniform(-0.04, 0.04)
-    y_tip = rng.uniform(-0.21, -0.18)  # bottom edge of the barrier
-    y_g = rng.uniform(0.17, 0.20)  # centre of the narrow gap
-    gap = rng.uniform(0.04, 0.05)
-    r_cap = (HALF - 0.003 - (y_g + gap / 2)) / 2  # cap circle: bottom edge at the gap, top edge 3 mm below the wall
-    if not RADIUS_RANGE[0] <= r_cap <= RADIUS_RANGE[1]:
+    centers, radii = [], []
+    for _ in range(int(rng.integers(3, 5))):
+        r = rng.uniform(0.038, RADIUS_RANGE[1])
+        for _ in range(400):
+            c = np.array([rng.uniform(-0.13, 0.13), rng.uniform(-0.08, 0.08)])
+            if _spot_free(c, r, centers, radii):
+                centers.append(c)
+                radii.append(r)
+                break
+        else:
+            return None
+    if sum(abs(c[1]) < r + PARTICLE_RADIUS for c, r in zip(centers, radii)) < 2:
         return None
-    cap = np.array([x_b + rng.uniform(-0.005, 0.005), y_g + gap / 2 + r_cap])
-    top_edge = y_g - gap / 2  # the chain ends here, the circle below the gap touches it
-    r0, r1 = rng.uniform(0.04, RADIUS_RANGE[1], size=2)
-    length = top_edge - y_tip
-    n = int(np.ceil((length - r0 - r1) / (0.85 * (r0 + r1)))) + 1  # circles overlap by at least 15 percent
-    ys = np.linspace(y_tip + r0, top_edge - r1, n)
-    rs = np.linspace(r0, r1, n)
-    chain = np.stack([x_b + rng.uniform(-0.006, 0.006, size=n), ys], axis=1)
-    if n + 1 > N_OBSTACLES - 2:
-        return None
-    centers = list(chain) + [cap]
-    radii = list(rs) + [r_cap]
-    for _ in range(300):
+    for _ in range(500):
         if len(radii) == N_OBSTACLES:
             break
         r = rng.uniform(*RADIUS_RANGE)
         c = rng.uniform(-HALF + MIN_GAP + r, HALF - MIN_GAP - r, size=2)
-        if len(radii) < n + 1 + 2:  # the first two scatter circles stand near the wide route (bottom half), to lengthen it
-            c[1] = rng.uniform(-HALF + MIN_GAP + r, -0.04)
         if _spot_free(c, r, centers, radii):
             centers.append(c)
             radii.append(r)
     if len(radii) < N_OBSTACLES:
         return None
-    centers, radii = np.array(centers), np.array(radii)
-    # the chain circles keep MIN_GAP to the walls except at the tip opening; the cap and the chain bottom are by construction
-    gap_center = np.array([x_b, y_g])
-    if rng.random() < 0.5:  # mirror in y
-        centers = centers * np.array([1.0, -1.0])
-        gap_center = gap_center * np.array([1.0, -1.0])
-    return centers, radii, gap_center, gap
+    return np.array(centers), np.array(radii)
 
 
-MIN_SHORTEST_RATIO = 1.25  # the shortest path is at least 25 percent longer than the straight line
-MIN_SECOND_EXTRA = 0.07  # m, the second-best route is at least this much longer than the shortest
+# With 9 circles and every gap >= MIN_GAP = 3 particle diameters the shortest path cannot get much longer than the straight
+# line (annealing over the 9 positions found at most 1.07 x; with gaps of 0.05 / 0.04 m: 1.08 x / 1.09 x), so the
+# requirement is 5 percent, not the 10 percent first asked for.
+MIN_SHORTEST_RATIO = 1.05
+MIN_SECOND_EXTRA = 0.03  # m, the second-best route is at least this much longer than the shortest
+MIN_ROUTE_DIFFERENCE = 0.04  # m, the second-best route leaves the shortest path by at least this much (a different route)
 
 
-def route_lengths(centers, radii, gap_center, gap_width, min_shortest=0.0):
-    """(shortest path, its length, second-best route length, second-best path): the second-best route is the shortest path with the narrow
-    gap plugged. l2 is NaN when the shortest path does not use the gap, inf when the plugged one has no path; when the
-    shortest path is shorter than ``min_shortest`` the second search is skipped (l2 = NaN)."""
+def _narrowest_point(path, centers, radii):
+    """The point of the path with the narrowest passage (sum of the two smallest surface distances to circles / walls),
+    away from the start and the goal, and the larger of the two distances."""
+    seg = np.concatenate([np.linspace(p, q, 30) for p, q in zip(path[:-1], path[1:])])
+    seg = seg[(np.linalg.norm(seg - START, axis=1) > 0.07) & (np.linalg.norm(seg - GOAL, axis=1) > 0.07)]
+    d = np.linalg.norm(seg[:, None, :] - centers[None], axis=-1) - radii[None]
+    walls = np.stack([HALF - seg[:, 0], HALF + seg[:, 0], HALF - seg[:, 1], HALF + seg[:, 1]], axis=1)
+    d = np.sort(np.concatenate([d, walls], axis=1), axis=1)[:, :2]
+    k = int(np.argmin(d.sum(axis=1)))
+    return seg[k], float(d[k].max())
+
+
+def route_lengths(centers, radii, min_shortest=0.0):
+    """(shortest path, its length, second-best route length, second-best path).
+
+    The second-best route is the shortest path with the narrowest passage of the shortest path plugged by a disk (touching
+    both sides of the passage); it is a different route when it leaves the shortest path by MIN_ROUTE_DIFFERENCE
+    (l2 = NaN otherwise). l2 is inf when the plugged layout has no path; the second search is skipped (l2 = NaN) when the
+    shortest path is shorter than ``min_shortest``.
+    """
     path, l1 = shortest_path(centers, radii)
     if path is None:
         return None, float("inf"), float("inf"), None
-    seg = np.concatenate([np.linspace(p, q, 40) for p, q in zip(path[:-1], path[1:])])
-    if l1 < min_shortest or np.linalg.norm(seg - gap_center, axis=1).min() > gap_width / 2 + 0.02:
+    if l1 < min_shortest:
         return path, l1, float("nan"), None
-    plug_c = np.vstack([centers, gap_center])
-    plug_r = np.append(radii, gap_width / 2 + 0.003)
-    path2, l2 = shortest_path(plug_c, plug_r)
+    point, rad = _narrowest_point(path, centers, radii)
+    path2, l2 = shortest_path(np.vstack([centers, point]), np.append(radii, rad + 0.003))
+    if path2 is not None:
+        seg1 = np.concatenate([np.linspace(p, q, 40) for p, q in zip(path[:-1], path[1:])])
+        far = float(np.linalg.norm(path2[:, None, :] - seg1[None], axis=-1).min(axis=1).max())
+        if far < MIN_ROUTE_DIFFERENCE:
+            return path, l1, float("nan"), path2
     return path, l1, l2, path2
 
 
-# make_layout replays the candidates of the search quickly: the index of the accepted candidate per layout_seed (a pure
-# speed-up: it is verified, and the full search runs if the hint is missing or wrong)
-_ACCEPTED_CANDIDATE = {0: 30}
+# Index of the accepted candidate per layout_seed: a pure speed-up for the fixed benchmark layout (it is verified, and
+# the full search runs if the hint is missing or wrong). Only the accepted seed gets an entry.
+_ACCEPTED_CANDIDATE = {}
 
 
 def _accept(cand):
     """(info dict) if the candidate meets the layout requirements, else None."""
-    centers, radii, gap_center, gap_width = cand
+    centers, radii = cand
     straight = float(np.linalg.norm(GOAL - START))
-    path, l1, l2, path2 = route_lengths(centers, radii, gap_center, gap_width, MIN_SHORTEST_RATIO * straight)
+    coarse = shortest_path(centers, radii, step=0.005)[1]  # quick reject: 5 mm grid, no need for the exact length
+    if coarse < 0.98 * MIN_SHORTEST_RATIO * straight:
+        return None
+    path, l1, l2, path2 = route_lengths(centers, radii, MIN_SHORTEST_RATIO * straight)
     if path is None or not np.isfinite(l2) or l1 < MIN_SHORTEST_RATIO * straight or l2 < l1 + MIN_SECOND_EXTRA:
         return None
-    return dict(path=path, second_path=path2, shortest=l1, second=l2, straight=straight, gap_center=gap_center, gap_width=gap_width)
+    return dict(path=path, second_path=path2, shortest=l1, second=l2, straight=straight)
+
+
+def find_layout(layout_seed=0, max_tries=3000):
+    """(index of the accepted candidate, centers, radii, info) for ``layout_seed`` (full search, no hint)."""
+    rng = np.random.default_rng(layout_seed)
+    for k in range(max_tries):
+        cand = _propose(rng)
+        info = None if cand is None else _accept(cand)
+        if info is not None:
+            return k, cand[0], cand[1], info
+    raise RuntimeError(f"no layout found for layout_seed={layout_seed}")
 
 
 def make_layout(layout_seed=0, return_info=False, max_tries=3000):
     """(centers (9,2), radii (9,)) of the circles for ``layout_seed``; the same seed always gives the same layout.
 
     ``_propose`` draws candidates (see there); one is accepted when the grid search finds a path, the shortest path
-    goes through the narrow gap, is at least MIN_SHORTEST_RATIO times the straight line (0.5 m), and the second-best
-    route (narrow gap plugged) is at least MIN_SECOND_EXTRA longer. With ``return_info`` a dict with the reference
-    path, its length, the second-best route length, the straight line and the narrow gap is returned as a third value.
+    is at least MIN_SHORTEST_RATIO (1.05) times the straight line (0.5 m) and a second, different route (narrowest passage
+    plugged, see ``route_lengths``) is at least MIN_SECOND_EXTRA longer. With ``return_info`` a dict with the reference
+    path, its length, the second-best route and its length is returned as a third value.
     """
-    for hint in (_ACCEPTED_CANDIDATE.get(layout_seed), None):
+    hint = _ACCEPTED_CANDIDATE.get(layout_seed)
+    if hint is not None:
         rng = np.random.default_rng(layout_seed)
-        for k in range(max_tries if hint is None else hint + 1):
+        for k in range(hint + 1):
             cand = _propose(rng)
-            if cand is None or (hint is not None and k < hint):
-                continue
-            info = _accept(cand)
-            if info is not None:
-                if return_info:
-                    return cand[0], cand[1], info
-                return cand[0], cand[1]
-        if hint is None:
-            break
-    raise RuntimeError(f"no layout found for layout_seed={layout_seed}")
+        info = None if cand is None else _accept(cand)
+        if info is not None:
+            return (cand[0], cand[1], info) if return_info else (cand[0], cand[1])
+    _, centers, radii, info = find_layout(layout_seed, max_tries)
+    return (centers, radii, info) if return_info else (centers, radii)

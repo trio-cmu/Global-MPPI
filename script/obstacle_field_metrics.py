@@ -1,7 +1,8 @@
 """Metrics and figures of the obstacle_field task.
 
     python script/obstacle_field_metrics.py RESULTS_DIR [--out-dir DIR]      per-run metrics + summary + trajectory figure
-    python script/obstacle_field_metrics.py --plot-layout OUT.png [--layout-seed 0]   layout, start, goal, reference path
+    python script/obstacle_field_metrics.py --plot-layout OUT.png [--layout-seed 0]   layout, start, goal, shortest and second-best route
+    python script/obstacle_field_metrics.py --plot-candidates OUT.png --seeds 11 19 22   several layouts side by side
 
 RESULTS_DIR holds <method>/s<seed>/{cycles.csv, final.json, args.json} (what examples/obstacle_field.py writes; the
 queue uses <queue>/obstacle_field/results). Written to --out-dir (default RESULTS_DIR/../figures): metrics.csv (one
@@ -103,21 +104,31 @@ def draw_layout(ax, centers, radii, ref_path=None):
     ax.set_ylabel("y (m)")
 
 
-def plot_layout(out, layout_seed):
-    centers, radii, info = L.make_layout(layout_seed, return_info=True)
-    fig, ax = plt.subplots(figsize=(6.5, 6.5))
+def draw_candidate(ax, seed, centers, radii, info):
     draw_layout(ax, centers, radii, info["path"])
-    p2 = info["second_path"]
-    ax.plot(p2[:, 0], p2[:, 1], "--", c="tab:red", lw=1.8, zorder=4, label="second-best route (narrow gap plugged)")
-    ax.plot(*info["gap_center"], "x", c="tab:orange", ms=9, mew=2, zorder=6, label=f"narrow gap ({info['gap_width'] * 100:.1f} cm)")
-    ax.set_title(f"obstacle_field, layout_seed={layout_seed}\nshortest {info['shortest']:.3f} m "
-                 f"(x{info['shortest'] / info['straight']:.2f} of straight 0.500 m), second-best route {info['second']:.3f} m", fontsize=9)
-    ax.legend(loc="lower center", ncol=2, fontsize=7)
+    ax.plot(info["second_path"][:, 0], info["second_path"][:, 1], "--", c="tab:red", lw=1.8, zorder=4, label="second-best route")
+    ax.add_patch(plt.Circle(L.START, L.PARTICLE_RADIUS, fc="tab:blue", ec="k", zorder=6))  # the particle, to scale (r = 1 cm)
+    ax.set_title(f"layout_seed={seed}: shortest {info['shortest']:.3f} m (x{info['shortest'] / info['straight']:.3f}), "
+                 f"second {info['second']:.3f} m (+{(info['second'] - info['shortest']) * 100:.1f} cm)", fontsize=8)
+
+
+def plot_layout(out, layout_seed):
+    """Layout, start (with the particle to scale), goal, shortest and second-best route of one seed."""
+    plot_candidates(out, [layout_seed])
+
+
+def plot_candidates(out, seeds):
+    fig, axes = plt.subplots(1, len(seeds), figsize=(5.2 * len(seeds), 5.6), squeeze=False)
+    for ax, seed in zip(axes[0], seeds):
+        k, centers, radii, info = L.find_layout(seed)  # full search (no cached hint), a few seconds
+        draw_candidate(ax, seed, centers, radii, info)
+        print(f"layout_seed {seed}: candidate #{k}, straight {info['straight']:.4f} m, shortest {info['shortest']:.4f} m, "
+              f"second-best route {info['second']:.4f} m")
+    axes[0][0].legend(loc="lower center", ncol=2, fontsize=6)
     fig.tight_layout()
     Path(out).parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out, dpi=150)
-    print(f"{out}: straight {info['straight']:.4f} m, shortest {info['shortest']:.4f} m, second-best route {info['second']:.4f} m, "
-          f"narrow gap {info['gap_width']:.4f} m at {info['gap_center'].round(3).tolist()}")
+    fig.savefig(out, dpi=140)
+    print(out)
 
 
 def main():
@@ -126,7 +137,12 @@ def main():
     ap.add_argument("--out-dir", type=Path)
     ap.add_argument("--layout-seed", type=int, default=0, help="layout of runs without args.json, and of --plot-layout")
     ap.add_argument("--plot-layout", type=Path, metavar="OUT.png")
+    ap.add_argument("--plot-candidates", type=Path, metavar="OUT.png", help="side by side with --seeds")
+    ap.add_argument("--seeds", type=int, nargs="+", default=[0])
     a = ap.parse_args()
+    if a.plot_candidates:
+        plot_candidates(a.plot_candidates, a.seeds)
+        return
     if a.plot_layout:
         plot_layout(a.plot_layout, a.layout_seed)
         return
