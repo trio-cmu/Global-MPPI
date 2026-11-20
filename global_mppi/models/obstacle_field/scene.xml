@@ -1,0 +1,64 @@
+<mujoco model="obstacle_field">
+  <!-- Template of the obstacle_field task. Same point mass, motors and outer walls as models/particle_navigation
+       (adopted from the MJPC particle task), but no inner walls: the circular obstacles are added by
+       global_mppi/tasks/obstacle_field.py (make_layout(layout_seed)) at the marker below.
+       Bitmasks: pointmass contype=1 conaffinity=2; walls and obstacles contype=2 conaffinity=1. -->
+  <option timestep="0.01" iterations="2" ls_iterations="6">
+    <flag eulerdamp="disable"/>
+  </option>
+
+  <statistic center="0 0 0" extent="0.9"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3"
+      markrgb="0.8 0.8 0.8" width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
+  </asset>
+
+  <default>
+    <joint type="hinge" axis="0 0 1" limited="true" range="-.29 .29" damping="1" />
+    <motor gear=".1" ctrlrange="-1 1" ctrllimited="true" />
+    <default class="wall">
+      <geom type="box" contype="2" conaffinity="1" rgba="0.6 0.6 0.6 1"
+            friction="0.1 0.005 0.0001" solref="0.005 1" solimp="0.95 0.99 0.001"/>
+    </default>
+  </default>
+
+  <worldbody>
+    <light pos="0 0 1"/>
+    <geom name="floor" size="0 0 .125" type="plane" material="groundplane"/>
+
+    <body name="goal" mocap="true" pos="0.25 0 0.01" quat="1 0 0 0">
+      <geom type="sphere" size=".01" contype="0" conaffinity="0" rgba="0 1 0 .5" />
+    </body>
+
+    <camera name="top_view" pos="0 -0.635 0.635" xyaxes="1 0 0 0 0.7 0.7" />
+    <geom name="wall_x"     class="wall" pos="-.31  0   .02" size=".02 .3  .02" />
+    <geom name="wall_neg_x" class="wall" pos=" .31  0   .02" size=".02 .3  .02" />
+    <geom name="wall_y"     class="wall" pos=" 0  -.31  .02" size=".3  .02 .02" />
+    <geom name="wall_neg_y" class="wall" pos=" 0   .31  .02" size=".3  .02 .02" />
+
+    <!-- OBSTACLES -->
+
+    <body name="pointmass" pos="0 0 .01">  <!-- qpos of the two slide joints = the position; the start (-0.25, 0) is set by the example -->
+      <camera name="cam0" pos="0 -0.635 0.635" xyaxes="1 0 0 0 0.7 0.7" />
+      <joint name="root_x" type="slide" pos="0 0 0" axis="1 0 0" />
+      <joint name="root_y" type="slide" pos="0 0 0" axis="0 1 0" />
+      <geom name="pointmass" type="sphere" size=".01" mass=".3"
+            contype="1" conaffinity="2"
+            friction="0.1 0.005 0.0001" solref="0.005 1" solimp="0.95 0.99 0.001"/>
+      <site name="pointmass" pos="0 0 0" size="0.01" />
+    </body>
+  </worldbody>
+
+  <actuator>
+    <motor name="x_motor" joint="root_x" gear="1" ctrllimited="true" ctrlrange="-1 1" />
+    <motor name="y_motor" joint="root_y" gear="1" ctrllimited="true" ctrlrange="-1 1" />
+  </actuator>
+</mujoco>
