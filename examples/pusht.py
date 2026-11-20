@@ -22,7 +22,7 @@ for _parent in Path(__file__).resolve().parents:
         os.environ.setdefault("CUKERNELSOS_PYTHON", str(_parent / "cuKernelSOS" / "python"))
         break
 
-from global_mppi.algs import PredictiveSampling, MPPI, DIAL, GlobalMPPI
+from global_mppi.algs import PredictiveSampling, MPPI, DIAL, GlobalMPPI, MTP, CBO
 from global_mppi.simulation.deterministic import run_interactive
 from global_mppi.tasks.pusht import PushT
 """
@@ -52,6 +52,25 @@ parser.add_argument(
     help="KSOS solver used by GlobalMPPI (default: newton). ADMM-cuda uses the "
     "single-step test's setting: 1000 two-level Sobol candidates per restart, "
     "GPU ADMM, then MPPI with 1000 samples x 5 iterations at noise --mppi-noise (0.1)",
+)
+parser.add_argument(
+    "--gm-temperature",
+    type=float,
+    default=0.1,
+    help="GlobalMPPI ADMM-cuda: temperature of the final MPPI step's softmax over rollout costs (default: 0.1)",
+)
+parser.add_argument(
+    "--out-dir",
+    default=None,
+    help="folder for this run's video and cost/state histories (default: logs/pushT_globalmppi_<algo>/<timestamp>/)",
+)
+parser.add_argument(
+    "--cost",
+    choices=["pose", "path"],
+    default="pose",
+    help="PushT cost (global_mppi/tasks/pusht.py): pose (default) = 50|p_COM - goal|^2 + 15*2(1 - cos th) + 10 x "
+    "pusher path off contact, over time; path = the path cost GCS plans with: T corner path + 0.1 x pusher path "
+    "while the T is still + 10 x final corner distance to the goal (time does not count)",
 )
 parser.add_argument(
     "--gcs-model",
@@ -191,10 +210,13 @@ subparsers.add_parser(
 subparsers.add_parser(
     "globalmppi", help="GlobalMPPI"
 )
+subparsers.add_parser("mtp", help="Model Tensor Planning (hydrax, upstream default hyperparameters)")
+subparsers.add_parser("cbo", help="Consensus-Based Optimization (hydrax, upstream example values)")
 args = parser.parse_args()
+task = PushT(cost=args.cost)
 if args.gcs_model:
     from global_mppi.tasks.pusht_gcs import PushTGCS
-    task = PushTGCS()
+    task = PushTGCS(cost=args.cost)
 
 # Authenticate with Weights & Biases. The first time, prompt for an API key
 # (grab yours from https://wandb.ai/authorize); it is cached in ~/.netrc so
@@ -268,7 +290,7 @@ elif args.algorithm == "globalmppi" and args.ksos_solver == "ADMM-cuda":
         task,
         num_samples=args.num_samples or 1000,
         noise_level=0.2,
-        temperature=0.1,
+        temperature=args.gm_temperature,
         spline_type="cubic",
         plan_horizon=1.0,
         num_knots=6,
@@ -304,6 +326,31 @@ elif args.algorithm == "globalmppi":
         wendland_sigma=args.wendland_sigma,
     )
 
+elif args.algorithm in ("mtp", "cbo"):
+    # ported from hydrax (global_mppi/algs/mtp.py, cbo.py), the same settings as the benchmarks branch (9e8340c):
+    # samples via --num-samples (default 256 as ps / mppi / dial), 5 iterations, horizon 1 s, 6 knots, cubic spline,
+    # all other hyperparameters at the hydrax values: MTP = the defaults of its constructor; CBO has no defaults for
+    # four arguments, so the values of the only hydrax example that uses it (examples/bugtrap.py at bd53d43)
+    UPSTREAM_DEFAULTS = {
+        "mtp": dict(
+            m_pts=3, n_per_layer=50, degree=2, num_elites=5, sigma_start=0.5, sigma_min=0.1,
+            sigma_max=1.0, temperature=0.1, beta=0.1, alpha=0.5, mtp_interpolation="akima",
+        ),
+        "cbo": dict(
+            initial_noise_level=1.0, temperature=0.01, consensus_weight=1.0, noise_weight=10.0, step_size=0.1,
+        ),
+    }
+    mtp_cbo_cfg = dict(
+        num_samples=args.num_samples or 256,
+        plan_horizon=1.0,
+        spline_type="cubic",
+        num_knots=6,
+        iterations=5,
+        **UPSTREAM_DEFAULTS[args.algorithm],
+    )
+    print(f"Running {args.algorithm.upper()} (hydrax hyperparameters): {mtp_cbo_cfg}")
+    ctrl = (MTP if args.algorithm == "mtp" else CBO)(task, **mtp_cbo_cfg)
+
 # Run the interactive simulation
 start_seed = args.seed
 for trial_idx in range(start_seed, start_seed + 1):
@@ -332,4 +379,5 @@ for trial_idx in range(start_seed, start_seed + 1):
         wandb_project=args.wandb_project,
         wandb_entity=args.wandb_entity,
         headless=args.headless,
+        out_dir=args.out_dir,
     )

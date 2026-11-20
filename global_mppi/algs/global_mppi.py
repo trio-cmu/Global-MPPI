@@ -629,7 +629,8 @@ class GlobalMPPI(SamplingBasedController):
     def _solve_cacs(self, params: GlobalMPPIParams, state: mjx.Data) -> GlobalMPPIParams:
         """CACS in this restart's trust region (it rolls out its own candidates):
         the box of half-width decay_rate**iter around the previous restart's
-        solution (the whole control box at restart 0), with the kernel radius h
+        solution, shifted to lie inside the control bounds (the whole control
+        box at restart 0), with the kernel radius h
         shrunk by the same factor,
         then KSOS with cuKernelSOS's GPU ADMM on the CACS samples in reverse
         insertion order (a perfect elimination order of the CACS certificate),
@@ -642,8 +643,18 @@ class GlobalMPPI(SamplingBasedController):
         it = int(params.iter)
         scale = self.decay_rate ** it
         center = np.asarray(params.mean, dtype=np.float64).reshape(-1) if it > 0 else np.zeros_like(lo)
-        box_lo = np.maximum(center - scale * hi, lo)
-        box_hi = np.minimum(center + scale * hi, hi)
+        if it == 0:
+            box_lo = np.maximum(center - scale * hi, lo)
+            box_hi = np.minimum(center + scale * hi, hi)
+        else:
+            # shift the box inside the control bounds instead of cutting it: a cut box is up to
+            # 2^dim times smaller while h only shrinks by `scale`, and with saturated controls (a
+            # solution on a corner of the bounds) CACS then cannot place its samples within the
+            # clique limit and spends thousands of rounds rejecting proposals. The shifted box has
+            # the full width and still contains the previous solution.
+            half = np.minimum(scale * hi, (hi - lo) / 2)
+            center = np.clip(center, lo + half, hi - half)
+            box_lo, box_hi = center - half, center + half
         cfg = replace(self.cacs_config, h=self.cacs_config.h * scale)
 
         def roll(points, pad_to=None):

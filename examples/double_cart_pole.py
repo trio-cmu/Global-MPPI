@@ -74,7 +74,7 @@ parser.add_argument(
 parser.add_argument(
     "--gpu",
     action="store_true",
-    help="cukernelsos: CACS sampling + cuKernelSOS ADMM-cuda with this branch's solver settings, 5 restarts, "
+    help="cukernelsos: CACS sampling + cuKernelSOS ADMM-cuda with this branch's solver settings, --restarts restarts (default 5), "
     "1000 candidates per restart (needs CUKERNELSOS_PYTHON to point to the cuKernelSOS build)",
 )
 parser.add_argument(
@@ -108,6 +108,12 @@ parser.add_argument(
     type=float,
     default=None,
     help="cukernelsos: CACS kernel radius h (default: 0.7 * vmax, vmax = largest |actuator ctrlrange|)",
+)
+parser.add_argument(
+    "--restarts",
+    type=int,
+    default=5,
+    help="cukernelsos: KSOS restarts per planning cycle (default: 5)",
 )
 subparsers = parser.add_subparsers(dest="algorithm", help="Sampling algorithm (choose one)")
 subparsers.add_parser("ps", help="Predictive Sampling")
@@ -194,7 +200,7 @@ else:
     cfg.update(
         ksos_solver="ADMM-cuda",
         ksos_sampling="cacs",
-        ksos_num_restart=5,
+        ksos_num_restart=args.restarts,
         ksos_num_samples=1000,
         ksos_warm_start=args.warm_start,
         mppi_noise=args.mppi_noise,
