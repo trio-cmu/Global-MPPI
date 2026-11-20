@@ -1,0 +1,6 @@
+method,seed,finished,cycles,path_length,path_ratio,reached,collision,min_clearance,final_distance,plan_s
+ps,0,True,100,0.37737,0.71267,False,False,0.01823,0.21142,16.32754
+mppi,0,True,100,0.86320,1.63016,False,False,0.03442,0.03520,19.51908
+dial,0,True,100,0.65670,1.24018,False,False,0.01760,0.03140,19.43258
+mtp,0,True,100,0.66744,1.26047,False,False,0.02814,0.03040,18.74867
+cbo,0,True,100,0.79612,1.50347,False,False,0.02444,0.16119,18.63083
