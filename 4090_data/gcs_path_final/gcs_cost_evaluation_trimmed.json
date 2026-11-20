@@ -1,0 +1,16 @@
+{
+ "duration": 38.25,
+ "running_pose": 574.4130706715607,
+ "running_pusher_path": 58.97927649690899,
+ "running": 633.3923460918688,
+ "terminal": 0.0,
+ "total": 633.3923460918688,
+ "pusher_path_off_contact_m": 5.897927649690898,
+ "final_qpos": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ]
+}

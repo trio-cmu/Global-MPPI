@@ -1,0 +1,77 @@
+relaxed_gcs_cost: 0.2086025848280768
+relaxed_gcs_success: True
+relaxed_gcs_time: 36.1285643440001
+binary_flows_cost: 0.16090202392505393
+binary_flows_success: True
+binary_flows_time: 0.033034383000085654
+feasible_cost: 0.17061090558232303
+feasible_success: True
+feasible_time: 0.1795189380645752
+relaxed_mean_determinant: 0.9549078050387756
+rounded_mean_determinant: 1.0000000000000808
+start_and_goal: slider_initial_pose: x: 0.08761139475892181, y: 0.1034392706537447, theta: 1.3
+slider_target_pose: x: 0.0, y: 0.012857142857142855, theta: 0.0
+pusher_initial_pose: x: 0.0, y: 0.1, theta: 0.0
+pusher_target_pose: x: 0.0, y: 0.1, theta: 0.0
+config: start_and_goal: slider_initial_pose: x: 0.08761139475892181, y: 0.1034392706537447, theta: 1.3
+slider_target_pose: x: 0.0, y: 0.012857142857142855, theta: 0.0
+pusher_initial_pose: x: 0.0, y: 0.1, theta: 0.0
+pusher_target_pose: x: 0.0, y: 0.1, theta: 0.0
+num_knot_points_contact: 3
+num_knot_points_non_collision: 3
+time_in_contact: 1.5
+time_non_collision: 0.75
+continuity_on_pusher_velocity: True
+allow_teleportation: False
+use_eq_elimination: False
+use_entry_and_exit_subgraphs: True
+no_cycles: False
+workspace: None
+dynamics_config: SliderPusherSystemConfig(slider=RigidBody(name='t_pusher', geometry=TPusher2d(box_1=Box2d(width=0.06, height=0.02), box_2=Box2d(width=0.02, height=0.06), com_offset_override=array([ 0.   , -0.017])), mass=0.1, is_actuated=False), pusher_radius=0.01, friction_coeff_table_slider=0.5, friction_coeff_slider_pusher=0.1, grav_acc=9.81, integration_constant=0.3, force_scale=0.01)
+use_band_sparsity: True
+non_collision_cost: distance_to_object: None
+pusher_velocity_regularization: None
+pusher_velocity_constraint: None
+pusher_arc_length: 0.1
+contact_config: cost: keypoint_arc_length: 1.0
+force_regularization: None
+keypoint_velocity_regularization: None
+mode_transition_cost: None
+angular_velocity_regularixation: None
+trace: None
+time: None
+lam_min: 0.0
+lam_max: 1.0
+slider_rot_velocity_constraint: None
+slider_velocity_constraint: None
+keypoint_velocity_constraint: None
+use_approx_exponential_map: False
+num_binary_rounded_paths: 98
+num_feasible_rounded_paths: 54
+solver_params: PlanarSolverParams(rounding_steps=100, max_rounding_trials=10000, gcs_convex_relaxation=True, print_flows=False, assert_determinants=False, assert_result=False, assert_nan_values=True, print_solver_output=True, save_solver_output=False, measure_solve_time=True, max_mosek_solve_time=1200.0, print_path=False, print_cost=True, print_rounding_details=True, solver='mosek', get_rounded_and_original_traj=False, nonl_round_major_feas_tol=1e-05, nonl_round_minor_feas_tol=1e-05, nonl_round_opt_tol=1e-05, nonl_rounding_save_solver_output=False, nonl_round_major_iter_limit=10000, assert_rounding_res=False, sol_retrieval='first_row')
+name: None
+cost_term_vals: ----
+   contact_mode_costs: ----
+      keypoint_arc: [0.0028082135736649146, 0.008891777710568337, 0.1210627215427662]
+      keypoint_reg: [0.0, 0.0, 0.0]
+      force_reg: [0.0, 0.0, 0.0]
+      contact_time: [0.0, 0.0, 0.0]
+      mode_cost: [0.0, 0.0, 0.0]
+   contact_mode_sums: ----
+      keypoint_arc: 0.13276271282699945
+      keypoint_reg: 0.0
+      force_reg: 0.0
+      contact_time: 0.0
+      mode_cost: 0.0
+   non_collision_costs: ----
+      pusher_arc_length: [0.0, 0.0073211651726707815, 0.0010084138299615865, 0.002079440247898992, 0.0019207279298567256, 0.002034710426237878, 0.002259768059866423, 0.00437320672975932, 0.007139836106168225, 0.0]
+      pusher_vel_reg: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      object_avoidance_socp: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      non_contact_time: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+   non_collision_sums: ----
+      pusher_arc_length: 0.028137268502419932
+      pusher_vel_reg: 0.0
+      object_avoidance_socp: 0.0
+      non_contact_time: 0.0
+optimality_gap: -18.21246811350168
+sdp_optimality_gap: -22.866716125467033
