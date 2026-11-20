@@ -1,7 +1,7 @@
 """Metrics and figures of the obstacle_field task.
 
     python script/obstacle_field_metrics.py RESULTS_DIR [--out-dir DIR]      per-run metrics + summary + trajectory figure
-    python script/obstacle_field_metrics.py --plot-layout OUT.png [--layout-seed 0]   layout, start, goal, shortest and second-best route
+    python script/obstacle_field_metrics.py --plot-layout OUT.png [--layout-seed 19]   layout, start, goal, shortest and second-best route
     python script/obstacle_field_metrics.py --plot-candidates OUT.png --seeds 11 19 22   several layouts side by side
 
 RESULTS_DIR holds <method>/s<seed>/{cycles.csv, final.json, args.json} (what examples/obstacle_field.py writes; the
@@ -135,10 +135,10 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("results", nargs="?", type=Path)
     ap.add_argument("--out-dir", type=Path)
-    ap.add_argument("--layout-seed", type=int, default=0, help="layout of runs without args.json, and of --plot-layout")
+    ap.add_argument("--layout-seed", type=int, default=19, help="layout of runs without args.json, and of --plot-layout")
     ap.add_argument("--plot-layout", type=Path, metavar="OUT.png")
     ap.add_argument("--plot-candidates", type=Path, metavar="OUT.png", help="side by side with --seeds")
-    ap.add_argument("--seeds", type=int, nargs="+", default=[0])
+    ap.add_argument("--seeds", type=int, nargs="+", default=[19])
     a = ap.parse_args()
     if a.plot_candidates:
         plot_candidates(a.plot_candidates, a.seeds)

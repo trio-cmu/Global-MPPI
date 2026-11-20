@@ -18,7 +18,7 @@ from global_mppi.task_base import Task
 from global_mppi.tasks.obstacle_field_layout import GOAL, START, make_layout
 
 
-def build_model(layout_seed: int = 0) -> mujoco.MjModel:
+def build_model(layout_seed: int = 19) -> mujoco.MjModel:
     """MuJoCo model: models/obstacle_field/scene.xml with the circles of ``make_layout(layout_seed)`` as cylinders."""
     centers, radii = make_layout(layout_seed)
     geoms = "\n".join(
@@ -35,7 +35,7 @@ class ObstacleField(Task):
 
     def __init__(
         self,
-        layout_seed: int = 0,
+        layout_seed: int = 19,
         wall_weight: float = 5.0,
         wall_sharpness: float = 50.0,
         position_weight: float = 5.0,
@@ -45,7 +45,7 @@ class ObstacleField(Task):
         """Load the MuJoCo model and set task parameters.
 
         Args:
-            layout_seed: seed of ``make_layout`` (default 0: the fixed benchmark layout).
+            layout_seed: seed of ``make_layout`` (default 19: the fixed benchmark layout).
             wall_weight: Multiplier on the exponential obstacle proximity cost (as bugtrap's wall_weight).
             wall_sharpness: Decay rate in the ``exp(-sharpness * dist)`` obstacle cost.
             position_weight: Weight on the squared position tracking error.

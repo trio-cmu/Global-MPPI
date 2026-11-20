@@ -33,7 +33,7 @@ from global_mppi.tasks.obstacle_field_layout import GOAL, PARTICLE_RADIUS, START
 Run a simulation of the obstacle-field navigation task: a point mass (the particle model of bugtrap: same motors,
 outer walls and cost weights, no inner walls) starts on the left at (-0.25, 0), the goal is on the right at
 (0.25, 0), and 9 circular obstacles (radius 0.025 to 0.045 m, global_mppi/tasks/obstacle_field_layout.py,
-make_layout(layout_seed), default seed 0) stand in between. One folder per run:
+make_layout(layout_seed), default seed 19) stand in between. One folder per run:
 
     <out-dir>/<ps|mppi|dial|mtp|cbo|gm>/s<seed>/  cycles.csv, final.json, args.json, ...
 
@@ -67,7 +67,7 @@ parser.add_argument(
     action="store_true",
     help="no window: render offscreen (MUJOCO_GL=egl) and record a video (default: off)",
 )
-parser.add_argument("--layout-seed", type=int, default=0, help="seed of the obstacle layout, make_layout(layout_seed) (default: 0, the benchmark layout)")
+parser.add_argument("--layout-seed", type=int, default=19, help="seed of the obstacle layout, make_layout(layout_seed) (default: 19, the benchmark layout)")
 parser.add_argument("--seed-start", type=int, default=0, help="first seed, inclusive (default: 0)")
 parser.add_argument("--seed-end", type=int, default=6, help="last seed, exclusive (default: 6)")
 parser.add_argument("--max-cycles", type=int, default=100, help="control cycles per run (default: 100)")
