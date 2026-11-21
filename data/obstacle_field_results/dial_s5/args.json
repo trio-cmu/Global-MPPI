@@ -1,0 +1,121 @@
+{
+  "task": "obstacle_field",
+  "task_file": "global_mppi/tasks/obstacle_field.py",
+  "layout_seed": 19,
+  "obstacle_centers": [
+    [
+      -0.12939861254811022,
+      0.026144260643200856
+    ],
+    [
+      0.007407283397093539,
+      0.06804095623581329
+    ],
+    [
+      0.1259070532045362,
+      -0.006666021620375828
+    ],
+    [
+      -0.028623065172051307,
+      -0.07831350820851773
+    ],
+    [
+      0.13228944806869739,
+      -0.19604116528492502
+    ],
+    [
+      -0.1732883266331183,
+      -0.16839712548229752
+    ],
+    [
+      0.17487400302400347,
+      0.14446241618176636
+    ],
+    [
+      -0.13023221985928352,
+      0.18887910165094668
+    ],
+    [
+      0.02631306101719144,
+      0.19452445258514953
+    ]
+  ],
+  "obstacle_radii": [
+    0.040820758988945514,
+    0.03827656439364696,
+    0.03979389532093589,
+    0.04429152148415017,
+    0.025500309140772313,
+    0.03002243611255581,
+    0.031888880266178594,
+    0.02613672061503619,
+    0.02844588441511577
+  ],
+  "algorithm": "dial",
+  "seed": 5,
+  "max_cycles": 100,
+  "control_frequency_hz": 50,
+  "command_line_args": {
+    "headless": true,
+    "layout_seed": 19,
+    "seed_start": 5,
+    "seed_end": 6,
+    "max_cycles": 100,
+    "out_dir": "/home/junlong/obstacle_field_bench/work/dial_s5_a1",
+    "gpu": false,
+    "num_samples": null,
+    "iterations": 5,
+    "noise": null,
+    "temperature": null,
+    "mppi_noise": 0.1,
+    "warm_start": true,
+    "cacs_h": null,
+    "horizon": 2.0,
+    "num_knots": 11,
+    "spline_type": "cubic",
+    "algorithm": "dial"
+  },
+  "controller": {
+    "class": "DIAL",
+    "num_samples": 2000,
+    "noise_level": 1.0,
+    "iterations": 5,
+    "plan_horizon": 2.0,
+    "spline_type": "cubic",
+    "num_knots": 11,
+    "temperature": 0.01,
+    "beta_opt_iter": 1.0,
+    "beta_horizon": 1.0
+  },
+  "vmax": 1.0,
+  "vmax_rule": "largest |actuator ctrlrange| of the model (motor forces in [-1, 1])",
+  "cacs_h": null,
+  "nu": 2,
+  "control_dim": 22,
+  "planning_dt": 0.01,
+  "start": [
+    -0.25,
+    0.0
+  ],
+  "goal": [
+    0.25,
+    0.0
+  ],
+  "success": {
+    "goal_radius_m": 0.02,
+    "goal_radius_loose_m": 0.05,
+    "collision": "min_clearance < 0 (particle surface to circle surface)"
+  },
+  "cukernelsos_python": "/home/junlong/kernelSOS_project/cuKernelSOS_zq/python",
+  "gpu_before_run": {
+    "util_percent": 99.0,
+    "mem_used_mib": 11872.0
+  },
+  "code": {
+    "global_mppi": "/home/junlong/wt_obst/global_mppi/__init__.py",
+    "mujoco": "3.13.0",
+    "mujoco_mjx": "3.13.0",
+    "git_commit": "809d073",
+    "git_dirty": true
+  }
+}
