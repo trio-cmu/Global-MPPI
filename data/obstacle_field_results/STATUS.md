@@ -1,6 +1,6 @@
 # obstacle_field benchmark: status
 
-Updated 2026-11-21 03:37:47. Layout seed 19, 100 cycles, horizon 2.0 s, 11 knots, cubic spline, seeds 0 to 5. Reference (grid-search shortest path): 0.530 m; straight line 0.500 m.
+Updated 2026-11-21 05:11:45. Layout seed 19, 100 cycles, horizon 2.0 s, 11 knots, cubic spline, seeds 0 to 5. Reference (grid-search shortest path): 0.530 m; straight line 0.500 m.
 
 Runs: `<method>_s<seed>/` (cycles.csv, final.json, args.json, video). `pending` = not finished yet (may be running).
 
@@ -11,7 +11,7 @@ Runs: `<method>_s<seed>/` (cycles.csv, final.json, args.json, video). `pending` 
 | DIAL | finished | finished | finished | finished | finished | finished |
 | MTP | finished | finished | finished | finished | finished | finished |
 | CBO | finished | finished | finished | finished | finished | finished |
-| GlobalMPPI | finished | finished | finished | pending | pending | pending |
+| GlobalMPPI | finished | finished | finished | finished | pending | pending |
 
 Finished runs only:
 
@@ -22,10 +22,10 @@ Finished runs only:
 | DIAL | 6 | 0.765 | 0/6 | 0/6 |
 | MTP | 6 | 0.791 | 0/6 | 0/6 |
 | CBO | 6 | 0.817 | 0/6 | 0/6 |
-| GlobalMPPI | 3 | 0.724 | 0/3 | 0/3 |
+| GlobalMPPI | 4 | 0.717 | 0/4 | 0/4 |
 
 **gm (GlobalMPPI) was run on a shared, busy GPU**: its ADMM stops at its time limit (`status=time_limit` in every call we checked), so the gm results are preliminary. The baselines ran in parallel, five at a time, on the same shared GPU; plan times are not comparable with idle-GPU runs.
 
 Files: `metrics.csv` (one row per finished run), `summary.txt` (one row per method), `reference_path.json`, `obstacle_field_trajectories.png` (all finished trajectories over the layout).
 
-Last push: 2026-11-21 01:03:03 pushed 55eefa5 to origin/obstacle-field
+Last push: 2026-11-21 03:37:49 pushed 25b10d2 to origin/obstacle-field
