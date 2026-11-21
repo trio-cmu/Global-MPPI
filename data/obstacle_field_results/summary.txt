@@ -1,0 +1,8 @@
+obstacle_field layout_seed=19; reference (grid-search shortest path) 0.5295 m; straight line 0.5000 m
+method      runs  reached collided        path (m)  path/ref  final dist (m)  min clear (m)  plan s/cycle
+PS             6      0/6      0/6    0.301+-0.091     0.569    0.277+-0.083         0.0286         13.31
+MPPI           6      0/6      0/6    0.795+-0.084     1.501    0.031+-0.002         0.0319         16.74
+DIAL           6      0/6      0/6    0.765+-0.090     1.444    0.031+-0.002         0.0280         17.35
+MTP            6      0/6      0/6    0.791+-0.086     1.494    0.031+-0.001         0.0320         16.48
+CBO            6      0/6      0/6    0.817+-0.063     1.544    0.117+-0.029         0.0237         16.72
+GlobalMPPI     6      0/6      0/6    0.704+-0.063     1.330    0.032+-0.001         0.0279         69.22

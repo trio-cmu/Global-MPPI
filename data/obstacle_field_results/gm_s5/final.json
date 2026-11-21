@@ -1,0 +1,14 @@
+{
+  "final_x": 0.2803976819755359,
+  "final_y": -0.011105469863462432,
+  "final_distance": 0.03236279546599909,
+  "path_length": 0.6630701269779055,
+  "min_clearance": 0.03084408260797266,
+  "collision": false,
+  "reached": false,
+  "reached_5cm": true,
+  "sim_time": 2.0000000000000013,
+  "cycles": 100,
+  "mean_plan_s_excl_cycle0": 17.473323896677808,
+  "solve_paths": {}
+}
