@@ -1,0 +1,14 @@
+{
+  "complete": true,
+  "method": "ps",
+  "seed": 0,
+  "finished": "2026-11-19T17:17:35-05:00",
+  "returncode": 0,
+  "timed_out": false,
+  "wall_s": 57.81274624494836,
+  "attempt": 1,
+  "last_cycle": 100,
+  "solve_paths": {},
+  "final_cost": 5.5251472076633945e-05,
+  "plan_s_median_excluding_jit": 0.3649
+}

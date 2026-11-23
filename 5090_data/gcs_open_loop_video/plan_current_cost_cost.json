@@ -1,0 +1,17 @@
+{
+ "plan": "gcs_current_cost_traj.npz",
+ "duration_s": 12.0,
+ "cost": "sum dt * (50|p-goal|^2 + 15*2(1-cos th)) + 10 * pusher path length off the T + terminal pose cost",
+ "running_pose": 49.421322672919025,
+ "pusher_path_off_T_m": 0.2028765154401918,
+ "pusher_path_cost": 2.028765154401918,
+ "terminal": 0.0,
+ "total": 51.45008782732094,
+ "final_qpos": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ]
+}

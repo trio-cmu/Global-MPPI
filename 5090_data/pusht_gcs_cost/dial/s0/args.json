@@ -1,0 +1,30 @@
+{
+  "method": "dial",
+  "seed": 0,
+  "command": [
+    "/home/robopt/.cache/global-mppi/pusht_5090/venv/bin/python",
+    "/home/robopt/Documents/zhongqi/Global-MPPI/5090_data/pusht_gcs_cost/run_one.py",
+    "/home/robopt/Documents/zhongqi/Global-MPPI/5090_data/pusht_gcs_cost/dial/s0",
+    "--no-wandb",
+    "--headless",
+    "--seed",
+    "0",
+    "--max-cycles",
+    "100",
+    "--num-samples",
+    "2000",
+    "dial"
+  ],
+  "example_arguments": [
+    "--no-wandb",
+    "--headless",
+    "--seed",
+    "0",
+    "--max-cycles",
+    "100",
+    "--num-samples",
+    "2000",
+    "dial"
+  ],
+  "manifest": "../../manifest.json"
+}

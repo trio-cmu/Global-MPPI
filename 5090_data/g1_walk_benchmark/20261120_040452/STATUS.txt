@@ -1,0 +1,4 @@
+overnight queue 20261120_040452   updated 2026-11-20 10:36:00   queue pid 1097901
+current: finished
+g1_walk: DONE   runs finished 36/36   gave up: none
+gpu now: 0 %, 1496 MiB

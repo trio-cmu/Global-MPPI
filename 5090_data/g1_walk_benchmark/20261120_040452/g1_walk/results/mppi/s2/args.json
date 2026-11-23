@@ -1,0 +1,76 @@
+{
+  "task": "g1_walk",
+  "task_file": "global_mppi/tasks/humanoid_mocap.py",
+  "algorithm": "mppi",
+  "seed": 2,
+  "max_cycles": 400,
+  "control_frequency_hz": 50,
+  "command_line_args": {
+    "headless": true,
+    "seed_start": 2,
+    "seed_end": 3,
+    "max_cycles": 400,
+    "reference_filename": "Lafan1/mocap/UnitreeG1/walk1_subject1.npz",
+    "out_dir": "/home/robopt/Documents/zhongqi/Global-MPPI/5090_data/g1_walk_benchmark/20261120_040452/g1_walk/results",
+    "gpu": false,
+    "num_samples": null,
+    "iterations": 5,
+    "noise": null,
+    "temperature": null,
+    "mppi_noise": 0.1,
+    "warm_start": true,
+    "cacs_h": null,
+    "algorithm": "mppi"
+  },
+  "controller": {
+    "class": "MPPI",
+    "num_samples": 2000,
+    "noise_level": 0.2,
+    "iterations": 5,
+    "plan_horizon": 0.8,
+    "spline_type": "zero",
+    "num_knots": 4,
+    "temperature": 0.001
+  },
+  "vmax": 3.0892,
+  "vmax_rule": "largest |actuator ctrlrange| of the model (joint-angle targets in rad)",
+  "cacs_h": null,
+  "nq": 30,
+  "nv": 29,
+  "nu": 23,
+  "control_dim": 92,
+  "planning_dt": 0.02,
+  "sim_model": {
+    "timestep": 0.01,
+    "iterations": 10,
+    "ls_iterations": 50,
+    "o_solimp": [
+      0.9,
+      0.95,
+      0.001,
+      0.5,
+      2
+    ],
+    "enableflags": "mjENBL_OVERRIDE"
+  },
+  "reference": {
+    "file": "Lafan1/mocap/UnitreeG1/walk1_subject1.npz",
+    "source": "https://huggingface.co/datasets/robfiras/loco-mujoco-datasets (CC-BY-NC-ND 4.0)",
+    "fps": 40.0,
+    "frames": 10450
+  },
+  "initial_state": "reference frame 0; initial knots = first reference joint positions",
+  "fall_height_m": 0.5,
+  "cukernelsos_python": "/home/robopt/.cache/global-mppi/pusht_5090/cuKernelSOS/python",
+  "gpu_before_run": {
+    "util_percent": 0.0,
+    "mem_used_mib": 1910.0
+  },
+  "code": {
+    "global_mppi": "/home/robopt/.cache/global-mppi/pusht_5090/Global-MPPI/global_mppi/__init__.py",
+    "mujoco": "3.3.6",
+    "mujoco_mjx": "3.3.6",
+    "git_commit": "7d71c56",
+    "git_dirty": false
+  }
+}

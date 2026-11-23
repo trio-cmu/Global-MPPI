@@ -1,0 +1,17 @@
+=== bugtrap, seeds per method: PS 6, MPPI 6, DIAL 6, MTP 6, CBO 6, GlobalMPPI (gm) 6. left_cup = the final position is outside the cup; reached = final distance below 2 cm / 5 cm; distance in m ===
+method          final distance median   mean ± std              left the cup            reached 2 cm            reached 5 cm            plan_s median           
+PS              0.248                   0.248 ± 0.00291         0/6                     0/6                     0/6                     1.37 s                  
+MPPI            0.252                   0.253 ± 0.0127          0/6                     0/6                     0/6                     1.61 s                  
+DIAL            0.0307                  0.0292 ± 0.00372        6/6                     0/6                     6/6                     3.47 s                  
+MTP             0.0138                  0.0135 ± 0.00276        6/6                     6/6                     6/6                     2.23 s                  
+CBO             0.16                    0.155 ± 0.0186          6/6                     0/6                     0/6                     1.76 s                  
+GlobalMPPI (gm) 0.0164                  0.0176 ± 0.00812        6/6                     4/6                     6/6                     25.09 s                 
+
+per-seed final distance:
+  PS               s0 0.249*  s1 0.243*  s2 0.248*  s3 0.249*  s4 0.251*  s5 0.245*
+  MPPI             s0 0.254*  s1 0.241*  s2 0.264*  s3 0.239*  s4 0.250*  s5 0.272*
+  DIAL             s0 0.030  s1 0.031  s2 0.028  s3 0.031  s4 0.022  s5 0.032
+  MTP              s0 0.010  s1 0.015  s2 0.013  s3 0.017  s4 0.015  s5 0.011
+  CBO              s0 0.175  s1 0.143  s2 0.155  s3 0.125  s4 0.165  s5 0.169
+  GlobalMPPI (gm)  s0 0.012  s1 0.007  s2 0.029  s3 0.017  s4 0.024  s5 0.016
+(* = final position inside the cup)

@@ -1,0 +1,68 @@
+{
+  "task": "double_cart_pole",
+  "task_file": "global_mppi/tasks/double_cart_pole.py",
+  "algorithm": "mtp",
+  "seed": 0,
+  "max_cycles": 100,
+  "control_frequency_hz": 50,
+  "command_line_args": {
+    "headless": true,
+    "seed_start": 0,
+    "seed_end": 1,
+    "max_cycles": 100,
+    "out_dir": "/home/robopt/Documents/zhongqi/Global-MPPI/5090_data/double_cart_pole_benchmark/20261119_213836/double_cart_pole/results",
+    "gpu": false,
+    "num_samples": null,
+    "iterations": 5,
+    "noise": null,
+    "temperature": null,
+    "mppi_noise": 0.1,
+    "warm_start": true,
+    "cacs_h": null,
+    "algorithm": "mtp"
+  },
+  "controller": {
+    "class": "MTP",
+    "num_samples": 2000,
+    "iterations": 5,
+    "plan_horizon": 1.0,
+    "spline_type": "cubic",
+    "num_knots": 4,
+    "m_pts": 3,
+    "n_per_layer": 50,
+    "degree": 2,
+    "num_elites": 5,
+    "sigma_start": 0.5,
+    "sigma_min": 0.1,
+    "sigma_max": 1.0,
+    "temperature": 0.1,
+    "beta": 0.1,
+    "alpha": 0.5,
+    "mtp_interpolation": "akima"
+  },
+  "vmax": 1.0,
+  "vmax_rule": "largest |actuator ctrlrange| of the model (normalised cart force in [-1, 1])",
+  "cacs_h": null,
+  "nq": 3,
+  "nv": 3,
+  "nu": 1,
+  "control_dim": 4,
+  "planning_dt": 0.01,
+  "sim_model": "the task's model as it is (timestep 0.01, contacts disabled)",
+  "upright": {
+    "tip_z_m": 4.0,
+    "tolerance_m": 0.2
+  },
+  "cukernelsos_python": "/home/robopt/.cache/global-mppi/pusht_5090/cuKernelSOS/python",
+  "gpu_before_run": {
+    "util_percent": 38.0,
+    "mem_used_mib": 7836.0
+  },
+  "code": {
+    "global_mppi": "/home/robopt/.cache/global-mppi/pusht_5090/Global-MPPI/global_mppi/__init__.py",
+    "mujoco": "3.3.6",
+    "mujoco_mjx": "3.3.6",
+    "git_commit": "7d71c56",
+    "git_dirty": false
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "final_x": 2.6910257851872306,
+  "final_y": -0.025455055235884264,
+  "final_z": 0.7864245424683604,
+  "final_tilt_deg": 7.126166616665105,
+  "final_ref_base_err": 0.05047637011484441,
+  "final_ref_joint_err": 2.6110033346130415,
+  "final_track_cost": 0.23740361630916595,
+  "mean_ref_base_err": 0.030111750000000003,
+  "mean_track_cost": 0.282706525,
+  "min_base_z": 0.7311567615807443,
+  "fell": false,
+  "sim_time": 7.999999999999874,
+  "cycles": 400,
+  "mean_plan_s_excl_cycle0": 0.5406803188467384
+}

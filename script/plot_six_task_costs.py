@@ -3,7 +3,8 @@
     python script/plot_six_task_costs.py [--out data/all_six_cost_vs_cycle.png]
 
 Cube shows all six methods from cube_cost_six.png using native 101-value
-NPY histories; G1 standup preserves its four methods and CSV cycles 0–99;
+NPY histories; G1 standup shows all six methods from 5090_data/g1_benchmark (RTX 5090 rerun, MPPI rerun of 2026-11-20) with
+native 101-value NPY histories, as 5090_data/g1_benchmark/figures/g1_cost_six.png;
 the other tasks use CSV cycles 0–100. Lines are seed medians, bands are IQRs.
 """
 import argparse
@@ -28,7 +29,7 @@ TASKS = (
     ("(a) PushT", "pusht_results", METHODS, "csv", "lower left"),
     ("(b) Dexterous in-hand manipulation", "cube_results_mj336", METHODS, "npy", "lower left"),
     ("(c) Double cart-pole", "double_cart_pole_results", METHODS, "csv", "lower left"),
-    ("(d) G1 standup", "g1_results", ORIGINAL_FOUR, "csv", "lower left"),
+    ("(d) G1 standup", "../5090_data/g1_benchmark", METHODS, "npy", "lower left"),
     ("(e) Bugtrap", "bugtrap_results", METHODS, "csv", "lower left"),
     ("(f) Walker", "walker_results", METHODS, "csv", "upper right"),
 )
@@ -53,7 +54,7 @@ def load_costs(folder, method, source):
                 rows = list(csv.DictReader(stream))
             costs = np.array([float(r["best_cost"]) for r in rows])
             cycles = np.array([int(r["cycle"]) for r in rows])
-        expected = 100 if folder == "g1_results" else 101
+        expected = 100 if ("g1_" in folder and source == "csv") else 101
         if len(costs) != expected or not np.array_equal(cycles, np.arange(expected)):
             raise ValueError(f"Unexpected or missing cycles in {run}")
         if not np.all(np.isfinite(costs)) or not np.all(costs > 0):

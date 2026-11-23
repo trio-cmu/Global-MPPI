@@ -1,0 +1,16 @@
+{
+  "complete": true,
+  "method": "gm",
+  "seed": 5,
+  "finished": "2026-11-19T19:07:31-05:00",
+  "returncode": 0,
+  "timed_out": false,
+  "wall_s": 780.4221160640009,
+  "attempt": 1,
+  "last_cycle": 100,
+  "solve_paths": {
+    "gpu": 505
+  },
+  "final_cost": 0.0004895567544735968,
+  "plan_s_median_excluding_jit": 7.1354
+}

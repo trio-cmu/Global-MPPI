@@ -1,0 +1,30 @@
+{
+  "method": "mppi",
+  "seed": 2,
+  "command": [
+    "/home/robopt/.cache/global-mppi/pusht_5090/venv/bin/python",
+    "/home/robopt/Documents/zhongqi/Global-MPPI/5090_data/pusht_gcs_cost/run_one.py",
+    "/home/robopt/Documents/zhongqi/Global-MPPI/5090_data/pusht_gcs_cost/mppi/s2",
+    "--no-wandb",
+    "--headless",
+    "--seed",
+    "2",
+    "--max-cycles",
+    "100",
+    "--num-samples",
+    "2000",
+    "mppi"
+  ],
+  "example_arguments": [
+    "--no-wandb",
+    "--headless",
+    "--seed",
+    "2",
+    "--max-cycles",
+    "100",
+    "--num-samples",
+    "2000",
+    "mppi"
+  ],
+  "manifest": "../../manifest.json"
+}

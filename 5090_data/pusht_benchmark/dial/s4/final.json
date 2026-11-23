@@ -1,0 +1,14 @@
+{
+  "complete": true,
+  "method": "dial",
+  "seed": 4,
+  "finished": "2026-11-19T18:33:04-05:00",
+  "returncode": 0,
+  "timed_out": false,
+  "wall_s": 61.77303368085995,
+  "attempt": 1,
+  "last_cycle": 100,
+  "solve_paths": {},
+  "final_cost": 0.008777706883847713,
+  "plan_s_median_excluding_jit": 0.3542
+}

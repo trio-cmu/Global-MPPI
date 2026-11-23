@@ -1,0 +1,14 @@
+{
+  "complete": true,
+  "method": "cbo",
+  "seed": 3,
+  "finished": "2026-11-19T20:32:08-05:00",
+  "returncode": 0,
+  "timed_out": false,
+  "wall_s": 123.12831242778338,
+  "attempt": 1,
+  "last_cycle": 100,
+  "solve_paths": {},
+  "final_cost": 5.708829402923584,
+  "plan_s_median_excluding_jit": 0.4041
+}

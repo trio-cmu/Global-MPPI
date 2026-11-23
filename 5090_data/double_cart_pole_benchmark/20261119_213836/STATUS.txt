@@ -1,0 +1,4 @@
+overnight queue 20261119_213836   updated 2026-11-19 21:42:40   queue pid 883897
+current: double_cart_pole gm s0 (attempt 1)
+double_cart_pole: RUNNING   runs finished 5/36   gave up: none
+gpu now: 39 %, 7301 MiB

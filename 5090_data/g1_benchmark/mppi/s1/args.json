@@ -1,0 +1,63 @@
+{
+  "task_version": "g1_fixed",
+  "task_file": "global_mppi/tasks/humanoid_standup.py",
+  "algorithm": "mppi",
+  "seed": 1,
+  "max_cycles": 100,
+  "control_frequency_hz": 50,
+  "command_line_args": {
+    "headless": true,
+    "seed_start": 1,
+    "seed_end": 2,
+    "max_cycles": 100,
+    "out_dir": "/home/robopt/Documents/zhongqi/Global-MPPI/5090_data/g1_benchmark",
+    "gpu": false,
+    "num_samples": null,
+    "iterations": 5,
+    "noise": null,
+    "temperature": null,
+    "mppi_noise": 0.1,
+    "warm_start": true,
+    "cacs_h": null,
+    "algorithm": "mppi"
+  },
+  "controller": {
+    "class": "MPPI",
+    "num_samples": 2000,
+    "noise_level": 0.2,
+    "iterations": 5,
+    "plan_horizon": 0.6,
+    "spline_type": "zero",
+    "num_knots": 4,
+    "temperature": 0.001
+  },
+  "vmax": 3.0892,
+  "cacs_h": null,
+  "nu": 29,
+  "control_dim": 116,
+  "planning_dt": 0.02,
+  "sim_model": {
+    "timestep": 0.01,
+    "o_solimp": [
+      0.9,
+      0.95,
+      0.001,
+      0.5,
+      2
+    ],
+    "enableflags": "mjENBL_OVERRIDE"
+  },
+  "initial_state": "keyframe stand with qpos[3:7] = [0.7, 0, -0.7, 0]",
+  "cukernelsos_python": "/home/robopt/.cache/global-mppi/pusht_5090/cuKernelSOS/python",
+  "gpu_before_run": {
+    "util_percent": 0.0,
+    "mem_used_mib": 1850.0
+  },
+  "code": {
+    "global_mppi": "/home/robopt/.cache/global-mppi/pusht_5090/Global-MPPI/global_mppi/__init__.py",
+    "mujoco": "3.3.6",
+    "mujoco_mjx": "3.3.6",
+    "git_commit": "7d71c56",
+    "git_dirty": false
+  }
+}

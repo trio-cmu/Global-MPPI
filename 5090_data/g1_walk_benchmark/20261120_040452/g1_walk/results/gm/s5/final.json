@@ -1,0 +1,19 @@
+{
+  "final_x": 2.661275414492509,
+  "final_y": -0.05218826843786294,
+  "final_z": 0.7902943914016133,
+  "final_tilt_deg": 12.128886867258016,
+  "final_ref_base_err": 0.0276691104534109,
+  "final_ref_joint_err": 1.4300055212529788,
+  "final_track_cost": 0.23803459107875824,
+  "mean_ref_base_err": 0.026387749999999998,
+  "mean_track_cost": 0.22871395,
+  "min_base_z": 0.752422443108755,
+  "fell": false,
+  "sim_time": 7.999999999999874,
+  "cycles": 400,
+  "mean_plan_s_excl_cycle0": 6.096801593488918,
+  "solve_paths": {
+    "gpu": 2005
+  }
+}

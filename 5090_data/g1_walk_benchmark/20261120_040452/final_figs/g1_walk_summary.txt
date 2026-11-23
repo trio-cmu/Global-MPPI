@@ -1,0 +1,16 @@
+=== g1_walk, 400 cycles (8 s), seeds per method: PS 6, MPPI 6, DIAL 6, MTP 6, CBO 6, GlobalMPPI (gm) 6. cell = median / mean ± std (ddof 1) over seeds. tracking cost = the task's running cost (0 to 1) of the real state, averaged over the cycles; base error = distance of the base to the reference base position [m]; 'after the first step' = cycles >= 211 (4.22 s); fell = the base height was below 0.5 m in any cycle ===
+method          tracking cost, run            tracking cost, after 1st step base error, run [m]           base error, after 1st step    base error, last 25 [m]       min base height [m]           fell                          plan_s median                 
+PS              0.115 / 0.159 ± 0.0939        0.174 / 0.277 ± 0.195         0.0183 / 0.0433 ± 0.0579      0.03 / 0.0828 ± 0.123         0.0291 / 0.15 ± 0.277         0.777 / 0.669 ± 0.252         1/6                           0.53 s                        
+MPPI            0.488 / 0.454 ± 0.139         0.739 / 0.656 ± 0.277         0.143 / 0.198 ± 0.184         0.27 / 0.387 ± 0.385          0.426 / 0.7 ± 0.802           0.218 / 0.347 ± 0.317         4/6                           0.54 s                        
+DIAL            0.332 / 0.374 ± 0.12          0.408 / 0.497 ± 0.248         0.0419 / 0.113 ± 0.162        0.0579 / 0.211 ± 0.342        0.0476 / 0.43 ± 0.676         0.65 / 0.522 ± 0.29           2/6                           0.54 s                        
+MTP             0.119 / 0.126 ± 0.0158        0.184 / 0.185 ± 0.00685       0.0162 / 0.0172 ± 0.00362     0.0215 / 0.0223 ± 0.00268     0.018 / 0.0194 ± 0.00634      0.784 / 0.784 ± 0.00185       0/6                           0.53 s                        
+CBO             0.711 / 0.729 ± 0.115         1 / 0.967 ± 0.0514            0.567 / 0.617 ± 0.256         1.01 / 1.09 ± 0.406           1.77 / 1.92 ± 0.547           0.243 / 0.243 ± 0.0299        6/6                           0.53 s                        
+GlobalMPPI (gm) 0.226 / 0.233 ± 0.0373        0.293 / 0.312 ± 0.0673        0.0257 / 0.0288 ± 0.00688     0.0348 / 0.041 ± 0.0138       0.0378 / 0.0393 ± 0.0191      0.752 / 0.747 ± 0.0219        0/6                           5.85 s                        
+
+per-seed final base error [m] / minimum base height [m]  (* = fell):
+  PS               s0 0.02/0.78  s1 0.11/0.74  s2 0.02/0.78  s3 0.75/0.16*  s4 0.01/0.78  s5 0.03/0.78
+  MPPI             s0 0.12/0.75  s1 0.80/0.08*  s2 0.05/0.73  s3 1.98/0.09*  s4 1.59/0.11*  s5 0.01/0.32*
+  DIAL             s0 0.01/0.76  s1 0.04/0.76  s2 0.02/0.71  s3 0.79/0.18*  s4 0.04/0.59  s5 1.83/0.13*
+  MTP              s0 0.02/0.78  s1 0.02/0.79  s2 0.02/0.79  s3 0.02/0.78  s4 0.02/0.78  s5 0.02/0.79
+  CBO              s0 1.93/0.24*  s1 3.03/0.29*  s2 2.32/0.20*  s3 1.86/0.24*  s4 1.92/0.24*  s5 1.40/0.24*
+  GlobalMPPI (gm)  s0 0.08/0.72  s1 0.06/0.72  s2 0.02/0.75  s3 0.02/0.77  s4 0.02/0.76  s5 0.03/0.75

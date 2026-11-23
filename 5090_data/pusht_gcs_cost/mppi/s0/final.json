@@ -1,0 +1,14 @@
+{
+  "complete": true,
+  "method": "mppi",
+  "seed": 0,
+  "finished": "2026-11-19T19:11:32-05:00",
+  "returncode": 0,
+  "timed_out": false,
+  "wall_s": 115.31129863602109,
+  "attempt": 1,
+  "last_cycle": 100,
+  "solve_paths": {},
+  "final_cost": 3.059068202972412,
+  "plan_s_median_excluding_jit": 0.3562
+}

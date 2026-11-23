@@ -1,0 +1,7 @@
+# per-cycle planning time breakdown (seconds), KSOS phases summed over all restarts, mppi run once after the last restart
+# cycle num_restart sampling_rollout autocalib ksos_solve mppi total
+0 5 0.511334 0.000002 26.058642 5.683961 32.253950
+1 5 0.254574 0.000002 9.412092 0.185988 9.852664
+2 5 0.003900 0.000002 9.640746 0.185172 9.829828
+3 5 0.003455 0.000002 9.269739 0.187092 9.460296
+4 5 0.004918 0.000002 14.235480 0.183679 14.424087

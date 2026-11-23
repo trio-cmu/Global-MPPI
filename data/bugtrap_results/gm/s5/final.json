@@ -1,0 +1,14 @@
+{
+  "final_x": 0.26451438258729215,
+  "final_y": 0.007480274952325746,
+  "final_distance": 0.01632855827232403,
+  "left_cup": true,
+  "reached": true,
+  "reached_5cm": true,
+  "sim_time": 2.0000000000000013,
+  "cycles": 100,
+  "mean_plan_s_excl_cycle0": 51.93776548751677,
+  "solve_paths": {
+    "gpu": 505
+  }
+}

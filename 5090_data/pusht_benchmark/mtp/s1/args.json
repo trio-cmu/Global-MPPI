@@ -1,0 +1,30 @@
+{
+  "method": "mtp",
+  "seed": 1,
+  "command": [
+    "/home/robopt/.cache/global-mppi/pusht_5090/venv/bin/python",
+    "/home/robopt/Documents/zhongqi/Global-MPPI/5090_data/pusht_benchmark/run_one.py",
+    "/home/robopt/Documents/zhongqi/Global-MPPI/5090_data/pusht_benchmark/mtp/s1",
+    "--no-wandb",
+    "--headless",
+    "--seed",
+    "1",
+    "--max-cycles",
+    "100",
+    "--num-samples",
+    "2000",
+    "mtp"
+  ],
+  "example_arguments": [
+    "--no-wandb",
+    "--headless",
+    "--seed",
+    "1",
+    "--max-cycles",
+    "100",
+    "--num-samples",
+    "2000",
+    "mtp"
+  ],
+  "manifest": "../../manifest.json"
+}

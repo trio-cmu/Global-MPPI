@@ -1,0 +1,72 @@
+{
+  "task_version": "g1_fixed",
+  "task_file": "/home/junlong/g1_runs/code/g1_fixed_task.py",
+  "task_file_sha256": "de7f41a482e0e529d3e64af9c14ca2bd0644b6dd57b3a75f3637b9eb1e352396",
+  "task_note": "g1_orig = upstream hydrax humanoid_standup.py (import/impl/make_data edits only); g1_fixed = same with jnp.square(torso_orientation[:2]) in running_cost",
+  "algorithm": "dial",
+  "seed": 4,
+  "max_cycles": 100,
+  "control_frequency_hz": 50,
+  "controller": {
+    "class": "DIAL",
+    "num_samples": 2000,
+    "noise_level": 1.0,
+    "iterations": 5,
+    "temperature": 0.01,
+    "beta_opt_iter": 1.0,
+    "beta_horizon": 1.0,
+    "plan_horizon": 0.6,
+    "spline_type": "zero",
+    "num_knots": 4
+  },
+  "params_source": "/home/junlong/cube_runs_mj336/dial/dial/s0/args.json",
+  "cube_controller": {
+    "class": "DIAL",
+    "num_samples": 2000,
+    "noise_level": 1.0,
+    "iterations": 5,
+    "plan_horizon": 0.25,
+    "spline_type": "zero",
+    "num_knots": 4,
+    "temperature": 0.01,
+    "beta_opt_iter": 1.0,
+    "beta_horizon": 1.0
+  },
+  "cube_vmax": 1.88,
+  "cube_cacs_h": null,
+  "g1_vmax": 3.0892,
+  "g1_cacs_h": null,
+  "overridden_for_g1": [
+    "plan_horizon 0.25 -> 0.6",
+    "num_knots 4 (same)",
+    "cacs h = 0.7 * vmax (cube.py rule): 2.1624 instead of the cube value None"
+  ],
+  "nu": 29,
+  "control_dim": 116,
+  "planning_dt": 0.02,
+  "sim_model": {
+    "timestep": 0.01,
+    "o_solimp": [
+      0.9,
+      0.95,
+      0.001,
+      0.5,
+      2
+    ],
+    "enableflags": "mjENBL_OVERRIDE"
+  },
+  "initial_state": "keyframe stand with qpos[3:7] = [0.7, 0, -0.7, 0]",
+  "headless": true,
+  "cukernelsos_python": "/home/junlong/kernelSOS_project/cuKernelSOS/python",
+  "gpu_before_run": {
+    "util_percent": 82.0,
+    "mem_used_mib": 18682.0
+  },
+  "code": {
+    "global_mppi": "/home/junlong/kernelSOS_project/Global-MPPI/global_mppi/__init__.py",
+    "global_mppi_git_commit": "db94bc7",
+    "global_mppi_git_dirty": false,
+    "mujoco": "3.3.6",
+    "mujoco_mjx": "3.3.6"
+  }
+}

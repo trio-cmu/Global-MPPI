@@ -1,0 +1,20 @@
+{
+ "plan": "gcs_our_cost_exactquad_traj.npz",
+ "duration_s": 4.5,
+ "cost": "sum dt * (70|p-goal|^2 + 15*2(1-cos th)) + 10 * pusher path length off the T + terminal pose cost",
+ "pusher_path_weight": 10.0,
+ "position_weight": 70.0,
+ "angle_weight": 15.0,
+ "running_pose": 47.5185858743205,
+ "pusher_path_off_T_m": 0.1012002258206461,
+ "pusher_path_cost": 1.012002258206461,
+ "terminal": 0.0,
+ "total": 48.53058813252696,
+ "final_qpos": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ]
+}

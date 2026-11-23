@@ -1,0 +1,49 @@
+{
+  "algorithm": "mppi",
+  "seed": 1,
+  "command_line_args": {
+    "headless": true,
+    "seed_start": 1,
+    "seed_end": 2,
+    "max_cycles": 100,
+    "out_dir": "/home/robopt/Documents/zhongqi/Global-MPPI/5090_data/cube_benchmark/mppi",
+    "gpu": false,
+    "legacy_newton": false,
+    "num_samples": null,
+    "iterations": 5,
+    "noise": null,
+    "temperature": null,
+    "mppi_noise": 0.1,
+    "warm_start": true,
+    "cacs_h": null,
+    "algorithm": "mppi"
+  },
+  "controller": {
+    "class": "MPPI",
+    "num_samples": 2000,
+    "noise_level": 0.2,
+    "iterations": 5,
+    "plan_horizon": 0.25,
+    "spline_type": "zero",
+    "num_knots": 4,
+    "temperature": 0.001
+  },
+  "vmax": 1.88,
+  "cacs_h": null,
+  "control_frequency_hz": 25,
+  "max_cycles": 100,
+  "cukernelsos_python": "/home/robopt/.cache/global-mppi/pusht_5090/cuKernelSOS/python",
+  "ksos_gpu_solve_env": null,
+  "gpu_before_run": {
+    "util_percent": 74.0,
+    "mem_used_mib": 12428.0
+  },
+  "code": {
+    "global_mppi": "/home/robopt/.cache/global-mppi/pusht_5090/Global-MPPI/global_mppi/__init__.py",
+    "mujoco": "3.3.6",
+    "mujoco_mjx": "3.3.6",
+    "ksos_tools": "/home/robopt/.cache/global-mppi/pusht_5090/ksos-tools/ksos_tools/__init__.py",
+    "git_commit": "7d71c56",
+    "git_dirty": false
+  }
+}

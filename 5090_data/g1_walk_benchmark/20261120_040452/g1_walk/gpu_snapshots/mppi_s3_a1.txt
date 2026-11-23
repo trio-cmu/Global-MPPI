@@ -1,0 +1,31 @@
+=== 2026-11-20 07:24:13 g1_walk mppi s3 (attempt 1)
+Fri Nov 20 07:24:13 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.99.02              Driver Version: 595.99.02      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5090        Off |   00000000:02:00.0  On |                  N/A |
+| 33%   40C    P1             75W /  575W |    1314MiB /  32607MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A          137022      G   /usr/lib/xorg/Xorg                      345MiB |
+|    0   N/A  N/A          137354      G   /usr/bin/gnome-shell                     67MiB |
+|    0   N/A  N/A          139538      G   /usr/bin/nautilus                        18MiB |
+|    0   N/A  N/A          379992      G   /usr/lib/xorg/Xorg                      150MiB |
+|    0   N/A  N/A          380364      G   /usr/bin/gnome-shell                     14MiB |
+|    0   N/A  N/A          380850      G   ...exec/xdg-desktop-portal-gnome          8MiB |
+|    0   N/A  N/A          402834      G   /usr/bin/nautilus                        17MiB |
+|    0   N/A  N/A         2605710      G   /usr/lib/xorg/Xorg                      526MiB |
+|    0   N/A  N/A         2606048      G   /usr/bin/gnome-shell                     44MiB |
++-----------------------------------------------------------------------------------------+
+
+pid, process_name, used_gpu_memory [MiB]

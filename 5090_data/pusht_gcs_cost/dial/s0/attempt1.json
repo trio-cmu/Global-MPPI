@@ -1,0 +1,12 @@
+{
+  "complete": true,
+  "method": "dial",
+  "seed": 0,
+  "finished": "2026-11-19T19:13:28-05:00",
+  "returncode": 0,
+  "timed_out": false,
+  "wall_s": 114.90695423516445,
+  "attempt": 1,
+  "last_cycle": 100,
+  "solve_paths": {}
+}

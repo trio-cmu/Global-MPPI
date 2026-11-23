@@ -1,0 +1,48 @@
+{
+  "started": "2026-11-19T17:16:38-05:00",
+  "python": "/home/robopt/.cache/global-mppi/pusht_5090/venv/bin/python",
+  "versions": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]\njax 0.5.3\nmujoco 3.3.6\nksos_tools /home/robopt/.cache/global-mppi/pusht_5090/ksos-tools/ksos_tools/__init__.py\n[CudaDevice(id=0)]\n",
+  "environment": {
+    "PYTHONPATH": "/home/robopt/.cache/global-mppi/pusht_5090/ksos-tools:/home/robopt/.cache/global-mppi/pusht_5090/Global-MPPI",
+    "CUKERNELSOS_PYTHON": "/home/robopt/.cache/global-mppi/pusht_5090/cuKernelSOS/python",
+    "KSOS_GPU_SOLVE": "1",
+    "XLA_PYTHON_CLIENT_PREALLOCATE": "false",
+    "MUJOCO_GL": "egl"
+  },
+  "repositories": {
+    "/home/robopt/.cache/global-mppi/pusht_5090/Global-MPPI": "7d71c56880fe43d329374275788639abf2a730a1",
+    "/home/robopt/.cache/global-mppi/pusht_5090/cuKernelSOS": "276861259a8e6028c68301cd611cd1365a7e9734",
+    "/home/robopt/.cache/global-mppi/pusht_5090/ksos-tools": "86e6163040ddea1d8df5af947bbc5bac64ce1b36"
+  },
+  "build_toolkit": "CUDA 12.9 (sm_120)",
+  "methods": [
+    "ps",
+    "mppi",
+    "dial",
+    "mtp",
+    "cbo",
+    "gm"
+  ],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "cycles": 100,
+  "baseline_samples": 2000,
+  "iterations": 5,
+  "globalmppi": {
+    "samples": 1000,
+    "ksos_candidates": 1000,
+    "restarts": 5,
+    "sampling": "cacs",
+    "solver": "ADMM-cuda",
+    "warm_start": true,
+    "gpu_solve": true,
+    "mppi_noise": 0.1
+  },
+  "notes": "RTX 5090; Python 3.12.3 venv; packages from docs/env_ksos_pip_freeze.txt (--no-deps); cuKernelSOS built with CUDA 12.9 for sm_120; MuJoCo/MJX 3.3.6, JAX 0.5.3, solver commits per the benchmark map."
+}

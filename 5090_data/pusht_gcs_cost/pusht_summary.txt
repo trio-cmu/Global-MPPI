@@ -1,0 +1,16 @@
+=== PushT closed loop, cost = planner best_cost, cycle 0..100; seeds per method: PS 6, MPPI 6, DIAL 6, MTP 6, CBO 6, GlobalMPPI (gm) 6 ===
+method           median@100    mean@100     std@100      IQR@100                    plan_s median      plan_s mean 
+PS               0.0512        0.0777       0.0792       0.0148 - 0.13              0.36 s             0.43 s      
+MPPI             2.54          2.59         1.46         1.88 - 3.45                0.36 s             0.37 s      
+DIAL             0.524         0.67         0.475        0.422 - 0.937              0.38 s             0.44 s      
+MTP              0.0251        0.0726       0.083        0.0166 - 0.135             0.38 s             0.38 s      
+CBO              6.13          6.4          3.99         4.04 - 7                   0.38 s             0.38 s      
+GlobalMPPI (gm)  0.102         0.141        0.124        0.0784 - 0.11              7.56 s             7.70 s      
+
+per-seed cost at cycle 100:
+  PS               s0 0.0127  s1 0.197  s2 0.146  s3 0.0209  s4 0.0814  s5 0.00745
+  MPPI             s0 3.06  s1 2.02  s2 4.6  s3 3.58  s4 0.465  s5 1.83
+  DIAL             s0 0.442  s1 1.05  s2 0.606  s3 1.41  s4 0.415  s5 0.105
+  MTP              s0 0.0152  s1 0.171  s2 0.0293  s3 0.0118  s4 0.188  s5 0.0209
+  CBO              s0 1.99  s1 7.15  s2 3.49  s3 5.71  s4 6.55  s5 13.5
+  GlobalMPPI (gm)  s0 0.0709  s1 0.0704  s2 0.103  s3 0.112  s4 0.392  s5 0.101

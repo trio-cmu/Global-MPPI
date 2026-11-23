@@ -1,0 +1,73 @@
+2026-11-20 11:48:57 === batch start (pid 1350031), code d69dfa4
+2026-11-20 11:48:57 SKIP  ps s0
+2026-11-20 11:48:57 START ps s1 (attempt 1)
+2026-11-20 11:49:26 END   ps s1 ok
+2026-11-20 11:49:26 START ps s2 (attempt 1)
+2026-11-20 11:49:55 END   ps s2 ok
+2026-11-20 11:49:55 START ps s3 (attempt 1)
+2026-11-20 11:50:25 END   ps s3 ok
+2026-11-20 11:50:25 START ps s4 (attempt 1)
+2026-11-20 11:50:55 END   ps s4 ok
+2026-11-20 11:50:55 START ps s5 (attempt 1)
+2026-11-20 11:51:25 END   ps s5 ok
+2026-11-20 11:51:25 START mppi s0 (attempt 1)
+2026-11-20 11:52:05 END   mppi s0 ok
+2026-11-20 11:52:05 START mppi s1 (attempt 1)
+2026-11-20 11:52:34 END   mppi s1 ok
+2026-11-20 11:52:34 START mppi s2 (attempt 1)
+2026-11-20 11:53:03 END   mppi s2 ok
+2026-11-20 11:53:03 START mppi s3 (attempt 1)
+2026-11-20 11:53:33 END   mppi s3 ok
+2026-11-20 11:53:33 START mppi s4 (attempt 1)
+2026-11-20 11:54:02 END   mppi s4 ok
+2026-11-20 11:54:02 START mppi s5 (attempt 1)
+2026-11-20 11:54:31 END   mppi s5 ok
+2026-11-20 11:54:31 START dial s0 (attempt 1)
+2026-11-20 11:55:10 END   dial s0 ok
+2026-11-20 11:55:10 START dial s1 (attempt 1)
+2026-11-20 11:55:41 END   dial s1 ok
+2026-11-20 11:55:41 START dial s2 (attempt 1)
+2026-11-20 11:56:11 END   dial s2 ok
+2026-11-20 11:56:11 START dial s3 (attempt 1)
+2026-11-20 11:56:41 END   dial s3 ok
+2026-11-20 11:56:41 START dial s4 (attempt 1)
+2026-11-20 11:57:10 END   dial s4 ok
+2026-11-20 11:57:10 START dial s5 (attempt 1)
+2026-11-20 11:57:40 END   dial s5 ok
+2026-11-20 11:57:40 START mtp s0 (attempt 1)
+2026-11-20 11:58:24 END   mtp s0 ok
+2026-11-20 11:58:24 START mtp s1 (attempt 1)
+2026-11-20 11:58:55 END   mtp s1 ok
+2026-11-20 11:58:55 START mtp s2 (attempt 1)
+2026-11-20 11:59:27 END   mtp s2 ok
+2026-11-20 11:59:27 START mtp s3 (attempt 1)
+2026-11-20 11:59:58 END   mtp s3 ok
+2026-11-20 11:59:58 START mtp s4 (attempt 1)
+2026-11-20 12:00:29 END   mtp s4 ok
+2026-11-20 12:00:29 START mtp s5 (attempt 1)
+2026-11-20 12:01:00 END   mtp s5 ok
+2026-11-20 12:01:00 START cbo s0 (attempt 1)
+2026-11-20 12:01:39 END   cbo s0 ok
+2026-11-20 12:01:39 START cbo s1 (attempt 1)
+2026-11-20 12:02:09 END   cbo s1 ok
+2026-11-20 12:02:09 START cbo s2 (attempt 1)
+2026-11-20 12:02:38 END   cbo s2 ok
+2026-11-20 12:02:38 START cbo s3 (attempt 1)
+2026-11-20 12:03:07 END   cbo s3 ok
+2026-11-20 12:03:07 START cbo s4 (attempt 1)
+2026-11-20 12:03:37 END   cbo s4 ok
+2026-11-20 12:03:37 START cbo s5 (attempt 1)
+2026-11-20 12:04:06 END   cbo s5 ok
+2026-11-20 12:04:06 START gm s0 (attempt 1)
+2026-11-20 12:19:37 END   gm s0 ok
+2026-11-20 12:19:37 START gm s1 (attempt 1)
+2026-11-20 12:35:07 END   gm s1 ok
+2026-11-20 12:35:07 START gm s2 (attempt 1)
+2026-11-20 12:50:31 END   gm s2 ok
+2026-11-20 12:50:31 START gm s3 (attempt 1)
+2026-11-20 13:06:02 END   gm s3 ok
+2026-11-20 13:06:02 START gm s4 (attempt 1)
+2026-11-20 13:20:56 END   gm s4 ok
+2026-11-20 13:20:56 START gm s5 (attempt 1)
+2026-11-20 13:39:12 END   gm s5 ok
+2026-11-20 13:39:14 === batch end: 0 gave up

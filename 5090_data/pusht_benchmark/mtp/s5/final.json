@@ -1,0 +1,14 @@
+{
+  "complete": true,
+  "method": "mtp",
+  "seed": 5,
+  "finished": "2026-11-19T18:53:25-05:00",
+  "returncode": 0,
+  "timed_out": false,
+  "wall_s": 64.8809511391446,
+  "attempt": 1,
+  "last_cycle": 100,
+  "solve_paths": {},
+  "final_cost": 0.0002193096443079412,
+  "plan_s_median_excluding_jit": 0.3545
+}
