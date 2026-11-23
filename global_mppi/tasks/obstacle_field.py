@@ -38,7 +38,7 @@ class ObstacleField(Task):
         layout_seed: int = 19,
         wall_weight: float = 5.0,
         wall_sharpness: float = 50.0,
-        position_weight: float = 5.0,
+        position_weight: float = 10.0,
         velocity_weight: float = 0.1,
         control_weight: float = 0.1,
     ) -> None:
@@ -48,7 +48,7 @@ class ObstacleField(Task):
             layout_seed: seed of ``make_layout`` (default 19: the fixed benchmark layout).
             wall_weight: Multiplier on the exponential obstacle proximity cost (as bugtrap's wall_weight).
             wall_sharpness: Decay rate in the ``exp(-sharpness * dist)`` obstacle cost.
-            position_weight: Weight on the squared position tracking error.
+            position_weight: Weight on the distance to the goal |p - goal| (not squared).
             velocity_weight: Weight on the squared velocity penalty.
             control_weight: Weight on the squared control penalty.
         """
@@ -85,9 +85,8 @@ class ObstacleField(Task):
 
     def terminal_cost(self, state: mjx.Data) -> jax.Array:
         """The terminal cost ϕ(x_T): position tracking + velocity reg."""
-        position_cost = jnp.sum(
-            jnp.square(state.site_xpos[self.pointmass_id] - state.mocap_pos[0])
-        )
+        # Euclidean distance to the goal (not squared): the pull stays 10 per metre near the goal.
+        position_cost = jnp.linalg.norm(state.site_xpos[self.pointmass_id] - state.mocap_pos[0])
         velocity_cost = jnp.sum(jnp.square(state.qvel))
         return (
             self.position_weight * position_cost
