@@ -106,14 +106,14 @@
   },
   "cukernelsos_python": "/home/junlong/kernelSOS_project/cuKernelSOS_zq/python",
   "gpu_before_run": {
-    "util_percent": 100.0,
-    "mem_used_mib": 11139.0
+    "util_percent": 93.0,
+    "mem_used_mib": 4414.0
   },
   "code": {
     "global_mppi": "/home/junlong/wt_obst/global_mppi/__init__.py",
     "mujoco": "3.13.0",
     "mujoco_mjx": "3.13.0",
-    "git_commit": "030d2ed",
+    "git_commit": "2b61cca",
     "git_dirty": true
   }
 }

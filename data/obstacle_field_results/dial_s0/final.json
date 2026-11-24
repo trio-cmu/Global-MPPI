@@ -1,13 +1,13 @@
 {
-  "final_x": 0.27995049914794706,
-  "final_y": -0.009437146072485051,
-  "final_distance": 0.03140210383405223,
-  "path_length": 0.6566875888126232,
-  "min_clearance": 0.017940427471263135,
+  "final_x": 0.27739608124548787,
+  "final_y": -0.027528174182344933,
+  "final_distance": 0.03883742578265061,
+  "path_length": 0.7674147551734208,
+  "min_clearance": 0.018564355356858533,
   "collision": false,
   "reached": false,
   "reached_5cm": true,
   "sim_time": 2.0000000000000013,
   "cycles": 100,
-  "mean_plan_s_excl_cycle0": 19.432565431402185
+  "mean_plan_s_excl_cycle0": 5.462389192195854
 }
