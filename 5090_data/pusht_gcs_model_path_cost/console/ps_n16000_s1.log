@@ -1,0 +1,430 @@
+Failed to import mujoco.mjx.third_party.mujoco_warp as mujoco_warp: No module named 'warp.context'
+Running predictive sampling
+
+=== Seed 1 ===
+Planning with 100 steps over a 1.0 second horizon with 6 knots.
+Planning at 50.0 Hz, simulating at 1000.0 Hz
+Jitting the controller...
+Time to jit: 6.270 seconds
+Recording video to /home/robopt/Documents/zhongqi/Global-MPPI/5090_data/pusht_gcs_model_path_cost/ps_n16000/s1/simulation_20261120_163327.mp4
+
+Cycle 0: Best cost: 0.1608617901802063, Best sample: 0.16067492961883545
+Cost for optimal action (cycle 0): [Array(0.16086179, dtype=float32)]
+
+Cycle 0: plan time: 3.5095s
+Realtime rate: 0.00, plan time: 3.5095s
+Cycle 1.0: Best cost: 0.1783418208360672, Best sample: 0.17827890813350677
+
+Cycle 1.0: plan time: 2.2685s
+Realtime rate: 0.01, plan time: 2.2685s
+Cycle 2.0: Best cost: 0.19639936089515686, Best sample: 0.1964963674545288
+
+Cycle 2.0: plan time: 2.2265s
+Realtime rate: 0.01, plan time: 2.2265s
+Cycle 3.0: Best cost: 0.1733458936214447, Best sample: 0.1736477166414261
+
+Cycle 3.0: plan time: 2.2962s
+Realtime rate: 0.01, plan time: 2.2962s
+Cycle 4.0: Best cost: 0.19128084182739258, Best sample: 0.1903810352087021
+
+Cycle 4.0: plan time: 2.2504s
+Realtime rate: 0.01, plan time: 2.2504s
+Cycle 5.0: Best cost: 0.1840275377035141, Best sample: 0.18393462896347046
+
+Cycle 5.0: plan time: 2.2324s
+Realtime rate: 0.01, plan time: 2.2324s
+Cycle 6.0: Best cost: 0.17283695936203003, Best sample: 0.17247959971427917
+
+Cycle 6.0: plan time: 2.2394s
+Realtime rate: 0.01, plan time: 2.2394s
+Cycle 7.0: Best cost: 0.1814175546169281, Best sample: 0.1811116337776184
+
+Cycle 7.0: plan time: 2.2416s
+Realtime rate: 0.01, plan time: 2.2416s
+Cycle 8.0: Best cost: 0.17946180701255798, Best sample: 0.17980146408081055
+
+Cycle 8.0: plan time: 2.2972s
+Realtime rate: 0.01, plan time: 2.2972s
+Cycle 9.0: Best cost: 0.17868712544441223, Best sample: 0.17890667915344238
+
+Cycle 9.0: plan time: 2.2356s
+Realtime rate: 0.01, plan time: 2.2356s
+Cycle 10.0: Best cost: 0.1876300871372223, Best sample: 0.18780681490898132
+Cost for optimal action (cycle 10.0): [Array(0.16086179, dtype=float32), Array(0.17834182, dtype=float32), Array(0.19639936, dtype=float32), Array(0.1733459, dtype=float32), Array(0.19128084, dtype=float32), Array(0.18402754, dtype=float32), Array(0.17283696, dtype=float32), Array(0.18141755, dtype=float32), Array(0.1794618, dtype=float32), Array(0.17868713, dtype=float32), Array(0.18763009, dtype=float32)]
+
+Cycle 10.0: plan time: 2.2939s
+Realtime rate: 0.01, plan time: 2.2939s
+Cycle 11.0: Best cost: 0.17812484502792358, Best sample: 0.1779138296842575
+
+Cycle 11.0: plan time: 2.2799s
+Realtime rate: 0.01, plan time: 2.2799s
+Cycle 12.0: Best cost: 0.183364599943161, Best sample: 0.18318581581115723
+
+Cycle 12.0: plan time: 2.2681s
+Realtime rate: 0.01, plan time: 2.2681s
+Cycle 13.0: Best cost: 0.18409080803394318, Best sample: 0.18410441279411316
+
+Cycle 13.0: plan time: 2.2446s
+Realtime rate: 0.01, plan time: 2.2446s
+Cycle 14.0: Best cost: 0.18744304776191711, Best sample: 0.18746426701545715
+
+Cycle 14.0: plan time: 2.2696s
+Realtime rate: 0.01, plan time: 2.2696s
+Cycle 15.0: Best cost: 0.18580910563468933, Best sample: 0.1855553388595581
+
+Cycle 15.0: plan time: 2.2623s
+Realtime rate: 0.01, plan time: 2.2623s
+Cycle 16.0: Best cost: 0.18253031373023987, Best sample: 0.18240921199321747
+
+Cycle 16.0: plan time: 2.2576s
+Realtime rate: 0.01, plan time: 2.2576s
+Cycle 17.0: Best cost: 0.1792762130498886, Best sample: 0.17940008640289307
+
+Cycle 17.0: plan time: 2.2582s
+Realtime rate: 0.01, plan time: 2.2582s
+Cycle 18.0: Best cost: 0.18460845947265625, Best sample: 0.18463675677776337
+
+Cycle 18.0: plan time: 2.2599s
+Realtime rate: 0.01, plan time: 2.2599s
+Cycle 19.0: Best cost: 0.18559971451759338, Best sample: 0.1855597347021103
+
+Cycle 19.0: plan time: 2.2517s
+Realtime rate: 0.01, plan time: 2.2517s
+Cycle 20.0: Best cost: 0.1869388073682785, Best sample: 0.1869698166847229
+Cost for optimal action (cycle 20.0): [Array(0.16086179, dtype=float32), Array(0.17834182, dtype=float32), Array(0.19639936, dtype=float32), Array(0.1733459, dtype=float32), Array(0.19128084, dtype=float32), Array(0.18402754, dtype=float32), Array(0.17283696, dtype=float32), Array(0.18141755, dtype=float32), Array(0.1794618, dtype=float32), Array(0.17868713, dtype=float32), Array(0.18763009, dtype=float32), Array(0.17812485, dtype=float32), Array(0.1833646, dtype=float32), Array(0.18409081, dtype=float32), Array(0.18744305, dtype=float32), Array(0.1858091, dtype=float32), Array(0.18253031, dtype=float32), Array(0.17927621, dtype=float32), Array(0.18460846, dtype=float32), Array(0.18559971, dtype=float32), Array(0.1869388, dtype=float32)]
+
+Cycle 20.0: plan time: 2.2458s
+Realtime rate: 0.01, plan time: 2.2458s
+Cycle 21.0: Best cost: 0.18498849868774414, Best sample: 0.18477092683315277
+
+Cycle 21.0: plan time: 2.2542s
+Realtime rate: 0.01, plan time: 2.2542s
+Cycle 22.0: Best cost: 0.17893895506858826, Best sample: 0.17863991856575012
+
+Cycle 22.0: plan time: 2.2591s
+Realtime rate: 0.01, plan time: 2.2591s
+Cycle 23.0: Best cost: 0.18639416992664337, Best sample: 0.1866484135389328
+
+Cycle 23.0: plan time: 2.2585s
+Realtime rate: 0.01, plan time: 2.2585s
+Cycle 24.0: Best cost: 0.1768886148929596, Best sample: 0.17671582102775574
+
+Cycle 24.0: plan time: 2.2601s
+Realtime rate: 0.01, plan time: 2.2601s
+Cycle 25.0: Best cost: 0.18511569499969482, Best sample: 0.18500916659832
+
+Cycle 25.0: plan time: 2.2595s
+Realtime rate: 0.01, plan time: 2.2595s
+Cycle 26.0: Best cost: 0.181722030043602, Best sample: 0.1815284788608551
+
+Cycle 26.0: plan time: 2.2538s
+Realtime rate: 0.01, plan time: 2.2538s
+Cycle 27.0: Best cost: 0.1709759384393692, Best sample: 0.17074930667877197
+
+Cycle 27.0: plan time: 2.2450s
+Realtime rate: 0.01, plan time: 2.2450s
+Cycle 28.0: Best cost: 0.17604932188987732, Best sample: 0.17620232701301575
+
+Cycle 28.0: plan time: 2.2571s
+Realtime rate: 0.01, plan time: 2.2571s
+Cycle 29.0: Best cost: 0.1763753741979599, Best sample: 0.17612388730049133
+
+Cycle 29.0: plan time: 2.2645s
+Realtime rate: 0.01, plan time: 2.2645s
+Cycle 30.0: Best cost: 0.17825384438037872, Best sample: 0.17821338772773743
+Cost for optimal action (cycle 30.0): [Array(0.16086179, dtype=float32), Array(0.17834182, dtype=float32), Array(0.19639936, dtype=float32), Array(0.1733459, dtype=float32), Array(0.19128084, dtype=float32), Array(0.18402754, dtype=float32), Array(0.17283696, dtype=float32), Array(0.18141755, dtype=float32), Array(0.1794618, dtype=float32), Array(0.17868713, dtype=float32), Array(0.18763009, dtype=float32), Array(0.17812485, dtype=float32), Array(0.1833646, dtype=float32), Array(0.18409081, dtype=float32), Array(0.18744305, dtype=float32), Array(0.1858091, dtype=float32), Array(0.18253031, dtype=float32), Array(0.17927621, dtype=float32), Array(0.18460846, dtype=float32), Array(0.18559971, dtype=float32), Array(0.1869388, dtype=float32), Array(0.1849885, dtype=float32), Array(0.17893896, dtype=float32), Array(0.18639417, dtype=float32), Array(0.17688861, dtype=float32), Array(0.1851157, dtype=float32), Array(0.18172203, dtype=float32), Array(0.17097594, dtype=float32), Array(0.17604932, dtype=float32), Array(0.17637537, dtype=float32), Array(0.17825384, dtype=float32)]
+
+Cycle 30.0: plan time: 2.2636s
+Realtime rate: 0.01, plan time: 2.2636s
+Cycle 31.0: Best cost: 0.18971337378025055, Best sample: 0.18970681726932526
+
+Cycle 31.0: plan time: 2.2473s
+Realtime rate: 0.01, plan time: 2.2473s
+Cycle 32.0: Best cost: 0.18240472674369812, Best sample: 0.1826930195093155
+
+Cycle 32.0: plan time: 2.2519s
+Realtime rate: 0.01, plan time: 2.2519s
+Cycle 33.0: Best cost: 0.1741301715373993, Best sample: 0.17434242367744446
+
+Cycle 33.0: plan time: 2.2278s
+Realtime rate: 0.01, plan time: 2.2278s
+Cycle 34.0: Best cost: 0.17947158217430115, Best sample: 0.179164320230484
+
+Cycle 34.0: plan time: 2.2563s
+Realtime rate: 0.01, plan time: 2.2563s
+Cycle 35.0: Best cost: 0.17572009563446045, Best sample: 0.17586684226989746
+
+Cycle 35.0: plan time: 2.2629s
+Realtime rate: 0.01, plan time: 2.2629s
+Cycle 36.0: Best cost: 0.17628329992294312, Best sample: 0.17648912966251373
+
+Cycle 36.0: plan time: 2.2525s
+Realtime rate: 0.01, plan time: 2.2525s
+Cycle 37.0: Best cost: 0.1799621880054474, Best sample: 0.1797073483467102
+
+Cycle 37.0: plan time: 2.2548s
+Realtime rate: 0.01, plan time: 2.2548s
+Cycle 38.0: Best cost: 0.18156012892723083, Best sample: 0.18123090267181396
+
+Cycle 38.0: plan time: 2.2656s
+Realtime rate: 0.01, plan time: 2.2656s
+Cycle 39.0: Best cost: 0.17712193727493286, Best sample: 0.1772066354751587
+
+Cycle 39.0: plan time: 2.2572s
+Realtime rate: 0.01, plan time: 2.2572s
+Cycle 40.0: Best cost: 0.1842147707939148, Best sample: 0.18411266803741455
+Cost for optimal action (cycle 40.0): [Array(0.16086179, dtype=float32), Array(0.17834182, dtype=float32), Array(0.19639936, dtype=float32), Array(0.1733459, dtype=float32), Array(0.19128084, dtype=float32), Array(0.18402754, dtype=float32), Array(0.17283696, dtype=float32), Array(0.18141755, dtype=float32), Array(0.1794618, dtype=float32), Array(0.17868713, dtype=float32), Array(0.18763009, dtype=float32), Array(0.17812485, dtype=float32), Array(0.1833646, dtype=float32), Array(0.18409081, dtype=float32), Array(0.18744305, dtype=float32), Array(0.1858091, dtype=float32), Array(0.18253031, dtype=float32), Array(0.17927621, dtype=float32), Array(0.18460846, dtype=float32), Array(0.18559971, dtype=float32), Array(0.1869388, dtype=float32), Array(0.1849885, dtype=float32), Array(0.17893896, dtype=float32), Array(0.18639417, dtype=float32), Array(0.17688861, dtype=float32), Array(0.1851157, dtype=float32), Array(0.18172203, dtype=float32), Array(0.17097594, dtype=float32), Array(0.17604932, dtype=float32), Array(0.17637537, dtype=float32), Array(0.17825384, dtype=float32), Array(0.18971337, dtype=float32), Array(0.18240473, dtype=float32), Array(0.17413017, dtype=float32), Array(0.17947158, dtype=float32), Array(0.1757201, dtype=float32), Array(0.1762833, dtype=float32), Array(0.17996219, dtype=float32), Array(0.18156013, dtype=float32), Array(0.17712194, dtype=float32), Array(0.18421477, dtype=float32)]
+
+Cycle 40.0: plan time: 2.2639s
+Realtime rate: 0.01, plan time: 2.2639s
+Cycle 41.0: Best cost: 0.1691562831401825, Best sample: 0.16907259821891785
+
+Cycle 41.0: plan time: 2.2213s
+Realtime rate: 0.01, plan time: 2.2213s
+Cycle 42.0: Best cost: 0.1674482375383377, Best sample: 0.16724562644958496
+
+Cycle 42.0: plan time: 2.2545s
+Realtime rate: 0.01, plan time: 2.2545s
+Cycle 43.0: Best cost: 0.17189544439315796, Best sample: 0.17191287875175476
+
+Cycle 43.0: plan time: 2.2505s
+Realtime rate: 0.01, plan time: 2.2505s
+Cycle 44.0: Best cost: 0.16466979682445526, Best sample: 0.1646268218755722
+
+Cycle 44.0: plan time: 2.2575s
+Realtime rate: 0.01, plan time: 2.2575s
+Cycle 45.0: Best cost: 0.1479172706604004, Best sample: 0.1480768322944641
+
+Cycle 45.0: plan time: 2.2600s
+Realtime rate: 0.01, plan time: 2.2600s
+Cycle 46.0: Best cost: 0.12162509560585022, Best sample: 0.12174969911575317
+
+Cycle 46.0: plan time: 2.2540s
+Realtime rate: 0.01, plan time: 2.2540s
+Cycle 47.0: Best cost: 0.10561110079288483, Best sample: 0.10561488568782806
+
+Cycle 47.0: plan time: 2.2476s
+Realtime rate: 0.01, plan time: 2.2476s
+Cycle 48.0: Best cost: 0.08997838199138641, Best sample: 0.08985777199268341
+
+Cycle 48.0: plan time: 2.2577s
+Realtime rate: 0.01, plan time: 2.2577s
+Cycle 49.0: Best cost: 0.07240469008684158, Best sample: 0.07238069921731949
+
+Cycle 49.0: plan time: 2.2531s
+Realtime rate: 0.01, plan time: 2.2531s
+Cycle 50.0: Best cost: 0.058620527386665344, Best sample: 0.05863116681575775
+Cost for optimal action (cycle 50.0): [Array(0.16086179, dtype=float32), Array(0.17834182, dtype=float32), Array(0.19639936, dtype=float32), Array(0.1733459, dtype=float32), Array(0.19128084, dtype=float32), Array(0.18402754, dtype=float32), Array(0.17283696, dtype=float32), Array(0.18141755, dtype=float32), Array(0.1794618, dtype=float32), Array(0.17868713, dtype=float32), Array(0.18763009, dtype=float32), Array(0.17812485, dtype=float32), Array(0.1833646, dtype=float32), Array(0.18409081, dtype=float32), Array(0.18744305, dtype=float32), Array(0.1858091, dtype=float32), Array(0.18253031, dtype=float32), Array(0.17927621, dtype=float32), Array(0.18460846, dtype=float32), Array(0.18559971, dtype=float32), Array(0.1869388, dtype=float32), Array(0.1849885, dtype=float32), Array(0.17893896, dtype=float32), Array(0.18639417, dtype=float32), Array(0.17688861, dtype=float32), Array(0.1851157, dtype=float32), Array(0.18172203, dtype=float32), Array(0.17097594, dtype=float32), Array(0.17604932, dtype=float32), Array(0.17637537, dtype=float32), Array(0.17825384, dtype=float32), Array(0.18971337, dtype=float32), Array(0.18240473, dtype=float32), Array(0.17413017, dtype=float32), Array(0.17947158, dtype=float32), Array(0.1757201, dtype=float32), Array(0.1762833, dtype=float32), Array(0.17996219, dtype=float32), Array(0.18156013, dtype=float32), Array(0.17712194, dtype=float32), Array(0.18421477, dtype=float32), Array(0.16915628, dtype=float32), Array(0.16744824, dtype=float32), Array(0.17189544, dtype=float32), Array(0.1646698, dtype=float32), Array(0.14791727, dtype=float32), Array(0.1216251, dtype=float32), Array(0.1056111, dtype=float32), Array(0.08997838, dtype=float32), Array(0.07240469, dtype=float32), Array(0.05862053, dtype=float32)]
+
+Cycle 50.0: plan time: 2.2575s
+Realtime rate: 0.01, plan time: 2.2575s
+Cycle 51.0: Best cost: 0.05097706988453865, Best sample: 0.050891976803541183
+
+Cycle 51.0: plan time: 2.2594s
+Realtime rate: 0.01, plan time: 2.2594s
+Cycle 52.0: Best cost: 0.04601253941655159, Best sample: 0.04605450481176376
+
+Cycle 52.0: plan time: 2.2677s
+Realtime rate: 0.01, plan time: 2.2677s
+Cycle 53.0: Best cost: 0.04174162447452545, Best sample: 0.04173895716667175
+
+Cycle 53.0: plan time: 2.2622s
+Realtime rate: 0.01, plan time: 2.2622s
+Cycle 54.0: Best cost: 0.039210155606269836, Best sample: 0.03925071656703949
+
+Cycle 54.0: plan time: 2.2541s
+Realtime rate: 0.01, plan time: 2.2541s
+Cycle 55.0: Best cost: 0.03772498294711113, Best sample: 0.0376349613070488
+
+Cycle 55.0: plan time: 2.2647s
+Realtime rate: 0.01, plan time: 2.2647s
+Cycle 56.0: Best cost: 0.03428516164422035, Best sample: 0.034301869571208954
+
+Cycle 56.0: plan time: 2.2692s
+Realtime rate: 0.01, plan time: 2.2692s
+Cycle 57.0: Best cost: 0.035381101071834564, Best sample: 0.03528520464897156
+
+Cycle 57.0: plan time: 2.2575s
+Realtime rate: 0.01, plan time: 2.2575s
+Cycle 58.0: Best cost: 0.0329936146736145, Best sample: 0.03290091082453728
+
+Cycle 58.0: plan time: 2.2664s
+Realtime rate: 0.01, plan time: 2.2664s
+Cycle 59.0: Best cost: 0.03500866889953613, Best sample: 0.03494584560394287
+
+Cycle 59.0: plan time: 2.2653s
+Realtime rate: 0.01, plan time: 2.2653s
+Cycle 60.0: Best cost: 0.03569018095731735, Best sample: 0.03564618155360222
+Cost for optimal action (cycle 60.0): [Array(0.16086179, dtype=float32), Array(0.17834182, dtype=float32), Array(0.19639936, dtype=float32), Array(0.1733459, dtype=float32), Array(0.19128084, dtype=float32), Array(0.18402754, dtype=float32), Array(0.17283696, dtype=float32), Array(0.18141755, dtype=float32), Array(0.1794618, dtype=float32), Array(0.17868713, dtype=float32), Array(0.18763009, dtype=float32), Array(0.17812485, dtype=float32), Array(0.1833646, dtype=float32), Array(0.18409081, dtype=float32), Array(0.18744305, dtype=float32), Array(0.1858091, dtype=float32), Array(0.18253031, dtype=float32), Array(0.17927621, dtype=float32), Array(0.18460846, dtype=float32), Array(0.18559971, dtype=float32), Array(0.1869388, dtype=float32), Array(0.1849885, dtype=float32), Array(0.17893896, dtype=float32), Array(0.18639417, dtype=float32), Array(0.17688861, dtype=float32), Array(0.1851157, dtype=float32), Array(0.18172203, dtype=float32), Array(0.17097594, dtype=float32), Array(0.17604932, dtype=float32), Array(0.17637537, dtype=float32), Array(0.17825384, dtype=float32), Array(0.18971337, dtype=float32), Array(0.18240473, dtype=float32), Array(0.17413017, dtype=float32), Array(0.17947158, dtype=float32), Array(0.1757201, dtype=float32), Array(0.1762833, dtype=float32), Array(0.17996219, dtype=float32), Array(0.18156013, dtype=float32), Array(0.17712194, dtype=float32), Array(0.18421477, dtype=float32), Array(0.16915628, dtype=float32), Array(0.16744824, dtype=float32), Array(0.17189544, dtype=float32), Array(0.1646698, dtype=float32), Array(0.14791727, dtype=float32), Array(0.1216251, dtype=float32), Array(0.1056111, dtype=float32), Array(0.08997838, dtype=float32), Array(0.07240469, dtype=float32), Array(0.05862053, dtype=float32), Array(0.05097707, dtype=float32), Array(0.04601254, dtype=float32), Array(0.04174162, dtype=float32), Array(0.03921016, dtype=float32), Array(0.03772498, dtype=float32), Array(0.03428516, dtype=float32), Array(0.0353811, dtype=float32), Array(0.03299361, dtype=float32), Array(0.03500867, dtype=float32), Array(0.03569018, dtype=float32)]
+
+Cycle 60.0: plan time: 2.2726s
+Realtime rate: 0.01, plan time: 2.2726s
+Cycle 61.0: Best cost: 0.03289023041725159, Best sample: 0.032922204583883286
+
+Cycle 61.0: plan time: 2.2753s
+Realtime rate: 0.01, plan time: 2.2753s
+Cycle 62.0: Best cost: 0.030908524990081787, Best sample: 0.030904510989785194
+
+Cycle 62.0: plan time: 2.2653s
+Realtime rate: 0.01, plan time: 2.2653s
+Cycle 63.0: Best cost: 0.029593175277113914, Best sample: 0.029519328847527504
+
+Cycle 63.0: plan time: 2.2676s
+Realtime rate: 0.01, plan time: 2.2676s
+Cycle 64.0: Best cost: 0.028589151799678802, Best sample: 0.028520381078124046
+
+Cycle 64.0: plan time: 2.2638s
+Realtime rate: 0.01, plan time: 2.2638s
+Cycle 65.0: Best cost: 0.027934977784752846, Best sample: 0.02787388116121292
+
+Cycle 65.0: plan time: 2.2620s
+Realtime rate: 0.01, plan time: 2.2620s
+Cycle 66.0: Best cost: 0.028340889140963554, Best sample: 0.028287135064601898
+
+Cycle 66.0: plan time: 2.2578s
+Realtime rate: 0.01, plan time: 2.2578s
+Cycle 67.0: Best cost: 0.028947044163942337, Best sample: 0.02889537811279297
+
+Cycle 67.0: plan time: 2.2716s
+Realtime rate: 0.01, plan time: 2.2716s
+Cycle 68.0: Best cost: 0.02868492901325226, Best sample: 0.028689667582511902
+
+Cycle 68.0: plan time: 2.2674s
+Realtime rate: 0.01, plan time: 2.2674s
+Cycle 69.0: Best cost: 0.027843937277793884, Best sample: 0.027851704508066177
+
+Cycle 69.0: plan time: 2.2755s
+Realtime rate: 0.01, plan time: 2.2755s
+Cycle 70.0: Best cost: 0.027815522626042366, Best sample: 0.027799781411886215
+Cost for optimal action (cycle 70.0): [Array(0.16086179, dtype=float32), Array(0.17834182, dtype=float32), Array(0.19639936, dtype=float32), Array(0.1733459, dtype=float32), Array(0.19128084, dtype=float32), Array(0.18402754, dtype=float32), Array(0.17283696, dtype=float32), Array(0.18141755, dtype=float32), Array(0.1794618, dtype=float32), Array(0.17868713, dtype=float32), Array(0.18763009, dtype=float32), Array(0.17812485, dtype=float32), Array(0.1833646, dtype=float32), Array(0.18409081, dtype=float32), Array(0.18744305, dtype=float32), Array(0.1858091, dtype=float32), Array(0.18253031, dtype=float32), Array(0.17927621, dtype=float32), Array(0.18460846, dtype=float32), Array(0.18559971, dtype=float32), Array(0.1869388, dtype=float32), Array(0.1849885, dtype=float32), Array(0.17893896, dtype=float32), Array(0.18639417, dtype=float32), Array(0.17688861, dtype=float32), Array(0.1851157, dtype=float32), Array(0.18172203, dtype=float32), Array(0.17097594, dtype=float32), Array(0.17604932, dtype=float32), Array(0.17637537, dtype=float32), Array(0.17825384, dtype=float32), Array(0.18971337, dtype=float32), Array(0.18240473, dtype=float32), Array(0.17413017, dtype=float32), Array(0.17947158, dtype=float32), Array(0.1757201, dtype=float32), Array(0.1762833, dtype=float32), Array(0.17996219, dtype=float32), Array(0.18156013, dtype=float32), Array(0.17712194, dtype=float32), Array(0.18421477, dtype=float32), Array(0.16915628, dtype=float32), Array(0.16744824, dtype=float32), Array(0.17189544, dtype=float32), Array(0.1646698, dtype=float32), Array(0.14791727, dtype=float32), Array(0.1216251, dtype=float32), Array(0.1056111, dtype=float32), Array(0.08997838, dtype=float32), Array(0.07240469, dtype=float32), Array(0.05862053, dtype=float32), Array(0.05097707, dtype=float32), Array(0.04601254, dtype=float32), Array(0.04174162, dtype=float32), Array(0.03921016, dtype=float32), Array(0.03772498, dtype=float32), Array(0.03428516, dtype=float32), Array(0.0353811, dtype=float32), Array(0.03299361, dtype=float32), Array(0.03500867, dtype=float32), Array(0.03569018, dtype=float32), Array(0.03289023, dtype=float32), Array(0.03090852, dtype=float32), Array(0.02959318, dtype=float32), Array(0.02858915, dtype=float32), Array(0.02793498, dtype=float32), Array(0.02834089, dtype=float32), Array(0.02894704, dtype=float32), Array(0.02868493, dtype=float32), Array(0.02784394, dtype=float32), Array(0.02781552, dtype=float32)]
+
+Cycle 70.0: plan time: 2.2360s
+Realtime rate: 0.01, plan time: 2.2360s
+Cycle 71.0: Best cost: 0.02604176104068756, Best sample: 0.026048563420772552
+
+Cycle 71.0: plan time: 2.2741s
+Realtime rate: 0.01, plan time: 2.2741s
+Cycle 72.0: Best cost: 0.023514267057180405, Best sample: 0.023510437458753586
+
+Cycle 72.0: plan time: 2.2297s
+Realtime rate: 0.01, plan time: 2.2297s
+Cycle 73.0: Best cost: 0.01993858627974987, Best sample: 0.019935160875320435
+
+Cycle 73.0: plan time: 2.2241s
+Realtime rate: 0.01, plan time: 2.2241s
+Cycle 74.0: Best cost: 0.01612119749188423, Best sample: 0.01610412262380123
+
+Cycle 74.0: plan time: 2.2500s
+Realtime rate: 0.01, plan time: 2.2500s
+Cycle 75.0: Best cost: 0.016035620123147964, Best sample: 0.016032597050070763
+
+Cycle 75.0: plan time: 2.3082s
+Realtime rate: 0.01, plan time: 2.3082s
+Cycle 76.0: Best cost: 0.015918709337711334, Best sample: 0.015925785526633263
+
+Cycle 76.0: plan time: 2.2970s
+Realtime rate: 0.01, plan time: 2.2970s
+Cycle 77.0: Best cost: 0.01480931881815195, Best sample: 0.014819705858826637
+
+Cycle 77.0: plan time: 2.2769s
+Realtime rate: 0.01, plan time: 2.2769s
+Cycle 78.0: Best cost: 0.013182053342461586, Best sample: 0.01320543885231018
+
+Cycle 78.0: plan time: 2.2817s
+Realtime rate: 0.01, plan time: 2.2817s
+Cycle 79.0: Best cost: 0.011707823723554611, Best sample: 0.01173121016472578
+
+Cycle 79.0: plan time: 2.2951s
+Realtime rate: 0.01, plan time: 2.2951s
+Cycle 80.0: Best cost: 0.010255802422761917, Best sample: 0.010279189795255661
+Cost for optimal action (cycle 80.0): [Array(0.16086179, dtype=float32), Array(0.17834182, dtype=float32), Array(0.19639936, dtype=float32), Array(0.1733459, dtype=float32), Array(0.19128084, dtype=float32), Array(0.18402754, dtype=float32), Array(0.17283696, dtype=float32), Array(0.18141755, dtype=float32), Array(0.1794618, dtype=float32), Array(0.17868713, dtype=float32), Array(0.18763009, dtype=float32), Array(0.17812485, dtype=float32), Array(0.1833646, dtype=float32), Array(0.18409081, dtype=float32), Array(0.18744305, dtype=float32), Array(0.1858091, dtype=float32), Array(0.18253031, dtype=float32), Array(0.17927621, dtype=float32), Array(0.18460846, dtype=float32), Array(0.18559971, dtype=float32), Array(0.1869388, dtype=float32), Array(0.1849885, dtype=float32), Array(0.17893896, dtype=float32), Array(0.18639417, dtype=float32), Array(0.17688861, dtype=float32), Array(0.1851157, dtype=float32), Array(0.18172203, dtype=float32), Array(0.17097594, dtype=float32), Array(0.17604932, dtype=float32), Array(0.17637537, dtype=float32), Array(0.17825384, dtype=float32), Array(0.18971337, dtype=float32), Array(0.18240473, dtype=float32), Array(0.17413017, dtype=float32), Array(0.17947158, dtype=float32), Array(0.1757201, dtype=float32), Array(0.1762833, dtype=float32), Array(0.17996219, dtype=float32), Array(0.18156013, dtype=float32), Array(0.17712194, dtype=float32), Array(0.18421477, dtype=float32), Array(0.16915628, dtype=float32), Array(0.16744824, dtype=float32), Array(0.17189544, dtype=float32), Array(0.1646698, dtype=float32), Array(0.14791727, dtype=float32), Array(0.1216251, dtype=float32), Array(0.1056111, dtype=float32), Array(0.08997838, dtype=float32), Array(0.07240469, dtype=float32), Array(0.05862053, dtype=float32), Array(0.05097707, dtype=float32), Array(0.04601254, dtype=float32), Array(0.04174162, dtype=float32), Array(0.03921016, dtype=float32), Array(0.03772498, dtype=float32), Array(0.03428516, dtype=float32), Array(0.0353811, dtype=float32), Array(0.03299361, dtype=float32), Array(0.03500867, dtype=float32), Array(0.03569018, dtype=float32), Array(0.03289023, dtype=float32), Array(0.03090852, dtype=float32), Array(0.02959318, dtype=float32), Array(0.02858915, dtype=float32), Array(0.02793498, dtype=float32), Array(0.02834089, dtype=float32), Array(0.02894704, dtype=float32), Array(0.02868493, dtype=float32), Array(0.02784394, dtype=float32), Array(0.02781552, dtype=float32), Array(0.02604176, dtype=float32), Array(0.02351427, dtype=float32), Array(0.01993859, dtype=float32), Array(0.0161212, dtype=float32), Array(0.01603562, dtype=float32), Array(0.01591871, dtype=float32), Array(0.01480932, dtype=float32), Array(0.01318205, dtype=float32), Array(0.01170782, dtype=float32), Array(0.0102558, dtype=float32)]
+
+Cycle 80.0: plan time: 2.3192s
+Realtime rate: 0.01, plan time: 2.3192s
+Cycle 81.0: Best cost: 0.01055389828979969, Best sample: 0.01057728473097086
+
+Cycle 81.0: plan time: 2.2782s
+Realtime rate: 0.01, plan time: 2.2782s
+Cycle 82.0: Best cost: 0.010971598327159882, Best sample: 0.010994984768331051
+
+Cycle 82.0: plan time: 2.2749s
+Realtime rate: 0.01, plan time: 2.2749s
+Cycle 83.0: Best cost: 0.011514667421579361, Best sample: 0.01153805386275053
+
+Cycle 83.0: plan time: 2.2546s
+Realtime rate: 0.01, plan time: 2.2546s
+Cycle 84.0: Best cost: 0.0121906828135252, Best sample: 0.01221406925469637
+
+Cycle 84.0: plan time: 2.2678s
+Realtime rate: 0.01, plan time: 2.2678s
+Cycle 85.0: Best cost: 0.013006285764276981, Best sample: 0.01302967220544815
+
+Cycle 85.0: plan time: 2.2683s
+Realtime rate: 0.01, plan time: 2.2683s
+Cycle 86.0: Best cost: 0.01304562482982874, Best sample: 0.013069011270999908
+
+Cycle 86.0: plan time: 2.2330s
+Realtime rate: 0.01, plan time: 2.2330s
+Cycle 87.0: Best cost: 0.0118067916482687, Best sample: 0.011830178089439869
+
+Cycle 87.0: plan time: 2.2613s
+Realtime rate: 0.01, plan time: 2.2613s
+Cycle 88.0: Best cost: 0.011306478641927242, Best sample: 0.011329863220453262
+
+Cycle 88.0: plan time: 2.2690s
+Realtime rate: 0.01, plan time: 2.2690s
+Cycle 89.0: Best cost: 0.011299513280391693, Best sample: 0.011322896927595139
+
+Cycle 89.0: plan time: 2.2728s
+Realtime rate: 0.01, plan time: 2.2728s
+Cycle 90.0: Best cost: 0.011472713202238083, Best sample: 0.011496098712086678
+Cost for optimal action (cycle 90.0): [Array(0.16086179, dtype=float32), Array(0.17834182, dtype=float32), Array(0.19639936, dtype=float32), Array(0.1733459, dtype=float32), Array(0.19128084, dtype=float32), Array(0.18402754, dtype=float32), Array(0.17283696, dtype=float32), Array(0.18141755, dtype=float32), Array(0.1794618, dtype=float32), Array(0.17868713, dtype=float32), Array(0.18763009, dtype=float32), Array(0.17812485, dtype=float32), Array(0.1833646, dtype=float32), Array(0.18409081, dtype=float32), Array(0.18744305, dtype=float32), Array(0.1858091, dtype=float32), Array(0.18253031, dtype=float32), Array(0.17927621, dtype=float32), Array(0.18460846, dtype=float32), Array(0.18559971, dtype=float32), Array(0.1869388, dtype=float32), Array(0.1849885, dtype=float32), Array(0.17893896, dtype=float32), Array(0.18639417, dtype=float32), Array(0.17688861, dtype=float32), Array(0.1851157, dtype=float32), Array(0.18172203, dtype=float32), Array(0.17097594, dtype=float32), Array(0.17604932, dtype=float32), Array(0.17637537, dtype=float32), Array(0.17825384, dtype=float32), Array(0.18971337, dtype=float32), Array(0.18240473, dtype=float32), Array(0.17413017, dtype=float32), Array(0.17947158, dtype=float32), Array(0.1757201, dtype=float32), Array(0.1762833, dtype=float32), Array(0.17996219, dtype=float32), Array(0.18156013, dtype=float32), Array(0.17712194, dtype=float32), Array(0.18421477, dtype=float32), Array(0.16915628, dtype=float32), Array(0.16744824, dtype=float32), Array(0.17189544, dtype=float32), Array(0.1646698, dtype=float32), Array(0.14791727, dtype=float32), Array(0.1216251, dtype=float32), Array(0.1056111, dtype=float32), Array(0.08997838, dtype=float32), Array(0.07240469, dtype=float32), Array(0.05862053, dtype=float32), Array(0.05097707, dtype=float32), Array(0.04601254, dtype=float32), Array(0.04174162, dtype=float32), Array(0.03921016, dtype=float32), Array(0.03772498, dtype=float32), Array(0.03428516, dtype=float32), Array(0.0353811, dtype=float32), Array(0.03299361, dtype=float32), Array(0.03500867, dtype=float32), Array(0.03569018, dtype=float32), Array(0.03289023, dtype=float32), Array(0.03090852, dtype=float32), Array(0.02959318, dtype=float32), Array(0.02858915, dtype=float32), Array(0.02793498, dtype=float32), Array(0.02834089, dtype=float32), Array(0.02894704, dtype=float32), Array(0.02868493, dtype=float32), Array(0.02784394, dtype=float32), Array(0.02781552, dtype=float32), Array(0.02604176, dtype=float32), Array(0.02351427, dtype=float32), Array(0.01993859, dtype=float32), Array(0.0161212, dtype=float32), Array(0.01603562, dtype=float32), Array(0.01591871, dtype=float32), Array(0.01480932, dtype=float32), Array(0.01318205, dtype=float32), Array(0.01170782, dtype=float32), Array(0.0102558, dtype=float32), Array(0.0105539, dtype=float32), Array(0.0109716, dtype=float32), Array(0.01151467, dtype=float32), Array(0.01219068, dtype=float32), Array(0.01300629, dtype=float32), Array(0.01304562, dtype=float32), Array(0.01180679, dtype=float32), Array(0.01130648, dtype=float32), Array(0.01129951, dtype=float32), Array(0.01147271, dtype=float32)]
+
+Cycle 90.0: plan time: 2.2652s
+Realtime rate: 0.01, plan time: 2.2652s
+Cycle 91.0: Best cost: 0.011844957247376442, Best sample: 0.011868343688547611
+
+Cycle 91.0: plan time: 2.2774s
+Realtime rate: 0.01, plan time: 2.2774s
+Cycle 92.0: Best cost: 0.012440161779522896, Best sample: 0.01246354915201664
+
+Cycle 92.0: plan time: 2.3299s
+Realtime rate: 0.01, plan time: 2.3299s
+Cycle 93.0: Best cost: 0.013286164030432701, Best sample: 0.013309549540281296
+
+Cycle 93.0: plan time: 2.3428s
+Realtime rate: 0.01, plan time: 2.3428s
+Cycle 94.0: Best cost: 0.013792300596833229, Best sample: 0.013815688900649548
+
+Cycle 94.0: plan time: 2.2823s
+Realtime rate: 0.01, plan time: 2.2823s
+Cycle 95.0: Best cost: 0.011248008348047733, Best sample: 0.011271395720541477
+
+Cycle 95.0: plan time: 2.2780s
+Realtime rate: 0.01, plan time: 2.2780s
+Cycle 96.0: Best cost: 0.011475007981061935, Best sample: 0.01149839349091053
+
+Cycle 96.0: plan time: 2.2911s
+Realtime rate: 0.01, plan time: 2.2911s
+Cycle 97.0: Best cost: 0.011805153451859951, Best sample: 0.011828540824353695
+
+Cycle 97.0: plan time: 2.2778s
+Realtime rate: 0.01, plan time: 2.2778s
+Cycle 98.0: Best cost: 0.012256665155291557, Best sample: 0.012280051596462727
+
+Cycle 98.0: plan time: 2.3022s
+Realtime rate: 0.01, plan time: 2.3022s
+Cycle 99.0: Best cost: 0.012857938185334206, Best sample: 0.0128813236951828
+
+Cycle 99.0: plan time: 2.2762s
+Realtime rate: 0.01, plan time: 2.2762s
+Cycle 100.0: Best cost: 0.013642063364386559, Best sample: 0.013665448874235153
+Cost for optimal action (cycle 100.0): [Array(0.16086179, dtype=float32), Array(0.17834182, dtype=float32), Array(0.19639936, dtype=float32), Array(0.1733459, dtype=float32), Array(0.19128084, dtype=float32), Array(0.18402754, dtype=float32), Array(0.17283696, dtype=float32), Array(0.18141755, dtype=float32), Array(0.1794618, dtype=float32), Array(0.17868713, dtype=float32), Array(0.18763009, dtype=float32), Array(0.17812485, dtype=float32), Array(0.1833646, dtype=float32), Array(0.18409081, dtype=float32), Array(0.18744305, dtype=float32), Array(0.1858091, dtype=float32), Array(0.18253031, dtype=float32), Array(0.17927621, dtype=float32), Array(0.18460846, dtype=float32), Array(0.18559971, dtype=float32), Array(0.1869388, dtype=float32), Array(0.1849885, dtype=float32), Array(0.17893896, dtype=float32), Array(0.18639417, dtype=float32), Array(0.17688861, dtype=float32), Array(0.1851157, dtype=float32), Array(0.18172203, dtype=float32), Array(0.17097594, dtype=float32), Array(0.17604932, dtype=float32), Array(0.17637537, dtype=float32), Array(0.17825384, dtype=float32), Array(0.18971337, dtype=float32), Array(0.18240473, dtype=float32), Array(0.17413017, dtype=float32), Array(0.17947158, dtype=float32), Array(0.1757201, dtype=float32), Array(0.1762833, dtype=float32), Array(0.17996219, dtype=float32), Array(0.18156013, dtype=float32), Array(0.17712194, dtype=float32), Array(0.18421477, dtype=float32), Array(0.16915628, dtype=float32), Array(0.16744824, dtype=float32), Array(0.17189544, dtype=float32), Array(0.1646698, dtype=float32), Array(0.14791727, dtype=float32), Array(0.1216251, dtype=float32), Array(0.1056111, dtype=float32), Array(0.08997838, dtype=float32), Array(0.07240469, dtype=float32), Array(0.05862053, dtype=float32), Array(0.05097707, dtype=float32), Array(0.04601254, dtype=float32), Array(0.04174162, dtype=float32), Array(0.03921016, dtype=float32), Array(0.03772498, dtype=float32), Array(0.03428516, dtype=float32), Array(0.0353811, dtype=float32), Array(0.03299361, dtype=float32), Array(0.03500867, dtype=float32), Array(0.03569018, dtype=float32), Array(0.03289023, dtype=float32), Array(0.03090852, dtype=float32), Array(0.02959318, dtype=float32), Array(0.02858915, dtype=float32), Array(0.02793498, dtype=float32), Array(0.02834089, dtype=float32), Array(0.02894704, dtype=float32), Array(0.02868493, dtype=float32), Array(0.02784394, dtype=float32), Array(0.02781552, dtype=float32), Array(0.02604176, dtype=float32), Array(0.02351427, dtype=float32), Array(0.01993859, dtype=float32), Array(0.0161212, dtype=float32), Array(0.01603562, dtype=float32), Array(0.01591871, dtype=float32), Array(0.01480932, dtype=float32), Array(0.01318205, dtype=float32), Array(0.01170782, dtype=float32), Array(0.0102558, dtype=float32), Array(0.0105539, dtype=float32), Array(0.0109716, dtype=float32), Array(0.01151467, dtype=float32), Array(0.01219068, dtype=float32), Array(0.01300629, dtype=float32), Array(0.01304562, dtype=float32), Array(0.01180679, dtype=float32), Array(0.01130648, dtype=float32), Array(0.01129951, dtype=float32), Array(0.01147271, dtype=float32), Array(0.01184496, dtype=float32), Array(0.01244016, dtype=float32), Array(0.01328616, dtype=float32), Array(0.0137923, dtype=float32), Array(0.01124801, dtype=float32), Array(0.01147501, dtype=float32), Array(0.01180515, dtype=float32), Array(0.01225667, dtype=float32), Array(0.01285794, dtype=float32), Array(0.01364206, dtype=float32)]
+[[[ 0.01676647  0.02911286]
+  [ 0.043622   -0.01136433]
+  [-0.00443926 -0.01403007]
+  [-0.03413235  0.02427883]
+  [ 0.0247398   0.004617  ]
+  [-0.17945124  0.47884464]]]
+finish the seed 1 interactive simulation for controller ps.
+Video saved to /home/robopt/Documents/zhongqi/Global-MPPI/5090_data/pusht_gcs_model_path_cost/ps_n16000/s1/simulation_20261120_163327.mp4
